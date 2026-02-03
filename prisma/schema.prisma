@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  createdAt     DateTime     @default(now())
+  portfolios    Portfolio[]
+  importJobs    ImportJob[]
+  reports       Report[]
+}
+
+model Portfolio {
+  id          String       @id @default(cuid())
+  name        String
+  userId      String
+  createdAt   DateTime     @default(now())
+  holdings    Holding[]
+  snapshots   Snapshot[]
+  ruleSets    RuleSet[]
+  recommendations Recommendation[]
+  stressTests StressTestResult[]
+  reports     Report[]
+  user        User         @relation(fields: [userId], references: [id])
+}
+
+model Holding {
+  id          String   @id @default(cuid())
+  portfolioId String
+  ticker      String
+  name        String?
+  assetClass  String
+  sector      String?
+  region      String?
+  quantity    Float
+  avgCost     Float?
+  notes       String?
+  source      String
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model ImportJob {
+  id           String   @id @default(cuid())
+  userId       String
+  type         String
+  status       String
+  rawFileUrl   String?
+  extractedJSON Json?
+  confidence   Float?
+  errors       Json?
+  createdAt    DateTime @default(now())
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+model PortfolioLot {
+  id          String   @id @default(cuid())
+  holdingId   String
+  quantity    Float
+  avgCost     Float?
+}
+
+model Snapshot {
+  id          String   @id @default(cuid())
+  portfolioId String
+  asOf        DateTime
+  totalValue  Float
+  computedMetrics Json
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model RuleSet {
+  id           String   @id @default(cuid())
+  portfolioId  String
+  objectivePreset String
+  capsFloors   Json
+  targetBands  Json
+  portfolio    Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model Recommendation {
+  id          String   @id @default(cuid())
+  portfolioId String
+  createdAt   DateTime @default(now())
+  trades      Json
+  rationale   Json
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model StressTestResult {
+  id          String   @id @default(cuid())
+  portfolioId String
+  scenarioName String
+  impact      Json
+  createdAt   DateTime @default(now())
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+}
+
+model Report {
+  id          String   @id @default(cuid())
+  portfolioId String
+  userId      String
+  url         String
+  createdAt   DateTime @default(now())
+  portfolio   Portfolio @relation(fields: [portfolioId], references: [id])
+  user        User     @relation(fields: [userId], references: [id])
+}
