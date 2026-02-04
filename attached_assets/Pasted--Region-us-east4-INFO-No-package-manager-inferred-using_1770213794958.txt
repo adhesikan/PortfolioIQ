@@ -1,0 +1,85 @@
+ 
+[Region: us-east4]
+INFO No package manager inferred, using npm default
+ 
+ 
+╭─────────────────╮
+│ Railpack 0.17.1 │
+╰─────────────────╯
+ 
+↳ Detected Node
+↳ Using npm package manager
+ 
+Packages
+──────────
+node  │  22.22.0  │  railpack default (22)
+ 
+Steps
+──────────
+▸ install
+$ npm ci
+ 
+▸ build
+$ npm run build
+ 
+Deploy
+──────────
+$ npm run start
+ 
+ 
+Successfully prepared Railpack plan for build
+ 
+ 
+context: 6qm1-8
+
+load build definition from railpack-plan.json
+0ms
+
+install mise packages: node cached
+0ms
+
+mkdir -p /app/node_modules/.cache cached
+0ms
+
+copy .next/package.json, .next/types/package.json cached
+0ms
+
+copy package-lock.json, package.json, prisma
+82ms
+
+npm ci
+12s
+Run `npm audit` for details.
+
+copy / /app
+246ms
+
+npm run build
+13s
+npm warn config production Use `--omit=dev` instead.
+> portfolioiq@0.1.0 build
+> next build
+  ▲ Next.js 14.2.35
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+eD [Error]: Missing credentials. Please pass an `apiKey`, or set the `OPENAI_API_KEY` environment variable.
+    at new nx (/app/.next/server/app/api/parse-image/route.js:8:46848)
+    at 3808 (/app/.next/server/app/api/parse-image/route.js:8:60669)
+    at t (/app/.next/server/webpack-runtime.js:1:127)
+    at s (/app/.next/server/app/api/parse-image/route.js:42:1625)
+    at /app/.next/server/app/api/parse-image/route.js:42:1656
+    at t.X (/app/.next/server/webpack-runtime.js:1:1191)
+    at /app/.next/server/app/api/parse-image/route.js:42:1638
+    at Object.<anonymous> (/app/.next/server/app/api/parse-image/route.js:42:1683)
+    at Module._compile (node:internal/modules/cjs/loader:1706:14)
+    at Object..js (node:internal/modules/cjs/loader:1839:10)
+> Build error occurred
+Error: Failed to collect page data for /api/parse-image
+
+    at /app/node_modules/next/dist/build/utils.js:1269:15
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  type: 'Error'
+}
+ERROR: failed to build: failed to solve: process "npm run build" did not complete successfully: exit code: 1
