@@ -87,6 +87,33 @@ Uses PostgreSQL via Prisma. Schema includes:
 - `PUT /api/portfolios/[id]` - Update portfolio
 - `DELETE /api/portfolios/[id]` - Delete portfolio
 
+## Deployment
+
+### Railway Deployment
+
+The project is configured for automatic deployment to Railway:
+
+1. **Required Environment Variables:**
+   - `DATABASE_URL` - PostgreSQL connection string
+   - `OPENAI_API_KEY` - For AI screenshot import feature
+
+2. **Configuration Files:**
+   - `railway.toml` - Railway-specific build/deploy settings
+   - `Procfile` - Runs migrations before starting the app
+
+3. **Automatic Database Migrations:**
+   - Migrations are in `prisma/migrations/`
+   - `prisma migrate deploy` runs automatically during build
+   - Schema changes sync to production on each deploy
+
+### Scripts
+
+- `npm run dev` - Development server (port 5000)
+- `npm run build` - Production build
+- `npm run start` - Production server
+- `npm run db:migrate` - Apply database migrations
+- `npm run db:push` - Push schema directly (dev only)
+
 ## Notes
 
 - Values shown are based on cost basis (average cost), not live market prices

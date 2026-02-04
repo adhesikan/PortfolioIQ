@@ -45,5 +45,5 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "scripts/start-production.sh"]
-build = ["bash", "-c", "npx prisma generate && npm run build"]
+run = ["npm", "run", "start"]
+build = ["bash", "-c", "npx prisma generate && npx prisma migrate deploy && npm run build"]
