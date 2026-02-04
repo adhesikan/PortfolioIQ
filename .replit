@@ -1,0 +1,48 @@
+modules = ["nodejs-20", "web"]
+[agent]
+expertMode = true
+
+[nix]
+channel = "stable-25_05"
+
+[userenv]
+
+[userenv.shared]
+NEXTAUTH_SECRET = "069acd31b7a2d558867d5073c3526ee770c0aac0a237e8bb00c8da97a9ef4492"
+NEXTAUTH_URL = "https://50daeb90-5b34-49b6-823c-d767abb2e927-00-2q89j3p9y2o4q.worf.replit.dev"
+PRICE_PROVIDER_MODE = "mock"
+BLOB_STORE_MODE = "mock"
+IMPORT_IMAGE_TTL_MINUTES = "60"
+
+[workflows]
+runButton = "Project"
+
+[[workflows.workflow]]
+name = "Project"
+mode = "parallel"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "Next.js Dev Server"
+
+[[workflows.workflow]]
+name = "Next.js Dev Server"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "npm run dev"
+waitForPort = 5000
+
+[workflows.workflow.metadata]
+outputType = "webview"
+
+[[ports]]
+localPort = 5000
+externalPort = 80
+
+[deployment]
+deploymentTarget = "autoscale"
+run = ["npm", "run", "start"]
+build = ["npm", "run", "build"]
