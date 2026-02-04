@@ -13,7 +13,8 @@ export type HoldingMetrics = {
   tinyPositions: number;
 };
 
-const safeNumber = (value: number | null | undefined) => (Number.isFinite(value) ? value : 0);
+const safeNumber = (value: number | null | undefined): number =>
+  typeof value === "number" && Number.isFinite(value) ? value : 0;
 
 export const computeHoldingMetrics = (holdings: Holding[]): HoldingMetrics => {
   const values = holdings.map((holding) => {
