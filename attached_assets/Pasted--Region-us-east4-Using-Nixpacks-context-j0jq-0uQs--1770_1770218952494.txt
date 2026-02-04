@@ -1,0 +1,107 @@
+ 
+[Region: us-east4]
+==============
+Using Nixpacks
+==============
+
+context: j0jq-0uQs
+╔══════════════════════════════ Nixpacks v1.38.0 ══════════════════════════════╗
+║ setup      │ nodejs_18, npm-9_x, openssl                                     ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ install    │ npm ci                                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ build      │ npm install && npx prisma generate && npx prisma migrate deploy ║
+║            │ && npm run build                                                ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ start      │ npm run start                                                   ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+133ms
+
+internal
+load .dockerignore
+0ms
+
+internal
+load build context
+0ms
+
+[ 2/13] WORKDIR /app/ cached
+0ms
+
+stage-0
+COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix
+37ms
+
+stage-0
+RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d
+44s
+61 store paths deleted, 559.37 MiB freed
+
+stage-0
+COPY . /app/.
+185ms
+
+stage-0
+RUN npm ci
+24s
+Run `npm audit` for details.
+
+stage-0
+COPY . /app/.
+236ms
+
+stage-0
+RUN npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+15s
+npm warn config production Use `--omit=dev` instead.
+> portfolioiq@0.1.0 postinstall
+> prisma generate
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 117ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.22.0 -> 7.3.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+up to date, audited 596 packages in 12s
+193 packages are looking for funding
+  run `npm fund` for details
+8 vulnerabilities (4 moderate, 4 high)
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+npm warn config production Use `--omit=dev` instead.
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 128ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Want to react to database changes in your app as they happen? Discover how with Pulse: https://pris.ly/tip-1-pulse
+npm warn config production Use `--omit=dev` instead.
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "railway", schema "public" at "postgres.railway.internal:5432"
+Error: P1001: Can't reach database server at `postgres.railway.internal:5432`
+
+Please make sure your database server is running at `postgres.railway.internal:5432`.
+Dockerfile:24
+-------------------
+22 |     # build phase
+23 |     COPY . /app/.
+24 | >>> RUN --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-next/cache,target=/app/.next/cache --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-node_modules/cache,target=/app/node_modules/.cache npm install && npx prisma generate && npx prisma migrate deploy && npm run build
+25 |
+26 |
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/bash -ol pipefail -c npm install && npx prisma generate && npx prisma migrate deploy && npm run build" did not complete successfully: exit code: 1
+Error: Docker build failed
