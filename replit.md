@@ -49,6 +49,7 @@ lib/
 1. **Import Methods:**
    - Manual entry with asset class selection
    - CSV upload with robust parsing (handles quoted fields)
+   - AI Screenshot: Upload brokerage screenshots for automatic extraction (requires OpenAI API key)
 
 2. **Analytics:**
    - HHI concentration index
