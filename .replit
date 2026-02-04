@@ -45,5 +45,5 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npm", "run", "start"]
+run = ["bash", "-c", "echo 'Syncing database...' && npx prisma db push --accept-data-loss 2>&1 && echo 'Database synced!' && npm run start"]
 build = ["bash", "-c", "npx prisma generate && npm run build"]
