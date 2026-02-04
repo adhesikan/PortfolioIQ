@@ -1,6 +1,8 @@
 import { Holding, RebalancePreset, Recommendation } from "@/lib/types";
 import { computeHoldingMetrics } from "@/lib/analytics";
 
+export type { RebalancePreset } from "@/lib/types";
+
 const presetBands: Record<RebalancePreset, Record<string, { min: number; max: number }>> = {
   "Balanced Growth": {
     equity: { min: 0.45, max: 0.65 },
