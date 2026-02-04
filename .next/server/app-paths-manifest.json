@@ -1,5 +1,1 @@
-{
-  "/page": "app/page.js",
-  "/import/page": "app/import/page.js",
-  "/api/portfolios/route": "app/api/portfolios/route.js"
-}
+{}
