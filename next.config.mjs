@@ -2,6 +2,9 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  images: {
+    unoptimized: true,
+  },
   allowedDevOrigins: [
     '50daeb90-5b34-49b6-823c-d767abb2e927-00-2q89j3p9y2o4q.worf.replit.dev',
     '127.0.0.1',
