@@ -47,6 +47,10 @@ externalPort = 80
 localPort = 5001
 externalPort = 3001
 
+[[ports]]
+localPort = 8080
+externalPort = 8080
+
 [deployment]
 deploymentTarget = "autoscale"
 run = ["bash", "-c", "npx prisma db push --accept-data-loss && npm run start"]

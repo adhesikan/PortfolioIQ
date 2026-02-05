@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic';
+
 export default function TestPage() {
   return (
     <div className="container-page py-10">
