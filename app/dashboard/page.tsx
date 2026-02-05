@@ -6,6 +6,7 @@ import { scorePortfolio } from "@/lib/scoring";
 import { defaultScenarios, runStressTest } from "@/lib/stress";
 import { generateRebalancePlan, RebalancePreset } from "@/lib/rebalance";
 import { Holding } from "@/lib/types";
+import Tooltip from "@/components/Tooltip";
 import Link from "next/link";
 import { useState } from "react";
 
@@ -97,7 +98,9 @@ function ScoreCard({ score, total }: { score: { total: number; notes: string[] }
 
   return (
     <div className="card">
-      <p className="metric-label mb-2">Portfolio Score</p>
+      <Tooltip content="A composite score (0-100) measuring diversification, concentration risk, and asset allocation. Higher scores indicate better diversification.">
+        <p className="metric-label mb-2">Portfolio Score</p>
+      </Tooltip>
       <p className={`metric-value ${getScoreColor(score.total)}`}>{Math.round(score.total)}</p>
       <div className="mt-4 space-y-1">
         {score.notes.slice(0, 3).map((note, i) => (
@@ -114,16 +117,24 @@ function ScoreCard({ score, total }: { score: { total: number; notes: string[] }
 function MetricsCard({ metrics }: { metrics: ReturnType<typeof computeHoldingMetrics> }) {
   return (
     <div className="card">
-      <p className="metric-label mb-2">Concentration</p>
+      <Tooltip content="Measures how much of your portfolio is concentrated in a single holding. Lower concentration generally means better diversification.">
+        <p className="metric-label mb-2">Concentration</p>
+      </Tooltip>
       <p className="metric-value">{(metrics.topWeights.top1 * 100).toFixed(0)}%</p>
-      <p className="text-sm text-slate-500 mt-1">Top holding weight</p>
+      <Tooltip content="The percentage of your total portfolio value in your largest single holding.">
+        <p className="text-sm text-slate-500 mt-1">Top holding weight</p>
+      </Tooltip>
       <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
         <div>
-          <p className="text-xs text-slate-500">HHI Index</p>
+          <Tooltip content="Herfindahl-Hirschman Index: Measures market concentration. Lower values (under 15%) indicate good diversification. Over 25% suggests high concentration risk.">
+            <p className="text-xs text-slate-500">HHI Index</p>
+          </Tooltip>
           <p className="font-semibold text-slate-900">{(metrics.hhi * 100).toFixed(1)}%</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Effective Holdings</p>
+          <Tooltip content="The number of equally-weighted holdings that would produce the same concentration level. Higher numbers indicate better diversification.">
+            <p className="text-xs text-slate-500">Effective Holdings</p>
+          </Tooltip>
           <p className="font-semibold text-slate-900">{metrics.effectiveHoldings.toFixed(1)}</p>
         </div>
       </div>
@@ -142,16 +153,24 @@ function TotalValueCard({ holdings }: { holdings: Holding[] }) {
 
   return (
     <div className="card">
-      <p className="metric-label mb-2">Total Cost Basis</p>
+      <Tooltip content="The total amount you paid for all your holdings, calculated as quantity times average cost per share.">
+        <p className="metric-label mb-2">Total Cost Basis</p>
+      </Tooltip>
       <p className="metric-value">${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-      <p className="text-xs text-slate-400 mt-1">Based on your average cost</p>
+      <Tooltip content="This value is based on your average purchase price, not current market prices.">
+        <p className="text-xs text-slate-400 mt-1">Based on your average cost</p>
+      </Tooltip>
       <div className="mt-4 grid grid-cols-2 gap-4 pt-4 border-t border-slate-100">
         <div>
-          <p className="text-xs text-slate-500">Holdings</p>
+          <Tooltip content="The total number of individual securities in your portfolio.">
+            <p className="text-xs text-slate-500">Holdings</p>
+          </Tooltip>
           <p className="font-semibold text-slate-900">{holdingCount}</p>
         </div>
         <div>
-          <p className="text-xs text-slate-500">Asset Classes</p>
+          <Tooltip content="The number of different asset types (equity, ETF, bonds, crypto, etc.) represented in your portfolio.">
+            <p className="text-xs text-slate-500">Asset Classes</p>
+          </Tooltip>
           <p className="font-semibold text-slate-900">{assetClasses}</p>
         </div>
       </div>
@@ -173,11 +192,31 @@ function HoldingsTable({ holdings }: { holdings: Holding[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200">
-              <th className="pb-3 text-left font-medium text-slate-500">Ticker</th>
-              <th className="pb-3 text-right font-medium text-slate-500">Quantity</th>
-              <th className="pb-3 text-right font-medium text-slate-500">Price</th>
-              <th className="pb-3 text-right font-medium text-slate-500">Value</th>
-              <th className="pb-3 text-left font-medium text-slate-500">Class</th>
+              <th className="pb-3 text-left font-medium text-slate-500">
+                <Tooltip content="The stock or ETF ticker symbol that uniquely identifies the security.">
+                  <span>Ticker</span>
+                </Tooltip>
+              </th>
+              <th className="pb-3 text-right font-medium text-slate-500">
+                <Tooltip content="The number of shares you own of this security.">
+                  <span>Quantity</span>
+                </Tooltip>
+              </th>
+              <th className="pb-3 text-right font-medium text-slate-500">
+                <Tooltip content="Your average cost per share (what you paid), not the current market price.">
+                  <span>Price</span>
+                </Tooltip>
+              </th>
+              <th className="pb-3 text-right font-medium text-slate-500">
+                <Tooltip content="Total value calculated as quantity multiplied by your average cost.">
+                  <span>Value</span>
+                </Tooltip>
+              </th>
+              <th className="pb-3 text-left font-medium text-slate-500">
+                <Tooltip content="The asset category: Equity (stocks), ETF (exchange-traded funds), Fixed-Income (bonds), Crypto, or Other.">
+                  <span>Class</span>
+                </Tooltip>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -224,7 +263,9 @@ function StressTestsCard({ holdings }: { holdings: Holding[] }) {
 
   return (
     <div className="card">
-      <h2 className="section-title mb-4">Stress Tests</h2>
+      <Tooltip content="Simulations showing how your portfolio might perform under various adverse market conditions. These are hypothetical scenarios for educational purposes.">
+        <h2 className="section-title mb-4">Stress Tests</h2>
+      </Tooltip>
       <p className="text-sm text-slate-500 mb-4">Hypothetical impact under market scenarios</p>
       <div className="space-y-3">
         {stress.map((result) => {
@@ -310,7 +351,9 @@ function RebalanceCard({ holdings }: { holdings: Holding[] }) {
     <div className="card">
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h2 className="section-title">Rebalancing Ideas</h2>
+          <Tooltip content="Suggestions for adjusting your asset allocation based on the selected investment strategy. These are educational ideas, not personalized advice.">
+            <h2 className="section-title">Rebalancing Ideas</h2>
+          </Tooltip>
           <p className="text-sm text-slate-500 mt-1">Educational suggestions only</p>
         </div>
         <select
