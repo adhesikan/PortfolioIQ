@@ -3,6 +3,7 @@ builder = "nixpacks"
 buildCommand = "npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/"
 
 [deploy]
+startCommand = "npx prisma migrate deploy && HOSTNAME=0.0.0.0 node .next/standalone/server.js"
 healthcheckPath = "/"
 healthcheckTimeout = 300
 restartPolicyType = "on_failure"
