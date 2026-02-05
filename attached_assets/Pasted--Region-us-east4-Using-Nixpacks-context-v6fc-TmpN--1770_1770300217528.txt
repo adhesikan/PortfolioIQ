@@ -1,0 +1,154 @@
+ 
+[Region: us-east4]
+==============
+Using Nixpacks
+==============
+
+context: v6fc-TmpN
+╔══════════════════════════════ Nixpacks v1.38.0 ══════════════════════════════╗
+║ setup      │ nodejs_18, npm-9_x, openssl                                     ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ install    │ npm ci                                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ build      │ npm install && npx prisma generate && npm run build && cp -r    ║
+║            │ public .next/standalone/ && cp -r .next/static                  ║
+║            │ .next/standalone/.next/                                         ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ start      │ npx prisma migrate deploy && HOSTNAME=0.0.0.0 node              ║
+║            │ .next/standalone/server.js                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+internal
+load build definition from Dockerfile
+1ms
+
+internal
+load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+118ms
+
+internal
+load .dockerignore
+0ms
+
+stage-0
+FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+9ms
+
+internal
+load build context
+0ms
+
+stage-0
+WORKDIR /app/ cached
+0ms
+
+stage-0
+COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix
+6s
+
+stage-0
+RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d
+47s
+61 store paths deleted, 559.37 MiB freed
+
+stage-0
+COPY . /app/.
+240ms
+
+stage-0
+RUN npm ci
+30s
+Run `npm audit` for details.
+
+stage-0
+COPY . /app/.
+323ms
+
+stage-0
+RUN npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/
+48s
+npm warn config production Use `--omit=dev` instead.
+> portfolioiq@0.1.0 postinstall
+> prisma generate
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 151ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.22.0 -> 7.3.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+up to date, audited 596 packages in 14s
+193 packages are looking for funding
+  run `npm fund` for details
+8 vulnerabilities (4 moderate, 4 high)
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+npm warn config production Use `--omit=dev` instead.
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 155ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+npm warn config production Use `--omit=dev` instead.
+> portfolioiq@0.1.0 build
+> next build
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+  ▲ Next.js 14.2.35
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/12) ...
+   Generating static pages (3/12) 
+   Generating static pages (6/12) 
+   Generating static pages (9/12) 
+ ✓ Generating static pages (12/12)
+   Finalizing page optimization ...
+   Collecting build traces ...
+Route (app)                               Size     First Load JS
+┌ ○ /                                     175 B          96.2 kB
+├ ○ /_not-found                           875 B          88.2 kB
+├ ƒ /api/health                           0 B                0 B
+├ ƒ /api/parse-image                      0 B                0 B
+├ ƒ /api/portfolios                       0 B                0 B
+├ ƒ /api/portfolios/[id]                  0 B                0 B
+├ ○ /billing                              141 B          87.5 kB
+├ ○ /dashboard                            4.9 kB          101 kB
+├ ○ /import                               5.36 kB        92.7 kB
+├ ○ /portfolio                            2.5 kB         98.5 kB
+├ ○ /report                               7.71 kB         104 kB
+└ ○ /settings                             141 B          87.5 kB
++ First Load JS shared by all             87.3 kB
+  ├ chunks/117-d0aa9486d6cf1a7a.js        31.7 kB
+  ├ chunks/fd9d1056-f8a2d551cbb94c85.js   53.7 kB
+  └ other shared chunks (total)           1.94 kB
+Route (pages)                             Size     First Load JS
+┌ ○ /404                                  353 B          81.1 kB
+└ ○ /500                                  342 B          81.1 kB
++ First Load JS shared by all             80.8 kB
+  ├ chunks/framework-4be839806aa8e2d3.js  44.9 kB
+  ├ chunks/main-355f207baf7904cb.js       34 kB
+  └ other shared chunks (total)           1.92 kB
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+cp: cannot stat 'public': No such file or directory
+Dockerfile:24
+-------------------
+22 |     # build phase
+23 |     COPY . /app/.
+24 | >>> RUN --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-next/cache,target=/app/.next/cache --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-node_modules/cache,target=/app/node_modules/.cache npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/
+25 |
+26 |
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/bash -ol pipefail -c npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ && cp -r .next/static .next/standalone/.next/" did not complete successfully: exit code: 1
+Error: Docker build failed
