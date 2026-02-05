@@ -203,7 +203,23 @@ function HoldingsTable({ holdings }: { holdings: Holding[] }) {
   );
 }
 
+const stressTestMitigations: Record<string, { tip: string; examples: string[] }> = {
+  "2022 Rate Shock": {
+    tip: "Consider adding short-duration bonds or value stocks that historically perform better when rates rise.",
+    examples: ["VTIP (Treasury Inflation-Protected)", "SCHD (Dividend Value ETF)", "BND (Total Bond Market)"]
+  },
+  "Single Stock Shock": {
+    tip: "Reduce single-stock concentration by diversifying across sectors or using broad market funds.",
+    examples: ["VTI (Total Stock Market)", "SCHB (Broad Market ETF)", "ITOT (Core S&P Total)"]
+  },
+  "Global Recession": {
+    tip: "Consider defensive sectors and international diversification to reduce correlation risk.",
+    examples: ["VWO (Emerging Markets)", "VXUS (International Stocks)", "XLU (Utilities Sector)"]
+  }
+};
+
 function StressTestsCard({ holdings }: { holdings: Holding[] }) {
+  const [expandedScenario, setExpandedScenario] = useState<string | null>(null);
   const stress = defaultScenarios.map((scenario) => runStressTest(holdings, scenario));
 
   return (
@@ -211,27 +227,83 @@ function StressTestsCard({ holdings }: { holdings: Holding[] }) {
       <h2 className="section-title mb-4">Stress Tests</h2>
       <p className="text-sm text-slate-500 mb-4">Hypothetical impact under market scenarios</p>
       <div className="space-y-3">
-        {stress.map((result) => (
-          <div key={result.scenario} className="rounded-xl bg-slate-50 p-4">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="font-medium text-slate-900">{result.scenario}</p>
-                <p className="text-xs text-slate-500 mt-1">{defaultScenarios.find(s => s.name === result.scenario)?.description}</p>
+        {stress.map((result) => {
+          const isExpanded = expandedScenario === result.scenario;
+          const mitigation = stressTestMitigations[result.scenario];
+          return (
+            <div 
+              key={result.scenario} 
+              className="rounded-xl bg-slate-50 p-4 cursor-pointer hover:bg-slate-100 transition-colors"
+              onClick={() => setExpandedScenario(isExpanded ? null : result.scenario)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-slate-900">{result.scenario}</p>
+                    <svg className={`h-4 w-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                  <p className="text-xs text-slate-500 mt-1">{defaultScenarios.find(s => s.name === result.scenario)?.description}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold text-red-600">{(result.impactPct * 100).toFixed(1)}%</p>
+                  <p className="text-xs text-slate-500">${Math.abs(result.impactDollars).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="font-semibold text-red-600">{(result.impactPct * 100).toFixed(1)}%</p>
-                <p className="text-xs text-slate-500">${Math.abs(result.impactDollars).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-              </div>
+              {isExpanded && mitigation && (
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <p className="text-sm text-slate-700 mb-3">{mitigation.tip}</p>
+                  <div className="flex flex-wrap gap-2">
+                    {mitigation.examples.map((example) => (
+                      <span key={example} className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+                        {example}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-3 italic">
+                    For educational purposes only. Not a recommendation to buy or sell any security.
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
+const assetClassSuggestions: Record<string, { etfs: string[]; description: string }> = {
+  cash: {
+    etfs: ["SGOV (Treasury Bills)", "BIL (1-3 Month T-Bills)", "SHV (Short Treasury)"],
+    description: "Short-term treasury ETFs for cash-equivalent holdings"
+  },
+  "fixed-income": {
+    etfs: ["BND (Total Bond)", "AGG (Aggregate Bond)", "VCIT (Corporate Bond)"],
+    description: "Diversified bond funds for fixed-income exposure"
+  },
+  etf: {
+    etfs: ["VTI (Total Market)", "VOO (S&P 500)", "VWO (Emerging Markets)", "SMH (Semiconductors)"],
+    description: "Broad market and sector ETFs for diversification"
+  },
+  equity: {
+    etfs: ["VIG (Dividend Growth)", "SCHD (Dividend Value)", "QUAL (Quality Factor)"],
+    description: "Quality-focused ETFs if looking to reduce single-stock risk"
+  },
+  crypto: {
+    etfs: ["BITO (Bitcoin Strategy)", "ETHA (Ethereum)", "IBIT (Bitcoin Trust)"],
+    description: "Regulated crypto exposure through ETFs"
+  },
+  other: {
+    etfs: ["VNQ (Real Estate)", "DBC (Commodities)", "GLD (Gold)"],
+    description: "Alternative asset class ETFs for diversification"
+  }
+};
+
 function RebalanceCard({ holdings }: { holdings: Holding[] }) {
   const [preset, setPreset] = useState<RebalancePreset>("Balanced Growth");
+  const [expandedTicker, setExpandedTicker] = useState<string | null>(null);
   const recommendations = generateRebalancePlan(holdings, preset);
 
   return (
@@ -257,20 +329,49 @@ function RebalanceCard({ holdings }: { holdings: Holding[] }) {
             Your portfolio appears balanced for this strategy.
           </p>
         ) : (
-          recommendations.map((rec, i) => (
-            <div key={i} className="rounded-xl border border-slate-200 p-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="font-medium text-slate-900">{rec.ticker}</p>
-                  <p className="text-xs text-slate-500 mt-1">{rec.rationale}</p>
+          recommendations.map((rec, i) => {
+            const isExpanded = expandedTicker === rec.ticker;
+            const suggestions = assetClassSuggestions[rec.ticker.toLowerCase()] || assetClassSuggestions["other"];
+            return (
+              <div 
+                key={i} 
+                className="rounded-xl border border-slate-200 p-4 cursor-pointer hover:border-slate-300 transition-colors"
+                onClick={() => setExpandedTicker(isExpanded ? null : rec.ticker)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium text-slate-900">{rec.ticker}</p>
+                      <svg className={`h-4 w-4 text-slate-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1">{rec.rationale}</p>
+                  </div>
+                  <div className={`text-right ${rec.action === "consider_buy" ? "text-green-600" : "text-orange-600"}`}>
+                    <p className="font-semibold">{rec.action === "consider_buy" ? "+" : "-"}${rec.dollars.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                    <p className="text-xs">{rec.action === "consider_buy" ? "Consider adding" : "Consider trimming"}</p>
+                  </div>
                 </div>
-                <div className={`text-right ${rec.action === "consider_buy" ? "text-green-600" : "text-orange-600"}`}>
-                  <p className="font-semibold">{rec.action === "consider_buy" ? "+" : "-"}${rec.dollars.toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                  <p className="text-xs">{rec.action === "consider_buy" ? "Consider adding" : "Consider trimming"}</p>
-                </div>
+                {isExpanded && (
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <p className="text-sm text-slate-700 mb-3">{suggestions.description}</p>
+                    <p className="text-xs font-medium text-slate-600 mb-2">Example ETFs to explore:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.etfs.map((etf) => (
+                        <span key={etf} className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700">
+                          {etf}
+                        </span>
+                      ))}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-3 italic">
+                      For educational purposes only. Research thoroughly before investing. This is not personalized investment advice.
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>
