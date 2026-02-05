@@ -192,31 +192,11 @@ function HoldingsTable({ holdings }: { holdings: Holding[] }) {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200">
-              <th className="pb-3 text-left font-medium text-slate-500">
-                <Tooltip content="The stock or ETF ticker symbol that uniquely identifies the security.">
-                  <span>Ticker</span>
-                </Tooltip>
-              </th>
-              <th className="pb-3 text-right font-medium text-slate-500">
-                <Tooltip content="The number of shares you own of this security.">
-                  <span>Quantity</span>
-                </Tooltip>
-              </th>
-              <th className="pb-3 text-right font-medium text-slate-500">
-                <Tooltip content="Your average cost per share (what you paid), not the current market price.">
-                  <span>Price</span>
-                </Tooltip>
-              </th>
-              <th className="pb-3 text-right font-medium text-slate-500">
-                <Tooltip content="Total value calculated as quantity multiplied by your average cost.">
-                  <span>Value</span>
-                </Tooltip>
-              </th>
-              <th className="pb-3 text-left font-medium text-slate-500">
-                <Tooltip content="The asset category: Equity (stocks), ETF (exchange-traded funds), Fixed-Income (bonds), Crypto, or Other.">
-                  <span>Class</span>
-                </Tooltip>
-              </th>
+              <th className="pb-3 text-left font-medium text-slate-500">Ticker</th>
+              <th className="pb-3 text-right font-medium text-slate-500">Quantity</th>
+              <th className="pb-3 text-right font-medium text-slate-500">Price</th>
+              <th className="pb-3 text-right font-medium text-slate-500">Value</th>
+              <th className="pb-3 text-left font-medium text-slate-500">Class</th>
             </tr>
           </thead>
           <tbody>
