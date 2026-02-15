@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Check, ArrowRight } from "lucide-react";
+import { Check, ArrowRight, AlertCircle, X, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import Tooltip from "@/components/Tooltip";
@@ -9,15 +9,45 @@ import Tooltip from "@/components/Tooltip";
 export default function PricingPage() {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [showConsent, setShowConsent] = useState(false);
+  const [consentChecks, setConsentChecks] = useState({
+    disclaimer: false,
+    privacy: false,
+    recurring: false,
+  });
+  const [consentError, setConsentError] = useState("");
 
-  const handleSubscribe = async () => {
+  const allChecked = consentChecks.disclaimer && consentChecks.privacy && consentChecks.recurring;
+
+  const handleUpgradeClick = () => {
     if (!user) { window.location.href = "/signup"; return; }
+    setConsentChecks({ disclaimer: false, privacy: false, recurring: false });
+    setConsentError("");
+    setShowConsent(true);
+  };
+
+  const handleConfirmSubscribe = async () => {
+    if (!allChecked) {
+      setConsentError("Please accept all items before continuing.");
+      return;
+    }
     setLoading(true);
+    setConsentError("");
     try {
-      const res = await fetch("/api/stripe/checkout", { method: "POST" });
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          disclaimerAccepted: consentChecks.disclaimer,
+          privacyPolicyAccepted: consentChecks.privacy,
+          recurringPaymentAccepted: consentChecks.recurring,
+        }),
+      });
       const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Checkout failed");
       if (data.url) window.location.href = data.url;
-    } catch {
+    } catch (err: any) {
+      setConsentError(err.message || "Something went wrong. Please try again.");
       setLoading(false);
     }
   };
@@ -81,9 +111,9 @@ export default function PricingPage() {
               </li>
             ))}
           </ul>
-          <button onClick={handleSubscribe} disabled={loading} className="btn-primary w-full py-3">
-            {loading ? "Loading..." : "Upgrade to Pro"}
-            {!loading && <ArrowRight className="h-4 w-4" />}
+          <button onClick={handleUpgradeClick} className="btn-primary w-full py-3">
+            Upgrade to Pro
+            <ArrowRight className="h-4 w-4" />
           </button>
         </div>
       </div>
@@ -93,6 +123,107 @@ export default function PricingPage() {
           Cancel anytime. No long-term contracts. For educational purposes only.
         </p>
       </div>
+
+      {showConsent && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6 sm:p-8 relative animate-fade-in">
+            <button
+              onClick={() => { setShowConsent(false); setLoading(false); }}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1"
+            >
+              <X className="h-5 w-5" />
+            </button>
+
+            <div className="flex items-center gap-3 mb-6">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100">
+                <ShieldCheck className="h-5 w-5 text-brand-accent" />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Confirm Your Subscription</h2>
+                <p className="text-xs text-slate-500">Please review and accept before continuing</p>
+              </div>
+            </div>
+
+            <div className="rounded-lg bg-slate-50 p-4 mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-slate-900">PortfolioIQ Pro Plan</span>
+                <span className="text-sm font-bold text-slate-900">$29/month</span>
+              </div>
+              <p className="text-xs text-slate-500">Billed monthly. Cancel anytime from your account settings.</p>
+            </div>
+
+            <div className="space-y-4 mb-6">
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={consentChecks.disclaimer}
+                  onChange={(e) => setConsentChecks((p) => ({ ...p, disclaimer: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+                />
+                <span className="text-sm text-slate-700 leading-relaxed">
+                  I understand that PortfolioIQ provides <strong>educational and informational content only</strong>. 
+                  It does not provide financial advice, investment recommendations, or trading signals. 
+                  Past performance is not indicative of future results.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={consentChecks.privacy}
+                  onChange={(e) => setConsentChecks((p) => ({ ...p, privacy: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+                />
+                <span className="text-sm text-slate-700 leading-relaxed">
+                  I agree to the <strong>Terms of Service</strong> and <strong>Privacy Policy</strong>. 
+                  I understand my trade data is processed securely and used solely for generating my reports.
+                </span>
+              </label>
+
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={consentChecks.recurring}
+                  onChange={(e) => setConsentChecks((p) => ({ ...p, recurring: e.target.checked }))}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+                />
+                <span className="text-sm text-slate-700 leading-relaxed">
+                  I authorize a <strong>recurring monthly charge of $29.00</strong> to my payment method. 
+                  I can cancel anytime and my subscription will remain active until the end of the billing period.
+                </span>
+              </label>
+            </div>
+
+            {consentError && (
+              <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {consentError}
+              </div>
+            )}
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={handleConfirmSubscribe}
+                disabled={!allChecked || loading}
+                className={`btn-primary w-full py-3 ${!allChecked ? "opacity-50 cursor-not-allowed" : ""}`}
+              >
+                {loading ? "Processing..." : "Continue to Payment"}
+                {!loading && <ArrowRight className="h-4 w-4" />}
+              </button>
+              <button
+                onClick={() => { setShowConsent(false); setLoading(false); }}
+                className="text-sm text-slate-500 hover:text-slate-700 text-center"
+              >
+                Cancel
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-400 text-center mt-4">
+              Secure payment processed by Stripe. Your consent is logged for compliance.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

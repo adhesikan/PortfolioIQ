@@ -111,7 +111,7 @@ prisma/
 
 ## Database Models
 
-User, Session, Subscription, Upload, Trade, LeakReport, UsageCounter, AbuseLog, AdminAuditLog, MarketingContent, Portfolio, Holding, ImportJob, PortfolioLot, Snapshot, RuleSet, Recommendation, StressTestResult, Report
+User, Session, Subscription, Upload, Trade, LeakReport, UsageCounter, AbuseLog, AdminAuditLog, MarketingContent, ConsentLog, Portfolio, Holding, ImportJob, PortfolioLot, Snapshot, RuleSet, Recommendation, StressTestResult, Report
 
 ## Environment Variables Required
 
