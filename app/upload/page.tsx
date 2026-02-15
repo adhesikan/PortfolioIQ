@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useCallback } from "react";
 import { Upload, FileText, Image, AlertCircle, Loader2, Check, Edit3, Trash2, ArrowRight } from "lucide-react";
+import Tooltip from "@/components/Tooltip";
 
 interface ExtractedTrade {
   ticker: string;
@@ -178,7 +179,9 @@ export default function UploadPage() {
 
       {!isPro && (
         <div className="mb-6 p-3 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-between">
-          <span className="text-sm text-blue-800">Free reports used: {freeUsed} / 3</span>
+          <Tooltip content="Each successful report generation counts as one use. You get 3 free reports for life.">
+            <span className="text-sm text-blue-800">Free reports used: {freeUsed} / 3</span>
+          </Tooltip>
           <div className="w-32 h-2 rounded-full bg-blue-200 overflow-hidden">
             <div className="h-full bg-brand-accent rounded-full" style={{ width: `${Math.min((freeUsed / 3) * 100, 100)}%` }}></div>
           </div>
@@ -201,7 +204,9 @@ export default function UploadPage() {
             <Image className="h-12 w-12 text-brand-accent mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Screenshot</h3>
             <p className="text-sm text-slate-600 mb-4">Take a screenshot of your brokerage trade history</p>
-            <span className="text-xs text-slate-500">PNG, JPG up to 10MB</span>
+            <Tooltip content="Our AI reads your screenshot and automatically extracts trade data. Works with most brokerages. For best results, make sure the text is clearly visible.">
+              <span className="text-xs text-slate-500">PNG, JPG up to 10MB</span>
+            </Tooltip>
             <input
               ref={fileInputRef}
               type="file"
@@ -217,7 +222,9 @@ export default function UploadPage() {
             <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload CSV</h3>
             <p className="text-sm text-slate-600 mb-4">Export your trade history as CSV for more accuracy</p>
-            <span className="text-xs text-slate-500">CSV files up to 5MB</span>
+            <Tooltip content="CSV files give more accurate results than screenshots. Most brokerages let you export trade history as a CSV file from your account settings.">
+              <span className="text-xs text-slate-500">CSV files up to 5MB</span>
+            </Tooltip>
             <input
               ref={csvInputRef}
               type="file"
@@ -240,7 +247,9 @@ export default function UploadPage() {
       {step === "confirm" && !loading && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-slate-900">Confirm Extracted Trades ({trades.length})</h2>
+            <Tooltip content="Review the trades our AI extracted. You can edit any values or remove incorrect rows before generating your report.">
+              <h2 className="text-xl font-semibold text-slate-900">Confirm Extracted Trades ({trades.length})</h2>
+            </Tooltip>
             <button onClick={handleGenerateReport} className="btn-primary" disabled={trades.length === 0}>
               Generate Leak Report
               <ArrowRight className="h-4 w-4" />
@@ -253,10 +262,26 @@ export default function UploadPage() {
                   <th className="pb-3 text-left font-medium text-slate-500">Ticker</th>
                   <th className="pb-3 text-left font-medium text-slate-500">Action</th>
                   <th className="pb-3 text-right font-medium text-slate-500">Qty</th>
-                  <th className="pb-3 text-right font-medium text-slate-500">Entry</th>
-                  <th className="pb-3 text-right font-medium text-slate-500">Exit</th>
-                  <th className="pb-3 text-right font-medium text-slate-500">P&L</th>
-                  <th className="pb-3 text-center font-medium text-slate-500">Confidence</th>
+                  <th className="pb-3 text-right font-medium text-slate-500">
+                    <Tooltip content="The price at which you entered (opened) the trade.">
+                      <span>Entry</span>
+                    </Tooltip>
+                  </th>
+                  <th className="pb-3 text-right font-medium text-slate-500">
+                    <Tooltip content="The price at which you exited (closed) the trade.">
+                      <span>Exit</span>
+                    </Tooltip>
+                  </th>
+                  <th className="pb-3 text-right font-medium text-slate-500">
+                    <Tooltip content="Profit or loss for this trade. Green means profit, red means loss.">
+                      <span>P&L</span>
+                    </Tooltip>
+                  </th>
+                  <th className="pb-3 text-center font-medium text-slate-500">
+                    <Tooltip content="How confident our AI is about the extracted data for this trade. Below 50% means you should double-check the values.">
+                      <span>Confidence</span>
+                    </Tooltip>
+                  </th>
                   <th className="pb-3 w-8"></th>
                 </tr>
               </thead>

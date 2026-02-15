@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Check, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import Tooltip from "@/components/Tooltip";
 
 export default function PricingPage() {
   const { user } = useAuth();
@@ -34,10 +35,18 @@ export default function PricingPage() {
           <p className="text-sm text-slate-500 mb-4">Get started with trading analysis</p>
           <p className="text-4xl font-bold text-slate-900 mb-6">$0 <span className="text-base font-normal text-slate-500">/forever</span></p>
           <ul className="space-y-3 mb-8">
-            {["3 Leak Reports (lifetime)", "Screenshot & CSV upload", "AI trade extraction", "Behavior pattern analysis", "7-day fix plans"].map((f) => (
-              <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
+            {[
+              { text: "3 Leak Reports (lifetime)", tip: "You can generate up to 3 Leak Reports for free, ever. This is a lifetime limit, not monthly." },
+              { text: "Screenshot & CSV upload", tip: "Upload screenshots from any brokerage or export your trade history as a CSV file." },
+              { text: "AI trade extraction", tip: "Our AI automatically reads your screenshots and structures your trade data — no manual entry." },
+              { text: "Behavior pattern analysis", tip: "AI identifies recurring patterns like revenge trading, early exits, and position sizing mistakes." },
+              { text: "7-day fix plans", tip: "Each report includes a personalized daily action plan to help fix your biggest trading leaks." },
+            ].map((f) => (
+              <li key={f.text} className="flex items-center gap-2 text-sm text-slate-700">
                 <Check className="h-4 w-4 text-green-500 shrink-0" />
-                {f}
+                <Tooltip content={f.tip}>
+                  <span>{f.text}</span>
+                </Tooltip>
               </li>
             ))}
           </ul>
@@ -57,16 +66,18 @@ export default function PricingPage() {
           <p className="text-4xl font-bold text-slate-900 mb-6">$29 <span className="text-base font-normal text-slate-500">/month</span></p>
           <ul className="space-y-3 mb-8">
             {[
-              "Unlimited Leak Reports",
-              "Everything in Free",
-              "Priority AI analysis",
-              "Advanced behavior insights",
-              "Historical report comparison",
-              "Email report delivery",
+              { text: "Unlimited Leak Reports", tip: "Generate as many Leak Reports as you want, every month. No caps or limits." },
+              { text: "Everything in Free", tip: "All Free plan features included: screenshot upload, AI extraction, pattern analysis, and fix plans." },
+              { text: "Priority AI analysis", tip: "Your reports are processed with priority, giving you faster results." },
+              { text: "Advanced behavior insights", tip: "Deeper analysis of your trading psychology including emotional patterns, time-of-day trends, and more." },
+              { text: "Historical report comparison", tip: "Track your progress over time by comparing Leak Scores and patterns across multiple reports." },
+              { text: "Email report delivery", tip: "Get your Leak Reports delivered straight to your inbox for easy reference." },
             ].map((f) => (
-              <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
+              <li key={f.text} className="flex items-center gap-2 text-sm text-slate-700">
                 <Check className="h-4 w-4 text-green-500 shrink-0" />
-                {f}
+                <Tooltip content={f.tip}>
+                  <span>{f.text}</span>
+                </Tooltip>
               </li>
             ))}
           </ul>

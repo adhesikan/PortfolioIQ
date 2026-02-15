@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Loader2, ArrowLeft, CheckCircle, XCircle, AlertTriangle, Calendar, TrendingDown } from "lucide-react";
 import Link from "next/link";
+import Tooltip from "@/components/Tooltip";
 
 interface FullReport {
   id: string;
@@ -75,7 +76,9 @@ export default function ReportDetailPage() {
               </svg>
               <div className="absolute inset-0 flex flex-col items-center justify-center">
                 <span className={`text-4xl font-bold ${scoreColor}`}>{report.leakScore}</span>
-                <span className="text-xs text-slate-500">Leak Score</span>
+                <Tooltip content="Your Leak Score rates your trading from 0-100. Higher is better. Below 40 means significant behavioral leaks. 70+ means you're trading with strong discipline.">
+                  <span className="text-xs text-slate-500">Leak Score</span>
+                </Tooltip>
               </div>
             </div>
           </div>
@@ -88,14 +91,16 @@ export default function ReportDetailPage() {
             {report.keyStats && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                 {[
-                  { label: "Win Rate", value: report.keyStats.winRate != null ? `${Math.round(report.keyStats.winRate * 100)}%` : "—" },
-                  { label: "Avg R:R", value: report.keyStats.avgRR != null ? `${report.keyStats.avgRR.toFixed(1)}:1` : "—" },
-                  { label: "Trades", value: report.keyStats.totalTrades ?? "—" },
-                  { label: "Profit Factor", value: report.keyStats.profitFactor != null ? report.keyStats.profitFactor.toFixed(2) : "—" },
+                  { label: "Win Rate", value: report.keyStats.winRate != null ? `${Math.round(report.keyStats.winRate * 100)}%` : "—", tip: "The percentage of your trades that were profitable. Above 50% is generally good, but depends on your risk-to-reward ratio." },
+                  { label: "Avg R:R", value: report.keyStats.avgRR != null ? `${report.keyStats.avgRR.toFixed(1)}:1` : "—", tip: "Average Risk-to-Reward ratio. This compares your average win size to your average loss. A 2:1 ratio means your wins are twice as large as your losses." },
+                  { label: "Trades", value: report.keyStats.totalTrades ?? "—", tip: "The total number of trades analyzed in this report." },
+                  { label: "Profit Factor", value: report.keyStats.profitFactor != null ? report.keyStats.profitFactor.toFixed(2) : "—", tip: "Total gross profit divided by total gross loss. Above 1.0 means you're profitable overall. Above 2.0 is strong." },
                 ].map((stat, i) => (
                   <div key={i} className="text-center p-3 rounded-lg bg-slate-50">
                     <p className="text-lg font-bold text-slate-900">{stat.value}</p>
-                    <p className="text-xs text-slate-500">{stat.label}</p>
+                    <Tooltip content={stat.tip}>
+                      <p className="text-xs text-slate-500">{stat.label}</p>
+                    </Tooltip>
                   </div>
                 ))}
               </div>
@@ -106,7 +111,9 @@ export default function ReportDetailPage() {
 
       <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
         <TrendingDown className="h-5 w-5 text-red-500" />
-        Top Leaks Found
+        <Tooltip content="These are the biggest behavioral patterns costing you money. Each leak includes evidence from your trades, what it means, and a quick fix.">
+          <span>Top Leaks Found</span>
+        </Tooltip>
       </h2>
       <div className="space-y-4 mb-8">
         {(report.topLeaks || []).map((leak, i) => (
@@ -116,7 +123,9 @@ export default function ReportDetailPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 text-sm font-bold">{i + 1}</div>
                 <h3 className="font-semibold text-slate-900">{leak.title}</h3>
               </div>
-              <span className="text-sm font-medium text-red-600">Severity: {leak.severity}/100</span>
+              <Tooltip content="How much this leak is hurting your performance. Higher severity means a bigger impact on your results.">
+                <span className="text-sm font-medium text-red-600">Severity: {leak.severity}/100</span>
+              </Tooltip>
             </div>
             <div className="space-y-3 ml-11">
               <div>
@@ -138,7 +147,9 @@ export default function ReportDetailPage() {
 
       {report.behaviorPatterns && report.behaviorPatterns.length > 0 && (
         <div className="card mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Behavior Patterns</h2>
+          <Tooltip content="Recurring tendencies our AI detected in your trading behavior. These patterns shape your overall performance.">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Behavior Patterns</h2>
+          </Tooltip>
           <ul className="space-y-2">
             {report.behaviorPatterns.map((p, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
@@ -152,7 +163,9 @@ export default function ReportDetailPage() {
 
       {report.fixPlan && report.fixPlan.length > 0 && (
         <div className="card mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">7-Day Fix Plan</h2>
+          <Tooltip content="A personalized daily action plan to help you break bad habits and fix your biggest leaks over one week.">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">7-Day Fix Plan</h2>
+          </Tooltip>
           <div className="space-y-3">
             {report.fixPlan.map((item, i) => (
               <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
@@ -168,7 +181,9 @@ export default function ReportDetailPage() {
 
       {report.riskChecklist && report.riskChecklist.length > 0 && (
         <div className="card mb-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">Risk Control Checklist</h2>
+          <Tooltip content="A checklist of risk management practices. Green means you're doing well, red means there's an issue, and yellow means caution.">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Risk Control Checklist</h2>
+          </Tooltip>
           <div className="space-y-2">
             {report.riskChecklist.map((item, i) => (
               <div key={i} className="flex items-center gap-3 p-2">

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { FileText, Upload, ArrowRight, TrendingUp, AlertCircle, Loader2, BarChart3 } from "lucide-react";
 import Link from "next/link";
+import Tooltip from "@/components/Tooltip";
 
 interface ReportSummary {
   id: string;
@@ -52,7 +53,9 @@ export default function DashboardPage() {
         <div className="card mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-100">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-blue-900">Free Reports</p>
+              <Tooltip content="You get 3 free Leak Reports for life. Each successful report generation counts as one use.">
+                <p className="text-sm font-medium text-blue-900">Free Reports</p>
+              </Tooltip>
               <p className="text-xs text-blue-700 mt-0.5">{freeUsed} of 3 free reports used</p>
             </div>
             <div className="flex items-center gap-3">
@@ -86,7 +89,9 @@ export default function DashboardPage() {
             </div>
             <div>
               <p className="text-2xl font-bold text-slate-900">{reports.length}</p>
-              <p className="text-xs text-slate-500">Total Reports</p>
+              <Tooltip content="The total number of Leak Reports you've generated so far.">
+                <p className="text-xs text-slate-500">Total Reports</p>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -99,7 +104,9 @@ export default function DashboardPage() {
               <p className={`text-2xl font-bold ${latestReport ? (latestReport.leakScore >= 70 ? "text-green-600" : latestReport.leakScore >= 40 ? "text-yellow-600" : "text-red-600") : "text-slate-400"}`}>
                 {latestReport ? latestReport.leakScore : "—"}
               </p>
-              <p className="text-xs text-slate-500">Latest Leak Score</p>
+              <Tooltip content="Your most recent Leak Score (0-100). Higher is better — 70+ means few leaks, below 40 means significant issues to fix.">
+                <p className="text-xs text-slate-500">Latest Leak Score</p>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -112,7 +119,9 @@ export default function DashboardPage() {
               <p className="text-2xl font-bold text-slate-900">
                 {reports.reduce((sum, r) => sum + r.tradesCount, 0)}
               </p>
-              <p className="text-xs text-slate-500">Trades Analyzed</p>
+              <Tooltip content="The total number of individual trades our AI has analyzed across all your reports.">
+                <p className="text-xs text-slate-500">Trades Analyzed</p>
+              </Tooltip>
             </div>
           </div>
         </div>

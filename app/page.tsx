@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Upload, CheckCircle, FileText, TrendingDown, AlertTriangle, Target, ArrowRight, Brain, Sparkles, Zap, ScanSearch, BarChart3, ShieldCheck } from "lucide-react";
+import Tooltip from "@/components/Tooltip";
 
 const sampleLeaks = [
   {
@@ -165,7 +166,9 @@ export default function HomePage() {
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
                       <span className="text-4xl font-bold text-red-600">42</span>
-                      <span className="text-xs text-slate-500">Leak Score</span>
+                      <Tooltip content="Your Leak Score rates your trading from 0-100. Higher is better. Below 40 means significant behavioral leaks to address.">
+                        <span className="text-xs text-slate-500">Leak Score</span>
+                      </Tooltip>
                     </div>
                   </div>
                 </div>
@@ -174,14 +177,16 @@ export default function HomePage() {
                   <p className="text-slate-600 mb-4">Your trading has significant behavioral leaks that are costing you money. The good news: these are fixable with discipline and awareness.</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
-                      { label: "Win Rate", value: "41%" },
-                      { label: "Avg R:R", value: "0.8:1" },
-                      { label: "Trades Analyzed", value: "47" },
-                      { label: "Leaks Found", value: "3" },
+                      { label: "Win Rate", value: "41%", tip: "Percentage of trades that were profitable." },
+                      { label: "Avg R:R", value: "0.8:1", tip: "Average Risk-to-Reward ratio. Compares average win size to average loss." },
+                      { label: "Trades Analyzed", value: "47", tip: "Total number of trades the AI analyzed." },
+                      { label: "Leaks Found", value: "3", tip: "Number of significant behavioral leaks identified." },
                     ].map((stat, i) => (
                       <div key={i} className="text-center p-3 rounded-lg bg-slate-50">
                         <p className="text-lg font-bold text-slate-900">{stat.value}</p>
-                        <p className="text-xs text-slate-500">{stat.label}</p>
+                        <Tooltip content={stat.tip}>
+                          <p className="text-xs text-slate-500">{stat.label}</p>
+                        </Tooltip>
                       </div>
                     ))}
                   </div>
