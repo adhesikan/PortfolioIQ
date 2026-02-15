@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { Upload, CheckCircle, FileText, TrendingDown, AlertTriangle, Target, ArrowRight } from "lucide-react";
+import { Upload, CheckCircle, FileText, TrendingDown, AlertTriangle, Target, ArrowRight, Brain, Sparkles, Zap, ScanSearch, BarChart3, ShieldCheck } from "lucide-react";
 
 const sampleLeaks = [
   {
@@ -37,14 +37,15 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
         <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 py-16 md:py-24">
           <div className="max-w-3xl mx-auto text-center">
-            <span className="inline-flex items-center rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-400 mb-6">
-              Trading Performance Intelligence
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-400 mb-6">
+              <Sparkles className="h-4 w-4" />
+              AI-Powered Trading Intelligence
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
               Find what&apos;s <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">leaking</span> in your trading.
             </h1>
             <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto">
-              Upload your trade history. Get a clear breakdown of what&apos;s holding you back — in minutes.
+              Upload your trade history. Our AI analyzes your patterns and gives you a clear breakdown of what&apos;s holding you back — in minutes.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -70,13 +71,13 @@ export default function HomePage() {
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
           <div className="text-center mb-12">
             <h2 className="text-3xl font-bold text-slate-900 mb-4">How It Works</h2>
-            <p className="text-lg text-slate-600">Three simple steps to find your trading leaks</p>
+            <p className="text-lg text-slate-600">Three simple steps — powered by AI from start to finish</p>
           </div>
           <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
             {[
               { icon: Upload, step: "1", title: "Upload Screenshot", desc: "Take a screenshot of your trade history from any brokerage. Or upload a CSV for more accuracy." },
-              { icon: CheckCircle, step: "2", title: "Confirm Trades", desc: "Our AI extracts your trades automatically. Review and confirm the data before analysis." },
-              { icon: FileText, step: "3", title: "Get Your Leak Report", desc: "Receive a detailed breakdown of behavioral patterns, leaks, and a 7-day fix plan." },
+              { icon: Brain, step: "2", title: "AI Extracts Your Trades", desc: "Our AI reads your screenshot, extracts every trade automatically, and lets you review the data before analysis." },
+              { icon: Sparkles, step: "3", title: "Get Your AI Leak Report", desc: "AI analyzes your behavioral patterns, identifies leaks costing you money, and builds a personalized 7-day fix plan." },
             ].map((item, i) => (
               <div key={i} className="relative text-center p-6">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
@@ -93,14 +94,63 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="py-16 md:py-20 bg-gradient-to-b from-slate-50 to-white">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+          <div className="text-center mb-12">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 mb-4">
+              <Brain className="h-3.5 w-3.5" />
+              Powered by AI
+            </span>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">What Our AI Does For You</h2>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Advanced machine learning analyzes your trading data to surface insights you&apos;d never find on your own</p>
+          </div>
+          <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
+            {[
+              {
+                icon: ScanSearch,
+                title: "Smart Trade Extraction",
+                desc: "Upload a screenshot from any brokerage — our AI vision model reads and structures your trade data automatically. No manual entry needed.",
+                gradient: "from-blue-500 to-cyan-500",
+              },
+              {
+                icon: BarChart3,
+                title: "Behavioral Pattern Analysis",
+                desc: "AI detects hidden patterns in your trading: revenge trades, premature exits, position sizing mistakes, and timing leaks across your history.",
+                gradient: "from-purple-500 to-pink-500",
+              },
+              {
+                icon: Zap,
+                title: "Personalized Fix Plans",
+                desc: "Based on your specific leaks, AI generates a custom 7-day action plan with daily tasks designed to break your losing patterns.",
+                gradient: "from-amber-500 to-orange-500",
+              },
+            ].map((item, i) => (
+              <div key={i} className="card group hover:shadow-lg transition-shadow">
+                <div className={`inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br ${item.gradient} mb-4`}>
+                  <item.icon className="h-6 w-6 text-white" />
+                </div>
+                <h3 className="font-semibold text-slate-900 mb-2 text-lg">{item.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="text-center mt-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 px-5 py-2.5 text-sm text-slate-600">
+              <ShieldCheck className="h-4 w-4 text-green-600" />
+              Your data is analyzed securely and never shared with third parties
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section id="sample-report" className="py-16 md:py-20 bg-slate-50">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
           <div className="text-center mb-10">
             <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 mb-4">
               Example Report — For Demonstration Only
             </span>
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">Sample Leak Report</h2>
-            <p className="text-lg text-slate-600">Here&apos;s what a real Leak Report looks like</p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Sample AI Leak Report</h2>
+            <p className="text-lg text-slate-600">Here&apos;s what an AI-generated Leak Report looks like</p>
           </div>
 
           <div className="max-w-4xl mx-auto">
@@ -184,11 +234,15 @@ export default function HomePage() {
 
       <section className="py-16 md:py-20 bg-slate-900">
         <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 text-center">
+          <div className="inline-flex items-center gap-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-400 mb-6">
+            <Sparkles className="h-4 w-4" />
+            AI-Powered Analysis
+          </div>
           <h2 className="text-3xl font-bold text-white mb-4">
-            Stop guessing. Start fixing.
+            Stop guessing. Let AI find the fix.
           </h2>
           <p className="text-lg text-slate-400 mb-8 max-w-xl mx-auto">
-            Most traders lose money because of repeatable behavioral mistakes. Find yours in minutes.
+            Most traders lose money because of repeatable behavioral mistakes. Our AI finds yours in minutes — not months.
           </p>
           <Link
             href={user ? "/upload" : "/signup"}
