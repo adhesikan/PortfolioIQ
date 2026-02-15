@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { canGenerateReport, FREE_REPORTS_LIFETIME_LIMIT } from "@/lib/usage";
+import { canGenerateReport, FREE_REPORTS_LIFETIME_LIMIT, FREE_MAX_TRADES_PER_REPORT, PRO_MAX_TRADES_PER_REPORT } from "@/lib/usage";
 import { logAbuse } from "@/lib/abuse";
 import OpenAI from "openai";
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { uploadId, trades } = await req.json();
+    const { uploadId, trades, selectedTradeIndices } = await req.json();
     if (!uploadId || !trades?.length) {
       return NextResponse.json({ error: "Upload ID and trades are required" }, { status: 400 });
     }
@@ -53,9 +53,39 @@ export async function POST(req: NextRequest) {
       }, { status: 402 });
     }
 
+    const isFreeUser = !check.isSubscriber && !isSampleReport;
+    const maxTrades = isFreeUser ? FREE_MAX_TRADES_PER_REPORT : PRO_MAX_TRADES_PER_REPORT;
+
+    let tradesToAnalyze = trades;
+
+    if (isFreeUser && trades.length > FREE_MAX_TRADES_PER_REPORT) {
+      if (!selectedTradeIndices || !Array.isArray(selectedTradeIndices) || selectedTradeIndices.length !== FREE_MAX_TRADES_PER_REPORT) {
+        return NextResponse.json({
+          error: "FREE_TRADE_LIMIT_EXCEEDED",
+          freeMaxTrades: FREE_MAX_TRADES_PER_REPORT,
+          totalTrades: trades.length,
+          selectedCount: selectedTradeIndices?.length ?? 0,
+          message: `Free reports analyze exactly ${FREE_MAX_TRADES_PER_REPORT} trades. ${selectedTradeIndices?.length > FREE_MAX_TRADES_PER_REPORT ? "Too many selected." : `Upgrade to analyze all ${trades.length} trades, or select ${FREE_MAX_TRADES_PER_REPORT} trades to continue.`}`,
+        }, { status: 409 });
+      }
+
+      const validIndices = selectedTradeIndices.every((idx: number) =>
+        Number.isInteger(idx) && idx >= 0 && idx < trades.length
+      );
+      if (!validIndices) {
+        return NextResponse.json({ error: "Invalid trade selection indices" }, { status: 400 });
+      }
+
+      tradesToAnalyze = selectedTradeIndices.map((idx: number) => trades[idx]);
+    }
+
+    if (!isFreeUser && tradesToAnalyze.length > maxTrades) {
+      tradesToAnalyze = tradesToAnalyze.slice(0, maxTrades);
+    }
+
     if (!isSampleReport) {
       await prisma.trade.createMany({
-        data: trades.map((t: any) => ({
+        data: tradesToAnalyze.map((t: any) => ({
           uploadId,
           ticker: t.ticker || "UNKNOWN",
           action: t.action || "BUY",
@@ -72,9 +102,11 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    const tradesSummary = JSON.stringify(trades, null, 2);
+    const indexedTrades = tradesToAnalyze.map((t: any, i: number) => ({ tradeIndex: i, ...t }));
+    const tradesSummary = JSON.stringify(indexedTrades, null, 2);
 
     const systemPrompt = `${isSampleReport ? SAMPLE_PROMPT_PREFIX : ""}You are a trading performance analyst. Analyze trade data and generate a Leak Report.
+Each trade has a "tradeIndex" field — use it to reference specific trades in leakDrivingTrades.
 You MUST return ONLY valid JSON with this exact structure:
 {
   "reportTitle": "${isSampleReport ? "Trading Leak Finder Report (Example)" : "Trading Leak Finder Report"}",
@@ -85,7 +117,25 @@ You MUST return ONLY valid JSON with this exact structure:
       "severity": 82,
       "evidence": "Specific data-backed evidence",
       "meaning": "What this pattern means for their trading",
-      "quickFix": "Actionable fix they can implement today"
+      "quickFix": "Actionable fix they can implement today",
+      "leakDrivingTrades": [
+        {
+          "tradeIndex": 0,
+          "symbol": "AAPL",
+          "openDate": "2024-01-15",
+          "closeDate": "2024-01-16",
+          "pnl": -250,
+          "holdDays": 1,
+          "notes": "Why this specific trade contributed to this leak"
+        }
+      ],
+      "fixPlan": [
+        {
+          "rule": "A specific rule to follow",
+          "howToApply": "Step-by-step instructions",
+          "whyItHelps": "Educational reasoning"
+        }
+      ]
     }
   ],
   "keyStats": {
@@ -125,18 +175,21 @@ You MUST return ONLY valid JSON with this exact structure:
 Rules:
 - leakScore is 0-100 where lower means more leaks (worse)
 - Identify exactly 3 top leaks
+- For each leak, include 2-5 leakDrivingTrades — specific trades that contributed to this leak pattern. Use the tradeIndex from the input data.
+- For each leak, include 1-3 fixPlan items with rule, howToApply, and whyItHelps fields
+- leakDrivingTrades notes should explain WHY this particular trade demonstrates the leak (educational, not advice)
 - Be compliance-safe: no promises, no buy/sell recommendations
 - Focus on behavior and process, not specific stocks
 - Use novice-friendly language
 - All evidence must be data-backed from the actual trades provided
-- The fix plan should be practical and progressive${isSampleReport ? "\n- Remember: this is EXAMPLE data for demonstration. Frame all findings as educational examples." : ""}`;
+- The 7-day fix plan should be practical and progressive${isSampleReport ? "\n- Remember: this is EXAMPLE data for demonstration. Frame all findings as educational examples." : ""}`;
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
-      max_tokens: 4000,
+      max_tokens: 6000,
       messages: [
         { role: "system", content: systemPrompt },
-        { role: "user", content: `Analyze these trades and generate a Leak Report:\n\n${tradesSummary}` }
+        { role: "user", content: `Analyze these ${tradesToAnalyze.length} trades and generate a Leak Report:\n\n${tradesSummary}` }
       ]
     });
 
@@ -200,7 +253,12 @@ Rules:
       await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_REPORT_GENERATED" });
     }
 
-    return NextResponse.json({ reportId: result.id, report });
+    return NextResponse.json({
+      reportId: result.id,
+      report,
+      tradesAnalyzed: tradesToAnalyze.length,
+      totalTrades: trades.length,
+    });
   } catch (error: any) {
     if (error.message === "FREE_LIMIT_REACHED") {
       return NextResponse.json({

@@ -49,6 +49,8 @@ export default function UploadPage() {
   const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
   const [pendingSampleType, setPendingSampleType] = useState<string | null>(null);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+  const [needsSelection, setNeedsSelection] = useState(false);
 
   if (!user) {
     router.push("/login");
@@ -59,6 +61,30 @@ export default function UploadPage() {
   const isPro = user.subscription?.status === "active";
   const atLimit = !isPro && freeUsed >= 3;
   const hasAcceptedDisclaimer = !!user.sampleDisclaimerAcceptedAt;
+  const FREE_MAX_TRADES = 10;
+  const requiresTradeSelection = !isPro && !isSample && trades.length > FREE_MAX_TRADES;
+
+  const toggleTradeSelection = (index: number) => {
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(index)) {
+        next.delete(index);
+      } else if (next.size < FREE_MAX_TRADES) {
+        next.add(index);
+      }
+      return next;
+    });
+  };
+
+  const selectMostRecent = () => {
+    const sorted = trades
+      .map((t, i) => ({ i, date: t.exitDate || t.entryDate || "" }))
+      .sort((a, b) => b.date.localeCompare(a.date))
+      .slice(0, FREE_MAX_TRADES);
+    setSelectedIndices(new Set(sorted.map((s) => s.i)));
+  };
+
+  const clearSelection = () => setSelectedIndices(new Set());
 
   const compressImage = (file: File, maxWidth = 1200): Promise<File> => {
     return new Promise((resolve) => {
@@ -171,13 +197,26 @@ export default function UploadPage() {
 
   const handleGenerateReport = async () => {
     if (!uploadId) return;
+    if (requiresTradeSelection && selectedIndices.size === 0) {
+      setNeedsSelection(true);
+      selectMostRecent();
+      return;
+    }
+    if (requiresTradeSelection && selectedIndices.size !== FREE_MAX_TRADES) {
+      setError(`Please select exactly ${FREE_MAX_TRADES} trades to analyze.`);
+      return;
+    }
     setStep("generating");
     setError("");
     try {
+      const body: any = { uploadId, trades };
+      if (requiresTradeSelection) {
+        body.selectedTradeIndices = Array.from(selectedIndices);
+      }
       const res = await fetch("/api/generate-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadId, trades, isSample, sampleType }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (res.status === 402) {
@@ -187,6 +226,13 @@ export default function UploadPage() {
       }
       if (res.status === 429) {
         setError(data.message || "You've reached today's sample report limit. Try again tomorrow.");
+        setStep("confirm");
+        return;
+      }
+      if (res.status === 409) {
+        setNeedsSelection(true);
+        selectMostRecent();
+        setError(data.message);
         setStep("confirm");
         return;
       }
@@ -361,14 +407,51 @@ export default function UploadPage() {
               <SampleDisclaimer compact />
             </div>
           )}
+
+          {requiresTradeSelection && (
+            <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-amber-900">Free reports analyze up to {FREE_MAX_TRADES} trades</p>
+                  <p className="text-xs text-amber-800 mt-1">
+                    You have {trades.length} trades. Select {FREE_MAX_TRADES} to include in your report, or upgrade for unlimited analysis.
+                  </p>
+                  <div className="flex items-center gap-3 mt-3">
+                    <span className={`text-sm font-bold ${selectedIndices.size === FREE_MAX_TRADES ? "text-green-700" : "text-amber-700"}`}>
+                      {selectedIndices.size} / {FREE_MAX_TRADES} selected
+                    </span>
+                    <button onClick={selectMostRecent} className="text-xs text-brand-accent hover:underline">
+                      Select most recent {FREE_MAX_TRADES}
+                    </button>
+                    {selectedIndices.size > 0 && (
+                      <button onClick={clearSelection} className="text-xs text-slate-500 hover:underline">
+                        Clear all
+                      </button>
+                    )}
+                    <a href="/pricing?reason=trade-limit" className="ml-auto btn-primary text-xs px-4 py-1.5">
+                      Upgrade for All Trades
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between mb-4">
             <Tooltip content={isSample ? "Review the sample trades. You can edit values or remove rows before generating the report." : "Review the trades our AI extracted. You can edit any values or remove incorrect rows before generating your report."}>
               <h2 className="text-xl font-semibold text-slate-900">
                 {isSample ? `Sample Trades — ${SAMPLE_TYPES.find(s => s.type === sampleType)?.label || "Example"} (${trades.length})` : `Confirm Extracted Trades (${trades.length})`}
               </h2>
             </Tooltip>
-            <button onClick={handleGenerateReport} className="btn-primary" disabled={trades.length === 0}>
-              Generate Leak Report
+            <button
+              onClick={handleGenerateReport}
+              className="btn-primary"
+              disabled={trades.length === 0 || (requiresTradeSelection && selectedIndices.size !== FREE_MAX_TRADES)}
+            >
+              {requiresTradeSelection
+                ? `Analyze ${selectedIndices.size === FREE_MAX_TRADES ? FREE_MAX_TRADES : "Selected"} Trades`
+                : "Generate Leak Report"}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -376,6 +459,13 @@ export default function UploadPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-slate-200">
+                  {requiresTradeSelection && (
+                    <th className="pb-3 w-8 text-center font-medium text-slate-500">
+                      <Tooltip content="Select trades to include in your free report">
+                        <span className="text-xs">Pick</span>
+                      </Tooltip>
+                    </th>
+                  )}
                   <th className="pb-3 text-left font-medium text-slate-500">Ticker</th>
                   <th className="pb-3 text-left font-medium text-slate-500">Action</th>
                   <th className="pb-3 text-right font-medium text-slate-500">Qty</th>
@@ -404,7 +494,18 @@ export default function UploadPage() {
               </thead>
               <tbody>
                 {trades.map((trade, i) => (
-                  <tr key={i} className="border-b border-slate-100 last:border-0">
+                  <tr key={i} className={`border-b border-slate-100 last:border-0 ${requiresTradeSelection && selectedIndices.has(i) ? "bg-blue-50/50" : ""}`}>
+                    {requiresTradeSelection && (
+                      <td className="py-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedIndices.has(i)}
+                          onChange={() => toggleTradeSelection(i)}
+                          disabled={!selectedIndices.has(i) && selectedIndices.size >= FREE_MAX_TRADES}
+                          className="h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+                        />
+                      </td>
+                    )}
                     <td className="py-3">
                       <input className="input w-20 py-1 text-xs" value={trade.ticker}
                         onChange={(e) => updateTrade(i, "ticker", e.target.value)} />

@@ -2,6 +2,8 @@ import { prisma } from "@/lib/db";
 
 export const FREE_REPORTS_LIFETIME_LIMIT = 3;
 export const SAMPLE_REPORTS_PER_DAY_LIMIT = 5;
+export const FREE_MAX_TRADES_PER_REPORT = 10;
+export const PRO_MAX_TRADES_PER_REPORT = 500;
 
 interface CanGenerateResult {
   allowed: boolean;

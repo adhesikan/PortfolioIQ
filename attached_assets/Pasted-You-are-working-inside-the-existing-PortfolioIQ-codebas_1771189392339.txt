@@ -1,0 +1,117 @@
+You are working inside the existing PortfolioIQ codebase (Next.js App Router + Prisma/Postgres + Stripe + OpenAI + shadcn/ui).
+
+Implement TWO upgrades:
+
+A) Free plan limitation: for the 3 lifetime free reports, analyze a maximum of 10 trades per report.
+B) Report enhancement: include “Leak-Driving Trades” sections that list specific trades contributing to the leak score, with details and a fix plan.
+
+IMPORTANT: Keep existing increment logic unchanged:
+if (!isSubscriber && report.inputType !== 'SAMPLE') {
+  increment freeReportsUsed
+}
+
+------------------------------------------
+A) FREE PLAN: MAX 10 TRADES ANALYZED
+------------------------------------------
+Rules:
+- Applies only when user is NOT Pro and report.inputType is IMAGE or CSV (not SAMPLE).
+- Free reports analyze at most 10 trades per report.
+- Pro reports analyze all trades (or a high cap like 500+).
+
+Implementation:
+1) Add constants:
+- FREE_REPORTS_LIFETIME_LIMIT = 3
+- FREE_MAX_TRADES_PER_REPORT = 10
+- PRO_MAX_TRADES_PER_REPORT = 500 (or unlimited; safe cap recommended)
+
+2) In server-side report generation (`POST /api/reports/generate`):
+- Load all validated trades for reportId
+- Determine entitlement (isPro / isFree)
+- If free and trades.length > 10:
+   - Return HTTP 409 (Conflict) with payload:
+     {
+       "error": "FREE_TRADE_LIMIT_EXCEEDED",
+       "freeMaxTrades": 10,
+       "totalTrades": <n>,
+       "message": "Free reports analyze up to 10 trades. Upgrade to analyze all trades or select 10 trades to continue."
+     }
+
+3) Add “Select Trades” UI:
+- On `/app/validate/[reportId]`, if free user has >10 trades:
+  - Show a banner and a trade selector UI:
+    - checkbox per row
+    - “Select 10” counter
+    - Button “Analyze Selected 10 Trades”
+    - Default selection = most recent 10 closes
+  - Persist selected trade IDs to DB in a `Report.selectedTradeIds` JSON field OR add `Trade.isSelected` boolean.
+- Update generate endpoint to analyze ONLY selected trades for free users.
+- Pro users ignore selection and analyze all trades (or allow selection as optional filter).
+
+4) UX:
+- Keep it friendly and non-punitive.
+- Offer Upgrade CTA next to selection UI.
+
+------------------------------------------
+B) REPORT: LEAK-DRIVING TRADES + LESSONS
+------------------------------------------
+Update report schema stored in Report.summaryJson (or structured columns) to include:
+- `leakDrivers`: per leak, list top contributing trades (max 3–5) with details
+- `tradeExamples`: highlight what specifically triggered the score
+- Keep compliance-safe language (no promises, no buy/sell advice)
+
+New JSON fields:
+{
+  "topLeaks":[
+    {
+      "name":"Overtrading",
+      "severity":"High",
+      "evidence":[...],
+      "leakDrivingTrades":[
+        {
+          "tradeId":"...",
+          "symbol":"...",
+          "openDate":"...",
+          "closeDate":"...",
+          "pnl":...,
+          "holdDays":...,
+          "notes":"Why this trade contributed"
+        }
+      ],
+      "whatItMeans":"...",
+      "quickFix":"...",
+      "fixPlan":[
+        {"rule":"...", "howToApply":"...", "whyItHelps":"..."}
+      ]
+    }
+  ]
+}
+
+Implementation steps:
+1) In the report generation input to OpenAI (gpt-4o-mini):
+- Provide the trade rows with stable IDs.
+- Instruct the model to reference specific tradeIds as examples for each leak.
+- Require max 3–5 example trades per leak.
+- If data is insufficient, return empty list and a note.
+
+2) Report UI:
+- Add a “Trades Driving This Leak” section under each leak card.
+- Render the table of example trades with:
+  - symbol, dates, pnl, hold time, size (if available)
+  - “Why it matters” note
+- Add a “Fix Plan You Can Reuse” box under each leak.
+
+3) Compliance:
+- Add a visible disclaimer on report page:
+  “Informational only. Not financial advice. No guarantees.”
+- Ensure wording is educational/process-focused, not outcome-promising.
+
+------------------------------------------
+QA CHECKLIST
+------------------------------------------
+- Free user with 12 trades is prompted to select 10; generation blocked until 10 are selected OR upgrade.
+- Free user can generate report analyzing exactly selected trades.
+- Pro user can generate report analyzing all trades.
+- Report includes leakDrivingTrades for each top leak (when possible).
+- Leak examples show trade details and a clear fix plan section.
+
+Implement now end-to-end with clean UI and server-side enforcement.

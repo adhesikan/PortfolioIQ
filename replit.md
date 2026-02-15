@@ -45,6 +45,9 @@ app/
   upload/           # Upload flow (screenshot/CSV/sample → confirm → generate)
   reports/          # Report list and detail view
   pricing/          # Pricing page (Free vs Pro)
+  disclaimer/       # Legal disclaimer page
+  privacy/          # Privacy policy page
+  terms/            # Terms of service page
   page.tsx          # Homepage with hero, sample report, 3-step flow
 
 components/
@@ -84,21 +87,29 @@ prisma/
 1. User uploads screenshot or CSV of trade history, OR selects a sample dataset
 2. GPT-4o-mini extracts structured trade data (or sample trades are loaded directly)
 3. User reviews and confirms trades in editable table
+   - Free users with >10 trades must select 10 to analyze (trade selector UI with checkboxes)
+   - Pro users analyze all trades (up to 500)
 4. AI generates Leak Report with:
    - Leak Score (0-100)
    - Top 3 Leaks with evidence, meaning, and quick fix
+   - Leak-Driving Trades: specific trades that contributed to each leak (2-5 per leak)
+   - Per-Leak Fix Plan: rule, how to apply, why it helps
    - Key stats (win rate, R:R, profit factor, etc.)
    - Behavior patterns
    - 7-Day Fix Plan
    - Risk Control Checklist
 
 ### Free Tier + Paywall
-- 3 free Leak Reports per user (lifetime)
+- 3 free Leak Reports per user (lifetime), max 10 trades per report
+- Pro users: unlimited reports, up to 500 trades per report
 - Usage tracked in UsageCounter table with transactional enforcement
 - Usage only increments on successful report generation (not extraction)
+- Free users with >10 trades see trade selector UI (checkboxes, default: most recent 10)
 - After 3 reports → HTTP 402 paywall with modal + redirect to pricing page
+- >10 trades on free plan → HTTP 409 with trade selection prompt
+- Sample reports do NOT count toward free limit (separate 5/day rate limit)
 - Stripe subscription for unlimited (Pro plan)
-- Constant: `FREE_REPORTS_LIFETIME_LIMIT = 3` in `lib/usage.ts`
+- Constants in `lib/usage.ts`: `FREE_REPORTS_LIFETIME_LIMIT = 3`, `FREE_MAX_TRADES_PER_REPORT = 10`, `PRO_MAX_TRADES_PER_REPORT = 500`
 
 ### Admin Panel (/admin)
 - User management (view, disable, reset reports, change role)
