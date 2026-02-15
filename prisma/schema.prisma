@@ -245,8 +245,8 @@ model Report {
 
 model ConsentLog {
   id                       String   @id @default(cuid())
-  userId                   String
-  email                    String
+  userId                   String?
+  email                    String?
   hashedIp                 String
   consentType              String
   disclaimerAccepted       Boolean  @default(false)
@@ -254,8 +254,11 @@ model ConsentLog {
   recurringPaymentAccepted Boolean  @default(false)
   userAgent                String?
   details                  Json?
+  location                 String?
   createdAt                DateTime @default(now())
-  user                     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                     User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
+  @@index([hashedIp])
+  @@index([consentType])
 }

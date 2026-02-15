@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import Providers from "@/components/Providers";
 import Navigation from "@/components/Navigation";
+import CookieConsent from "@/components/CookieConsent";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -75,6 +76,7 @@ export default function RootLayout({
               </div>
             </footer>
           </div>
+          <CookieConsent />
         </Providers>
       </body>
     </html>

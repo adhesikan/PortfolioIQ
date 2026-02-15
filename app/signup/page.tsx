@@ -13,6 +13,7 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [consent, setConsent] = useState(false);
 
   if (user) {
     router.push("/dashboard");
@@ -23,7 +24,12 @@ export default function SignupPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    const result = await signup(email, password, name || undefined);
+    if (!consent) {
+      setError("You must agree to the Terms and Privacy Policy to continue.");
+      setLoading(false);
+      return;
+    }
+    const result = await signup(email, password, name || undefined, consent);
     setLoading(false);
     if (result.success) {
       router.push("/dashboard");
@@ -58,18 +64,27 @@ export default function SignupPage() {
               <label className="label mb-1.5">Password</label>
               <input type="password" className="input" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} placeholder="Min 8 characters" />
             </div>
-            <button type="submit" className="btn-primary w-full py-3" disabled={loading}>
+            <label className="flex items-start gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+              />
+              <span className="text-xs text-slate-500">
+                I agree to the{" "}
+                <Link href="/terms" className="underline hover:text-slate-700" target="_blank">Terms of Service</Link>
+                {" and "}
+                <Link href="/privacy" className="underline hover:text-slate-700" target="_blank">Privacy Policy</Link>.
+                I understand PortfolioIQ is for informational purposes only and does not provide financial advice.
+              </span>
+            </label>
+            <button type="submit" className="btn-primary w-full py-3" disabled={loading || !consent}>
               {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
           <p className="text-center text-sm text-slate-600 mt-4">
             Already have an account? <Link href="/login" className="text-brand-accent font-medium hover:underline">Log in</Link>
-          </p>
-          <p className="text-center text-xs text-slate-400 mt-3">
-            By creating an account, you agree to our{" "}
-            <Link href="/terms" className="underline hover:text-slate-600">Terms of Service</Link>
-            {" and "}
-            <Link href="/privacy" className="underline hover:text-slate-600">Privacy Policy</Link>.
           </p>
         </div>
       </div>
