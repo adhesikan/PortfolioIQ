@@ -5,8 +5,8 @@ import Navigation from "@/components/Navigation";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "PortfolioIQ",
-  description: "Educational portfolio analytics and rebalancing insights.",
+  title: "PortfolioIQ — Trading Performance Intelligence",
+  description: "Find what's leaking in your trading. Upload your trade history and get a clear breakdown of what's holding you back.",
   icons: {
     icon: "/favicon.ico"
   }
@@ -21,26 +21,44 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Providers>
-          <div className="min-h-screen bg-slate-50">
+          <div className="min-h-screen bg-slate-50 flex flex-col">
             <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
-              <div className="container-page flex items-center justify-between py-4">
+              <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 flex items-center justify-between py-3">
                 <Link href="/" className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-accent text-lg font-bold text-white">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-accent text-lg font-bold text-white">
                     P
                   </div>
                   <div>
                     <p className="text-base font-semibold text-slate-900">PortfolioIQ</p>
-                    <p className="text-xs text-slate-500">Educational analytics</p>
+                    <p className="text-[10px] text-slate-500 leading-tight">Trading Performance Intelligence</p>
                   </div>
                 </Link>
                 <Navigation />
               </div>
             </header>
-            <main className="pb-20">{children}</main>
-            <footer className="border-t border-slate-200 bg-white">
-              <div className="container-page flex flex-col gap-2 py-6 text-xs text-slate-500">
-                <span>PortfolioIQ is for education only and does not provide personalized investment advice.</span>
-                <span>All analytics are hypothetical, simplified, and should be verified independently.</span>
+            <main className="flex-1">{children}</main>
+            <footer className="border-t border-slate-200 bg-slate-900 text-slate-400">
+              <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-2">PortfolioIQ</p>
+                    <p className="text-xs">Trading Performance Intelligence. Find and fix the leaks in your trading process.</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-2">Product</p>
+                    <div className="space-y-1 text-xs">
+                      <p><Link href="/upload" className="hover:text-white transition-colors">Leak Report</Link></p>
+                      <p><Link href="/pricing" className="hover:text-white transition-colors">Pricing</Link></p>
+                    </div>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-white mb-2">Legal</p>
+                    <p className="text-xs leading-relaxed">For informational and educational purposes only. Not financial advice. No guarantees of trading results. Past performance is not indicative of future results.</p>
+                  </div>
+                </div>
+                <div className="mt-8 pt-6 border-t border-slate-800 text-xs text-center">
+                  &copy; {new Date().getFullYear()} PortfolioIQ. All rights reserved.
+                </div>
               </div>
             </footer>
           </div>

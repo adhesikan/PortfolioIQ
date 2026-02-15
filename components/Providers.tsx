@@ -1,8 +1,8 @@
 "use client";
 
-import { PortfolioProvider } from "@/contexts/PortfolioContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { ReactNode } from "react";
 
 export default function Providers({ children }: { children: ReactNode }) {
-  return <PortfolioProvider>{children}</PortfolioProvider>;
+  return <AuthProvider>{children}</AuthProvider>;
 }

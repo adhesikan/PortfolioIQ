@@ -1,159 +1,215 @@
-import Link from "next/link";
+"use client";
 
-const features = [
+import Link from "next/link";
+import { useAuth } from "@/contexts/AuthContext";
+import { Upload, CheckCircle, FileText, TrendingDown, AlertTriangle, Target, ArrowRight } from "lucide-react";
+
+const sampleLeaks = [
   {
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-    title: "Portfolio Scoring",
-    description: "Get a transparent 0-100 score with specific improvement tips based on diversification and concentration."
+    title: "Cutting Winners Too Early",
+    score: 82,
+    evidence: "67% of winning trades closed within 2 days. Average winner held 1.8 days vs 4.2 days for losers.",
+    meaning: "You're letting fear drive exits on winning positions while holding losers hoping they recover.",
+    fix: "Set a minimum hold time of 3 days for winners. Use trailing stops instead of fixed targets.",
   },
   {
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-      </svg>
-    ),
-    title: "Stress Testing",
-    description: "See how your portfolio might perform under various market scenarios like rate shocks or recessions."
+    title: "Oversizing on Momentum Plays",
+    score: 74,
+    evidence: "Position sizes on breakout trades average 3.2x your normal size. These trades have a 38% win rate.",
+    meaning: "Excitement about momentum setups leads to larger positions that amplify losses.",
+    fix: "Cap all position sizes at 2% of account. No exceptions for any setup type.",
   },
   {
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-      </svg>
-    ),
-    title: "Rebalancing Ideas",
-    description: "Get educational suggestions for portfolio adjustments based on your chosen investment strategy."
+    title: "Revenge Trading After Losses",
+    score: 68,
+    evidence: "After a losing trade, 71% of next trades happen within 15 minutes. These have a 28% win rate.",
+    meaning: "Emotional response to losses causes impulsive trades with poor risk/reward.",
+    fix: "Implement a 1-hour cooldown rule after any loss. Log your emotional state before each trade.",
   },
-  {
-    icon: (
-      <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-      </svg>
-    ),
-    title: "Easy Import",
-    description: "Add holdings manually or import via CSV. Simple, fast, and secure with no brokerage connection required."
-  }
 ];
 
 export default function HomePage() {
+  const { user } = useAuth();
+
   return (
     <div className="animate-fade-in">
-      <section className="bg-gradient-to-b from-white to-slate-50">
-        <div className="container-page">
-          <div className="grid gap-12 lg:grid-cols-2 items-center py-12">
-            <div className="space-y-6">
-              <span className="inline-flex items-center rounded-full bg-blue-100 px-4 py-1.5 text-sm font-medium text-blue-700">
-                Educational analytics only
-              </span>
-              <h1 className="text-4xl font-bold text-slate-900 leading-tight md:text-5xl lg:text-6xl">
-                Understand your portfolio like never before
-              </h1>
-              <p className="text-lg text-slate-600 leading-relaxed">
-                Get transparent scoring, stress tests, and rebalancing suggestions. 
-                PortfolioIQ helps you learn about diversification and risk without the complexity.
-              </p>
-              <div className="flex flex-wrap gap-4 pt-2">
-                <Link href="/import" className="btn-primary text-base px-6 py-3">
-                  Get Started Free
-                </Link>
-                <Link href="/dashboard" className="btn-secondary text-base px-6 py-3">
-                  View Demo
-                </Link>
-              </div>
-              <p className="text-xs text-slate-500 pt-2">
-                No credit card required. Educational purposes only.
-              </p>
+      <section className="relative overflow-hidden bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/20 via-transparent to-transparent"></div>
+        <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 py-16 md:py-24">
+          <div className="max-w-3xl mx-auto text-center">
+            <span className="inline-flex items-center rounded-full bg-blue-500/10 border border-blue-500/20 px-4 py-1.5 text-sm font-medium text-blue-400 mb-6">
+              Trading Performance Intelligence
+            </span>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
+              Find what&apos;s <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">leaking</span> in your trading.
+            </h1>
+            <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto">
+              Upload your trade history. Get a clear breakdown of what&apos;s holding you back — in minutes.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link
+                href={user ? "/upload" : "/signup"}
+                className="btn-primary text-base px-8 py-4 rounded-xl shadow-lg shadow-blue-600/25"
+              >
+                Get My Free Leak Report
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+              <a
+                href="#sample-report"
+                className="btn-secondary text-base px-8 py-4 rounded-xl border-slate-600 text-slate-300 hover:bg-slate-800 hover:text-white"
+              >
+                See Sample Report
+              </a>
             </div>
-            <div className="card bg-gradient-to-br from-slate-50 to-white">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-500">Portfolio Score</span>
-                  <span className="text-3xl font-bold text-green-600">78</span>
-                </div>
-                <div className="h-3 rounded-full bg-slate-200 overflow-hidden">
-                  <div className="h-full w-[78%] rounded-full bg-gradient-to-r from-green-400 to-green-600"></div>
-                </div>
-                <div className="grid grid-cols-3 gap-4 pt-4">
-                  <div className="text-center p-3 rounded-lg bg-slate-100">
-                    <p className="text-xl font-bold text-slate-900">5</p>
-                    <p className="text-xs text-slate-500">Holdings</p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg bg-slate-100">
-                    <p className="text-xl font-bold text-slate-900">32%</p>
-                    <p className="text-xs text-slate-500">Top Weight</p>
-                  </div>
-                  <div className="text-center p-3 rounded-lg bg-slate-100">
-                    <p className="text-xl font-bold text-slate-900">3</p>
-                    <p className="text-xs text-slate-500">Asset Classes</p>
-                  </div>
-                </div>
-                <div className="pt-4 space-y-2">
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <span className="h-2 w-2 rounded-full bg-green-500"></span>
-                    Good diversification across asset classes
-                  </div>
-                  <div className="flex items-center gap-2 text-sm text-slate-600">
-                    <span className="h-2 w-2 rounded-full bg-yellow-500"></span>
-                    Consider reducing single stock concentration
-                  </div>
-                </div>
-              </div>
-            </div>
+            <p className="text-xs text-slate-500 mt-4">10 free reports. No credit card required.</p>
           </div>
         </div>
       </section>
 
-      <section className="py-20">
-        <div className="container-page">
+      <section className="py-16 md:py-20 bg-white">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-slate-900 mb-4">
-              Everything you need to understand your investments
-            </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Simple, transparent tools for portfolio analysis without the jargon or complexity.
-            </p>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">How It Works</h2>
+            <p className="text-lg text-slate-600">Three simple steps to find your trading leaks</p>
           </div>
-          <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, i) => (
-              <div key={i} className="card-hover text-center">
-                <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-blue-100 text-brand-accent">
-                  {feature.icon}
+          <div className="grid gap-8 md:grid-cols-3 max-w-4xl mx-auto">
+            {[
+              { icon: Upload, step: "1", title: "Upload Screenshot", desc: "Take a screenshot of your trade history from any brokerage. Or upload a CSV for more accuracy." },
+              { icon: CheckCircle, step: "2", title: "Confirm Trades", desc: "Our AI extracts your trades automatically. Review and confirm the data before analysis." },
+              { icon: FileText, step: "3", title: "Get Your Leak Report", desc: "Receive a detailed breakdown of behavioral patterns, leaks, and a 7-day fix plan." },
+            ].map((item, i) => (
+              <div key={i} className="relative text-center p-6">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
+                  <item.icon className="h-7 w-7 text-brand-accent" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-2">{feature.title}</h3>
-                <p className="text-sm text-slate-600">{feature.description}</p>
+                <div className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-brand-accent text-white text-xs font-bold mb-3">
+                  {item.step}
+                </div>
+                <h3 className="font-semibold text-slate-900 mb-2 text-lg">{item.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{item.desc}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="py-20 bg-slate-900">
-        <div className="container-page text-center">
+      <section id="sample-report" className="py-16 md:py-20 bg-slate-50">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800 mb-4">
+              Example Report — For Demonstration Only
+            </span>
+            <h2 className="text-3xl font-bold text-slate-900 mb-4">Sample Leak Report</h2>
+            <p className="text-lg text-slate-600">Here&apos;s what a real Leak Report looks like</p>
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="card mb-8">
+              <div className="flex flex-col md:flex-row items-center gap-8">
+                <div className="flex-shrink-0">
+                  <div className="relative h-40 w-40">
+                    <svg className="h-40 w-40 transform -rotate-90" viewBox="0 0 160 160">
+                      <circle cx="80" cy="80" r="70" fill="none" stroke="#e2e8f0" strokeWidth="12" />
+                      <circle cx="80" cy="80" r="70" fill="none" stroke="#ef4444" strokeWidth="12"
+                        strokeDasharray={`${(42 / 100) * 440} 440`} strokeLinecap="round" />
+                    </svg>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center">
+                      <span className="text-4xl font-bold text-red-600">42</span>
+                      <span className="text-xs text-slate-500">Leak Score</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-xl font-semibold text-slate-900 mb-2">Leak Score: 42 / 100</h3>
+                  <p className="text-slate-600 mb-4">Your trading has significant behavioral leaks that are costing you money. The good news: these are fixable with discipline and awareness.</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {[
+                      { label: "Win Rate", value: "41%" },
+                      { label: "Avg R:R", value: "0.8:1" },
+                      { label: "Trades Analyzed", value: "47" },
+                      { label: "Leaks Found", value: "3" },
+                    ].map((stat, i) => (
+                      <div key={i} className="text-center p-3 rounded-lg bg-slate-50">
+                        <p className="text-lg font-bold text-slate-900">{stat.value}</p>
+                        <p className="text-xs text-slate-500">{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {sampleLeaks.map((leak, i) => (
+                <div key={i} className="card border-l-4 border-l-red-400">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 text-sm font-bold">
+                        {i + 1}
+                      </div>
+                      <h4 className="font-semibold text-slate-900">{leak.title}</h4>
+                    </div>
+                    <span className="text-sm font-medium text-red-600">Severity: {leak.score}/100</span>
+                  </div>
+                  <div className="space-y-3 ml-11">
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Evidence</p>
+                      <p className="text-sm text-slate-700">{leak.evidence}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">What It Means</p>
+                      <p className="text-sm text-slate-700">{leak.meaning}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Quick Fix</p>
+                      <p className="text-sm text-slate-700 font-medium">{leak.fix}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="text-center mt-8">
+              <Link
+                href={user ? "/upload" : "/signup"}
+                className="btn-primary text-base px-8 py-4 rounded-xl"
+              >
+                Get Your Own Leak Report
+                <ArrowRight className="h-5 w-5" />
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 md:py-20 bg-slate-900">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 text-center">
           <h2 className="text-3xl font-bold text-white mb-4">
-            Ready to analyze your portfolio?
+            Stop guessing. Start fixing.
           </h2>
           <p className="text-lg text-slate-400 mb-8 max-w-xl mx-auto">
-            Start with manual entry or CSV import. Get insights in minutes, not hours.
+            Most traders lose money because of repeatable behavioral mistakes. Find yours in minutes.
           </p>
-          <Link href="/import" className="btn-primary text-base px-8 py-3 bg-white text-slate-900 hover:bg-slate-100">
-            Get Started Now
+          <Link
+            href={user ? "/upload" : "/signup"}
+            className="btn-primary text-base px-8 py-4 rounded-xl shadow-lg shadow-blue-600/25"
+          >
+            Get My Free Leak Report
+            <ArrowRight className="h-5 w-5" />
           </Link>
         </div>
       </section>
 
-      <section className="py-16">
-        <div className="container-page">
+      <section className="py-12 bg-white">
+        <div className="mx-auto w-full max-w-7xl px-4 sm:px-6">
           <div className="card bg-amber-50 border-amber-200">
             <h3 className="font-semibold text-amber-900 mb-2">Educational Disclaimer</h3>
             <p className="text-sm text-amber-800">
-              PortfolioIQ provides hypothetical analytics only. It does not assess your financial
-              situation, goals, or risk tolerance. Any examples or suggestions are purely educational.
-              We never connect to brokerage accounts or place trades. Please consult a qualified
-              financial advisor for personalized investment advice.
+              PortfolioIQ provides informational and educational content only. It does not provide personalized
+              financial advice, investment recommendations, or trading signals. All analysis is based on
+              user-submitted data and AI-generated insights. Past performance is not indicative of future results.
+              No guarantees of trading profits or loss prevention are made or implied. Consult a qualified
+              financial professional before making any investment decisions.
             </p>
           </div>
         </div>

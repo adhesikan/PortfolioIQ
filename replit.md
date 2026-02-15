@@ -1,16 +1,12 @@
-# PortfolioIQ
-
-Educational portfolio analytics application built with Next.js 14, TypeScript, Tailwind CSS, and Prisma.
+# PortfolioIQ — Trading Performance Intelligence
 
 ## Overview
 
-PortfolioIQ helps users understand their investment portfolios through:
-- Portfolio scoring (0-100) with transparent rubrics
-- Concentration and diversification metrics
-- Scenario-based stress testing
-- Rebalancing suggestions based on investment strategies
+PortfolioIQ is a full-stack SaaS application positioned as "Trading Performance Intelligence." The hero feature is the **Trader Leak Report**, which analyzes trade history to find behavioral leaks and provides actionable fixes.
 
-**Important:** This is for educational purposes only. No personalized investment advice is provided.
+**Domain:** portfolioiq.pro  
+**Status:** Active development  
+**Last Updated:** 2026-02-15
 
 ## Tech Stack
 
@@ -18,104 +14,132 @@ PortfolioIQ helps users understand their investment portfolios through:
 - **Language:** TypeScript
 - **Styling:** Tailwind CSS
 - **Database:** PostgreSQL with Prisma ORM
-- **State Management:** React Context API
+- **Auth:** Custom email/password with httpOnly session cookies
+- **AI:** OpenAI GPT-4o-mini (trade extraction + report generation)
+- **Payments:** Stripe (subscription model)
+- **Email:** SendGrid (transactional)
+- **Icons:** Lucide React
+
+## Product Modules
+
+1. **Leak Report** (Primary) — Upload trade history, AI extracts trades, generates behavioral analysis
+2. **Portfolio Performance** (Secondary) — Legacy portfolio analytics (scoring, stress tests, rebalancing)
+3. **Risk & Capital Insights** (Future)
 
 ## Project Structure
 
 ```
 app/
-  api/portfolios/     # REST API for portfolio CRUD operations
-  dashboard/          # Main analytics dashboard
-  import/             # Portfolio import wizard
-  portfolio/          # Portfolio management
-  report/             # Report generation with print support
+  api/
+    auth/           # Login, signup, logout, me endpoints
+    extract-trades/ # AI trade extraction from screenshots/CSV
+    generate-report/# Leak Report generation
+    reports/        # Report CRUD
+    stripe/         # Checkout, webhook, portal
+    admin/          # Users, abuse-logs, email broadcast
+    portfolios/     # Legacy portfolio API
+  admin/            # Admin panel (RBAC)
+  dashboard/        # User dashboard with usage tracking
+  login/            # Login page
+  signup/           # Signup page
+  upload/           # Upload flow (screenshot/CSV → confirm → generate)
+  reports/          # Report list and detail view
+  pricing/          # Pricing page (Free vs Pro)
+  page.tsx          # Homepage with hero, sample report, 3-step flow
+
 components/
-  ImportWizard.tsx    # Multi-method import (manual, CSV)
-  Navigation.tsx      # App navigation
-  Providers.tsx       # Context providers wrapper
+  Navigation.tsx    # Responsive nav with auth state
+  Providers.tsx     # Auth context provider wrapper
+  Tooltip.tsx       # Reusable tooltip component
+
 contexts/
-  PortfolioContext.tsx  # Portfolio state management
+  AuthContext.tsx    # Auth state management (login, signup, logout)
+
 lib/
-  analytics/          # Portfolio metrics calculation
-  scoring/            # Portfolio scoring logic
-  stress/             # Stress test scenarios
-  rebalance/          # Rebalancing recommendations
-  db.ts               # Prisma client singleton
-  types.ts            # TypeScript type definitions
+  auth.ts           # Session management, password hashing, IP hashing
+  abuse.ts          # Abuse prevention logging
+  db.ts             # Prisma client singleton
+  analytics/        # Portfolio metrics (legacy)
+  scoring/          # Portfolio scoring (legacy)
+  stress/           # Stress test scenarios (legacy)
+  rebalance/        # Rebalancing recommendations (legacy)
+
+prisma/
+  schema.prisma     # Full schema with auth, reports, trades, subscriptions
+  seed.ts           # Seeds admin user
 ```
 
 ## Key Features
 
-1. **Import Methods:**
-   - Manual entry with asset class selection
-   - CSV upload with robust parsing (handles quoted fields)
-   - AI Screenshot: Upload brokerage screenshots for automatic extraction (requires OpenAI API key)
+### Authentication
+- Email/password signup and login
+- Secure httpOnly session cookies
+- Role-based access: USER, ADMIN, SUPPORT
+- Account disable/enable by admin
 
-2. **Analytics:**
-   - HHI concentration index
-   - Top holding weights
-   - Effective holdings count
+### Leak Report Flow
+1. User uploads screenshot or CSV of trade history
+2. GPT-4o-mini extracts structured trade data
+3. User reviews and confirms trades in editable table
+4. AI generates Leak Report with:
+   - Leak Score (0-100)
+   - Top 3 Leaks with evidence, meaning, and quick fix
+   - Key stats (win rate, R:R, profit factor, etc.)
+   - Behavior patterns
+   - 7-Day Fix Plan
+   - Risk Control Checklist
 
-3. **Stress Testing:**
-   - 2022 Rate Shock scenario
-   - Single Stock Shock scenario
-   - Global Recession scenario
+### Free Tier + Paywall
+- 10 free Leak Reports per user
+- Usage tracked in UsageCounter table
+- After 10 reports → redirect to pricing page
+- Stripe subscription for unlimited (Pro plan)
 
-4. **Rebalancing Presets:**
-   - Balanced Growth
-   - Growth + Income
-   - Conservative Income
-   - Aggressive Growth
+### Admin Panel (/admin)
+- User management (view, disable, reset reports, change role)
+- Payment/subscription status
+- Email broadcast (all, free tier, paid tier)
+- Abuse logs with risk scoring
 
-## Development
+### Abuse Prevention
+- Hashed IP logging (SHA-256 + salt)
+- Device ID tracking via cookies
+- User agent logging
+- Risk score calculation
 
-The app runs on port 5000 with `npm run dev`.
+## Database Models
 
-### Database
+User, Session, Subscription, Upload, Trade, LeakReport, UsageCounter, AbuseLog, AdminAuditLog, MarketingContent, Portfolio, Holding, ImportJob, PortfolioLot, Snapshot, RuleSet, Recommendation, StressTestResult, Report
 
-Uses PostgreSQL via Prisma. Schema includes:
-- User (demo user for now)
-- Portfolio
-- Holding
-- Additional models for future features
+## Environment Variables Required
 
-### API Routes
+- `DATABASE_URL` — PostgreSQL connection string
+- `OPENAI_API_KEY` — For AI trade extraction and report generation
+- `STRIPE_SECRET_KEY` — Stripe API secret
+- `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret
+- `STRIPE_PRO_PRICE_ID` — Stripe price ID for Pro plan
+- `SENDGRID_API_KEY` — SendGrid for emails
+- `SENDGRID_FROM_EMAIL` — Sender email address
+- `APP_BASE_URL` — Public URL (e.g., https://portfolioiq.pro)
+- `IP_HASH_SALT` — Salt for IP hashing
 
-- `GET /api/portfolios` - List all portfolios
-- `POST /api/portfolios` - Create portfolio with holdings
-- `GET /api/portfolios/[id]` - Get single portfolio
-- `PUT /api/portfolios/[id]` - Update portfolio
-- `DELETE /api/portfolios/[id]` - Delete portfolio
+## Admin Credentials (Development)
 
-## Deployment
+- Email: admin@portfolioiq.pro
+- Password: admin123456
 
-### Railway Deployment
+## Scripts
 
-The project is configured for automatic deployment to Railway:
+- `npm run dev` — Development server (port 5000)
+- `npm run build` — Production build
+- `npm run start` — Production server (port 8080)
+- `npm run db:push` — Push schema to database
+- `npm run db:seed` — Seed admin user
+- `npm run db:migrate` — Apply migrations
 
-1. **Required Environment Variables:**
-   - `DATABASE_URL` - PostgreSQL connection string
-   - `OPENAI_API_KEY` - For AI screenshot import feature
+## Compliance
 
-2. **Configuration Files:**
-   - `railway.toml` - Railway-specific build/deploy settings
-   - `Procfile` - Runs migrations before starting the app
-
-3. **Automatic Database Migrations:**
-   - Migrations are in `prisma/migrations/`
-   - `prisma migrate deploy` runs automatically during build
-   - Schema changes sync to production on each deploy
-
-### Scripts
-
-- `npm run dev` - Development server (port 5000)
-- `npm run build` - Production build
-- `npm run start` - Production server
-- `npm run db:migrate` - Apply database migrations
-- `npm run db:push` - Push schema directly (dev only)
-
-## Notes
-
-- Values shown are based on cost basis (average cost), not live market prices
-- All analytics are simplified for educational purposes
-- Currently uses a demo user model; authentication can be added via NextAuth
+- All content is educational/informational only
+- No financial advice or trading recommendations
+- Disclaimers on homepage, reports, and footer
+- No guarantees of trading results

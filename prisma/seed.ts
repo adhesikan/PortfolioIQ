@@ -1,46 +1,33 @@
 import { PrismaClient } from "@prisma/client";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
 async function main() {
-  const user = await prisma.user.create({
-    data: {
-      email: "demo@portfolioiq.app",
-      name: "Demo User",
-      portfolios: {
-        create: {
-          name: "Growth",
-          holdings: {
-            create: [
-              {
-                ticker: "AAPL",
-                assetClass: "equity",
-                quantity: 40,
-                avgCost: 140,
-                source: "manual"
-              },
-              {
-                ticker: "VTI",
-                assetClass: "etf",
-                quantity: 25,
-                avgCost: 200,
-                source: "csv"
-              }
-            ]
-          }
-        }
-      }
-    }
-  });
+  const adminEmail = "admin@portfolioiq.pro";
+  const existing = await prisma.user.findUnique({ where: { email: adminEmail } });
 
-  console.log(`Seeded demo user ${user.email}`);
+  if (!existing) {
+    const passwordHash = await bcrypt.hash("admin123456", 12);
+    const admin = await prisma.user.create({
+      data: {
+        email: adminEmail,
+        name: "Admin",
+        passwordHash,
+        role: "ADMIN",
+      },
+    });
+
+    await prisma.usageCounter.create({
+      data: { userId: admin.id, freeReportsUsed: 0, totalReports: 0 },
+    });
+
+    console.log(`Admin user created: ${adminEmail}`);
+  } else {
+    console.log(`Admin user already exists: ${adminEmail}`);
+  }
 }
 
 main()
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(console.error)
+  .finally(() => prisma.$disconnect());
