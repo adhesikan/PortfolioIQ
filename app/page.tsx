@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { Upload, CheckCircle, FileText, TrendingDown, AlertTriangle, Target, ArrowRight, Brain, Sparkles, Zap, ScanSearch, BarChart3, ShieldCheck } from "lucide-react";
+import { Upload, CheckCircle, FileText, TrendingDown, AlertTriangle, Target, ArrowRight, Brain, Sparkles, Zap, ScanSearch, BarChart3, ShieldCheck, XCircle } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SampleDisclaimer from "@/components/SampleDisclaimer";
 
@@ -13,6 +13,15 @@ const sampleLeaks = [
     evidence: "67% of winning trades closed within 2 days. Average winner held 1.8 days vs 4.2 days for losers.",
     meaning: "You're letting fear drive exits on winning positions while holding losers hoping they recover.",
     fix: "Set a minimum hold time of 3 days for winners. Use trailing stops instead of fixed targets.",
+    drivingTrades: [
+      { symbol: "AAPL", open: "Jan 8", close: "Jan 9", pnl: 120, hold: "1d", notes: "Closed at +2.1% despite strong uptrend continuing to +6.8%." },
+      { symbol: "TSLA", open: "Jan 15", close: "Jan 16", pnl: 85, hold: "1d", notes: "Exited after first green candle. Stock ran another +4.2% over 3 days." },
+      { symbol: "NVDA", open: "Jan 22", close: "Jan 23", pnl: 210, hold: "1d", notes: "Took profit at +1.8%. Position would have gained +5.1% by week end." },
+    ],
+    fixPlan: [
+      { rule: "3-Day Minimum Hold Rule", howToApply: "Do not close any winning trade before 3 full trading days unless your stop-loss is hit.", whyItHelps: "Forces you to ride winners longer and capture the full move instead of exiting on fear." },
+      { rule: "Trailing Stop at 1.5 ATR", howToApply: "Replace fixed targets with a trailing stop set at 1.5x the Average True Range.", whyItHelps: "Locks in profits as the trade moves in your favor while allowing room for continuation." },
+    ],
   },
   {
     title: "Oversizing on Momentum Plays",
@@ -20,6 +29,13 @@ const sampleLeaks = [
     evidence: "Position sizes on breakout trades average 3.2x your normal size. These trades have a 38% win rate.",
     meaning: "Excitement about momentum setups leads to larger positions that amplify losses.",
     fix: "Cap all position sizes at 2% of account. No exceptions for any setup type.",
+    drivingTrades: [
+      { symbol: "AMD", open: "Jan 10", close: "Jan 12", pnl: -480, hold: "2d", notes: "3.5x normal size on breakout. Failed breakout led to oversized loss." },
+      { symbol: "MARA", open: "Jan 18", close: "Jan 19", pnl: -320, hold: "1d", notes: "4x position size on momentum setup. Gap down the next morning." },
+    ],
+    fixPlan: [
+      { rule: "2% Max Position Size", howToApply: "Before entering any trade, calculate position size so max loss is 2% of account. No exceptions.", whyItHelps: "Prevents any single trade from causing outsized damage to your account." },
+    ],
   },
   {
     title: "Revenge Trading After Losses",
@@ -27,7 +43,41 @@ const sampleLeaks = [
     evidence: "After a losing trade, 71% of next trades happen within 15 minutes. These have a 28% win rate.",
     meaning: "Emotional response to losses causes impulsive trades with poor risk/reward.",
     fix: "Implement a 1-hour cooldown rule after any loss. Log your emotional state before each trade.",
+    drivingTrades: [
+      { symbol: "SPY", open: "Jan 11", close: "Jan 11", pnl: -195, hold: "<1d", notes: "Entered 8 minutes after previous -$310 loss. No setup, pure impulse." },
+      { symbol: "QQQ", open: "Jan 20", close: "Jan 20", pnl: -240, hold: "<1d", notes: "Revenge entry 12 minutes after loss. Doubled down when it went against." },
+    ],
+    fixPlan: [
+      { rule: "60-Minute Cooldown", howToApply: "After any losing trade, set a timer for 60 minutes. No trading until timer completes.", whyItHelps: "Breaks the emotional cycle and gives your rational brain time to re-engage." },
+      { rule: "Pre-Trade Emotion Check", howToApply: "Before every trade, rate your emotional state 1-5. Do not trade if above 3.", whyItHelps: "Creates self-awareness about emotional trading and prevents impulsive entries." },
+    ],
   },
+];
+
+const sampleBehaviorPatterns = [
+  "Tendency to increase position sizes after a string of small wins, leading to outsized losses when the streak ends.",
+  "Consistently shorter hold times on winning trades (avg 1.8 days) vs losing trades (avg 4.2 days).",
+  "Higher trading frequency on Mondays and Fridays, with significantly lower win rates on those days.",
+  "Pattern of entering trades in the first 15 minutes of market open with 31% win rate vs 52% during mid-day.",
+];
+
+const sampleFixPlan = [
+  { day: 1, task: "Write down your top 3 trading rules. Print them and place next to your screen. Review before every session." },
+  { day: 2, task: "Set up a position size calculator. Before every trade, calculate max size so risk is 2% of account." },
+  { day: 3, task: "Implement the 60-minute cooldown rule after losses. Set a phone timer after every losing trade." },
+  { day: 4, task: "Review your last 10 winning trades. Note how many you closed too early. Calculate the missed profit." },
+  { day: 5, task: "Practice the trailing stop technique on paper. Set 1.5 ATR trailing stops on 3 hypothetical trades." },
+  { day: 6, task: "Start a pre-trade checklist: setup quality, emotional state, position size, stop-loss, target." },
+  { day: 7, task: "Journal review: read all entries from the week. Identify which rules you followed and which you broke." },
+];
+
+const sampleRiskChecklist = [
+  { item: "Stop-loss set on every trade", status: "fail" },
+  { item: "Position size within 2% risk limit", status: "fail" },
+  { item: "No more than 3 correlated positions open", status: "pass" },
+  { item: "Daily loss limit defined and enforced", status: "warning" },
+  { item: "Trading journal maintained consistently", status: "warning" },
+  { item: "Pre-trade checklist completed before entry", status: "fail" },
 ];
 
 export default function HomePage() {
@@ -199,6 +249,12 @@ export default function HomePage() {
               </div>
             </div>
 
+            <h3 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
+              <TrendingDown className="h-5 w-5 text-red-500" />
+              <Tooltip content="These are the biggest behavioral patterns costing you money. Each leak includes evidence from your trades, what it means, and a quick fix.">
+                <span>Top Leaks Found</span>
+              </Tooltip>
+            </h3>
             <div className="space-y-4">
               {sampleLeaks.map((leak, i) => (
                 <div key={i} className="card border-l-4 border-l-red-400">
@@ -209,7 +265,9 @@ export default function HomePage() {
                       </div>
                       <h4 className="font-semibold text-slate-900">{leak.title}</h4>
                     </div>
-                    <span className="text-sm font-medium text-red-600">Severity: {leak.score}/100</span>
+                    <Tooltip content="How much this leak is hurting your performance. Higher severity means a bigger impact on your results.">
+                      <span className="text-sm font-medium text-red-600">Severity: {leak.score}/100</span>
+                    </Tooltip>
                   </div>
                   <div className="space-y-3 ml-11">
                     <div>
@@ -224,9 +282,112 @@ export default function HomePage() {
                       <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Quick Fix</p>
                       <p className="text-sm text-slate-700 font-medium">{leak.fix}</p>
                     </div>
+
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <Tooltip content="These specific trades from your history contributed most to this leak pattern.">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Trades Driving This Leak</p>
+                      </Tooltip>
+                      <div className="overflow-x-auto rounded-lg border border-slate-200">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="bg-slate-50 border-b border-slate-200">
+                              <th className="px-3 py-2 text-left font-medium text-slate-500">Symbol</th>
+                              <th className="px-3 py-2 text-left font-medium text-slate-500">Open</th>
+                              <th className="px-3 py-2 text-left font-medium text-slate-500">Close</th>
+                              <th className="px-3 py-2 text-right font-medium text-slate-500">P&L</th>
+                              <th className="px-3 py-2 text-right font-medium text-slate-500">Hold</th>
+                              <th className="px-3 py-2 text-left font-medium text-slate-500">Why It Matters</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {leak.drivingTrades.map((dt, j) => (
+                              <tr key={j} className="border-b border-slate-100 last:border-0">
+                                <td className="px-3 py-2 font-medium text-slate-900">{dt.symbol}</td>
+                                <td className="px-3 py-2 text-slate-600">{dt.open}</td>
+                                <td className="px-3 py-2 text-slate-600">{dt.close}</td>
+                                <td className={`px-3 py-2 text-right font-medium ${dt.pnl >= 0 ? "text-green-600" : "text-red-600"}`}>
+                                  ${dt.pnl >= 0 ? "+" : ""}{dt.pnl.toFixed(2)}
+                                </td>
+                                <td className="px-3 py-2 text-right text-slate-600">{dt.hold}</td>
+                                <td className="px-3 py-2 text-slate-600 max-w-xs">{dt.notes}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 pt-4 border-t border-slate-100">
+                      <Tooltip content="Specific rules and strategies to fix this leak in your trading process.">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Fix Plan for This Leak</p>
+                      </Tooltip>
+                      <div className="space-y-3">
+                        {leak.fixPlan.map((fp, j) => (
+                          <div key={j} className="p-3 rounded-lg bg-green-50 border border-green-100">
+                            <p className="text-sm font-semibold text-green-900">{fp.rule}</p>
+                            <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div>
+                                <p className="text-[10px] font-medium text-green-700 uppercase tracking-wide">How to Apply</p>
+                                <p className="text-xs text-green-800 mt-0.5">{fp.howToApply}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] font-medium text-green-700 uppercase tracking-wide">Why It Helps</p>
+                                <p className="text-xs text-green-800 mt-0.5">{fp.whyItHelps}</p>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="card mt-6 mb-6">
+              <Tooltip content="Recurring tendencies our AI detected in your trading behavior. These patterns shape your overall performance.">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Behavior Patterns</h3>
+              </Tooltip>
+              <ul className="space-y-2">
+                {sampleBehaviorPatterns.map((p, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm text-slate-700">
+                    <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500 shrink-0"></span>
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div className="card mb-6">
+              <Tooltip content="A personalized daily action plan to help you break bad habits and fix your biggest leaks over one week.">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">7-Day Fix Plan</h3>
+              </Tooltip>
+              <div className="space-y-3">
+                {sampleFixPlan.map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 p-3 rounded-lg bg-slate-50">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-accent text-white text-xs font-bold shrink-0">
+                      D{item.day}
+                    </div>
+                    <p className="text-sm text-slate-700 pt-0.5">{item.task}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card mb-6">
+              <Tooltip content="A checklist of risk management practices. Green means you're doing well, red means there's an issue, and yellow means caution.">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Risk Control Checklist</h3>
+              </Tooltip>
+              <div className="space-y-2">
+                {sampleRiskChecklist.map((item, i) => (
+                  <div key={i} className="flex items-center gap-3 p-2">
+                    {item.status === "pass" && <CheckCircle className="h-5 w-5 text-green-500 shrink-0" />}
+                    {item.status === "fail" && <XCircle className="h-5 w-5 text-red-500 shrink-0" />}
+                    {item.status === "warning" && <AlertTriangle className="h-5 w-5 text-yellow-500 shrink-0" />}
+                    <span className="text-sm text-slate-700">{item.item}</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             <div className="text-center mt-8">
