@@ -8,6 +8,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   const report = await prisma.leakReport.findFirst({
     where: { id: params.id, userId: user.id },
+    include: { upload: { select: { isSample: true, sampleType: true, inputType: true } } },
   });
 
   if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
@@ -22,6 +23,9 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       fixPlan: report.fixPlan,
       riskChecklist: report.riskChecklist,
       createdAt: report.createdAt.toISOString(),
+      isSample: report.upload?.isSample || false,
+      sampleType: report.upload?.sampleType || null,
+      inputType: report.upload?.inputType || "IMAGE",
     },
   });
 }

@@ -42,7 +42,7 @@ app/
   dashboard/        # User dashboard with usage tracking
   login/            # Login page
   signup/           # Signup page
-  upload/           # Upload flow (screenshot/CSV → confirm → generate)
+  upload/           # Upload flow (screenshot/CSV/sample → confirm → generate)
   reports/          # Report list and detail view
   pricing/          # Pricing page (Free vs Pro)
   page.tsx          # Homepage with hero, sample report, 3-step flow
@@ -51,12 +51,15 @@ components/
   Navigation.tsx    # Responsive nav with auth state
   Providers.tsx     # Auth context provider wrapper
   Tooltip.tsx       # Reusable tooltip component
+  SampleDisclaimer.tsx # Compliance disclaimer for sample data
 
 contexts/
   AuthContext.tsx    # Auth state management (login, signup, logout)
 
 lib/
   auth.ts           # Session management, password hashing, IP hashing
+  sampleTrades.ts   # 5 sample trader archetype datasets
+  usage.ts          # Free report limit tracking
   abuse.ts          # Abuse prevention logging
   db.ts             # Prisma client singleton
   analytics/        # Portfolio metrics (legacy)
@@ -78,8 +81,8 @@ prisma/
 - Account disable/enable by admin
 
 ### Leak Report Flow
-1. User uploads screenshot or CSV of trade history
-2. GPT-4o-mini extracts structured trade data
+1. User uploads screenshot or CSV of trade history, OR selects a sample dataset
+2. GPT-4o-mini extracts structured trade data (or sample trades are loaded directly)
 3. User reviews and confirms trades in editable table
 4. AI generates Leak Report with:
    - Leak Score (0-100)

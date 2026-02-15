@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FileText, Calendar, ArrowRight, Loader2 } from "lucide-react";
+import { FileText, Calendar, ArrowRight, Loader2, Beaker } from "lucide-react";
 import Link from "next/link";
 
 interface ReportSummary {
@@ -11,7 +11,17 @@ interface ReportSummary {
   leakScore: number;
   createdAt: string;
   tradesCount: number;
+  isSample?: boolean;
+  sampleType?: string | null;
 }
+
+const SAMPLE_LABELS: Record<string, string> = {
+  DAY_TRADER: "Day Trader",
+  SWING_TRADER: "Swing Trader",
+  MESSY: "Messy Trader",
+  DISCIPLINED: "Disciplined Trader",
+  OPTIONS: "Options Trader",
+};
 
 export default function ReportsPage() {
   const { user } = useAuth();
@@ -61,7 +71,17 @@ export default function ReportsPage() {
                   {report.leakScore}
                 </div>
                 <div>
-                  <p className="font-semibold text-slate-900">Leak Report</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold text-slate-900">
+                      {report.isSample ? "Leak Report (Example)" : "Leak Report"}
+                    </p>
+                    {report.isSample && (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
+                        <Beaker className="h-2.5 w-2.5" />
+                        {report.sampleType ? SAMPLE_LABELS[report.sampleType] || "Sample" : "Sample"}
+                      </span>
+                    )}
+                  </div>
                   <div className="flex items-center gap-3 text-xs text-slate-500 mt-1">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />

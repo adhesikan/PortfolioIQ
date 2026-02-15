@@ -18,6 +18,8 @@ export async function GET() {
       leakScore: r.leakScore,
       createdAt: r.createdAt.toISOString(),
       tradesCount: r.upload.trades.length,
+      isSample: r.upload.isSample || false,
+      sampleType: r.upload.sampleType || null,
     })),
   });
 }

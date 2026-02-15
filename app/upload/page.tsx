@@ -3,8 +3,9 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useCallback } from "react";
-import { Upload, FileText, Image, AlertCircle, Loader2, Check, Edit3, Trash2, ArrowRight } from "lucide-react";
+import { Upload, FileText, Image, AlertCircle, Loader2, Check, Edit3, Trash2, ArrowRight, Beaker, TrendingUp, TrendingDown, BarChart3, Zap, LineChart } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
+import SampleDisclaimer from "@/components/SampleDisclaimer";
 
 interface ExtractedTrade {
   ticker: string;
@@ -22,6 +23,14 @@ interface ExtractedTrade {
 
 type Step = "upload" | "confirm" | "generating" | "done";
 
+const SAMPLE_TYPES = [
+  { type: "DAY_TRADER", label: "Day Trader", icon: Zap, badge: "Example Data", badgeColor: "bg-blue-100 text-blue-700", desc: "15 same-day trades" },
+  { type: "SWING_TRADER", label: "Swing Trader", icon: TrendingUp, badge: "Example Data", badgeColor: "bg-purple-100 text-purple-700", desc: "12 multi-day holds" },
+  { type: "MESSY", label: "Messy Trader", icon: TrendingDown, badge: "High Leaks", badgeColor: "bg-red-100 text-red-700", desc: "16 erratic trades" },
+  { type: "DISCIPLINED", label: "Disciplined Trader", icon: BarChart3, badge: "Low Leaks", badgeColor: "bg-green-100 text-green-700", desc: "10 structured trades" },
+  { type: "OPTIONS", label: "Options Trader", icon: LineChart, badge: "Example Data", badgeColor: "bg-amber-100 text-amber-700", desc: "10 option positions" },
+];
+
 export default function UploadPage() {
   const { user, refresh } = useAuth();
   const router = useRouter();
@@ -31,10 +40,15 @@ export default function UploadPage() {
   const [step, setStep] = useState<Step>("upload");
   const [trades, setTrades] = useState<ExtractedTrade[]>([]);
   const [uploadId, setUploadId] = useState<string | null>(null);
+  const [isSample, setIsSample] = useState(false);
+  const [sampleType, setSampleType] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [reportId, setReportId] = useState<string | null>(null);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [showDisclaimerModal, setShowDisclaimerModal] = useState(false);
+  const [pendingSampleType, setPendingSampleType] = useState<string | null>(null);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
 
   if (!user) {
     router.push("/login");
@@ -44,6 +58,7 @@ export default function UploadPage() {
   const freeUsed = user.usage?.freeReportsUsed ?? 0;
   const isPro = user.subscription?.status === "active";
   const atLimit = !isPro && freeUsed >= 3;
+  const hasAcceptedDisclaimer = !!user.sampleDisclaimerAcceptedAt;
 
   const compressImage = (file: File, maxWidth = 1200): Promise<File> => {
     return new Promise((resolve) => {
@@ -79,6 +94,8 @@ export default function UploadPage() {
       if (!res.ok) throw new Error(data.error || "Extraction failed");
       setTrades(data.trades);
       setUploadId(data.uploadId);
+      setIsSample(false);
+      setSampleType(null);
       setStep("confirm");
     } catch (err: any) {
       setError(err.message);
@@ -99,6 +116,51 @@ export default function UploadPage() {
       if (!res.ok) throw new Error(data.error || "CSV parsing failed");
       setTrades(data.trades);
       setUploadId(data.uploadId);
+      setIsSample(false);
+      setSampleType(null);
+      setStep("confirm");
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSampleClick = (type: string) => {
+    if (hasAcceptedDisclaimer) {
+      loadSampleData(type);
+    } else {
+      setPendingSampleType(type);
+      setDisclaimerAccepted(false);
+      setShowDisclaimerModal(true);
+    }
+  };
+
+  const handleDisclaimerConfirm = () => {
+    if (!disclaimerAccepted || !pendingSampleType) return;
+    setShowDisclaimerModal(false);
+    loadSampleData(pendingSampleType);
+  };
+
+  const loadSampleData = async (type: string) => {
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/reports/sample", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sampleType: type, disclaimerAccepted: true }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to load sample data");
+      setUploadId(data.uploadId);
+      setIsSample(true);
+      setSampleType(type);
+      const tradesRes = await fetch(`/api/reports/sample-trades?uploadId=${data.uploadId}`);
+      const tradesData = await tradesRes.json();
+      if (tradesRes.ok && tradesData.trades) {
+        setTrades(tradesData.trades);
+      }
       setStep("confirm");
     } catch (err: any) {
       setError(err.message);
@@ -115,7 +177,7 @@ export default function UploadPage() {
       const res = await fetch("/api/generate-report", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ uploadId, trades }),
+        body: JSON.stringify({ uploadId, trades, isSample, sampleType }),
       });
       const data = await res.json();
       if (res.status === 402) {
@@ -196,59 +258,112 @@ export default function UploadPage() {
       )}
 
       {step === "upload" && (
-        <div className="grid gap-6 md:grid-cols-2">
-          <div
-            className="card-hover cursor-pointer text-center py-12"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Image className="h-12 w-12 text-brand-accent mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Screenshot</h3>
-            <p className="text-sm text-slate-600 mb-4">Take a screenshot of your brokerage trade history</p>
-            <Tooltip content="Our AI reads your screenshot and automatically extracts trade data. Works with most brokerages. For best results, make sure the text is clearly visible.">
-              <span className="text-xs text-slate-500">PNG, JPG up to 10MB</span>
-            </Tooltip>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleScreenshot(e.target.files[0])}
-            />
+        <>
+          <div className="mb-8">
+            <div className="text-center mb-6">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 mb-3">
+                <Beaker className="h-3.5 w-3.5" />
+                Try Sample Data
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 mb-1">Try a Sample Leak Report</h2>
+              <p className="text-sm text-slate-600">See how the Leak Report works using example trade history. Example only — not real trades.</p>
+            </div>
+
+            <div className="grid gap-3 grid-cols-2 lg:grid-cols-5 mb-4">
+              {SAMPLE_TYPES.map((sample) => (
+                <button
+                  key={sample.type}
+                  onClick={() => handleSampleClick(sample.type)}
+                  disabled={loading}
+                  className="card-hover text-center p-4 group transition-all hover:ring-2 hover:ring-brand-accent/30"
+                >
+                  <sample.icon className="h-7 w-7 text-slate-600 group-hover:text-brand-accent mx-auto mb-2 transition-colors" />
+                  <p className="text-sm font-semibold text-slate-900 mb-1">{sample.label}</p>
+                  <p className="text-xs text-slate-500 mb-2">{sample.desc}</p>
+                  <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${sample.badgeColor}`}>
+                    {sample.badge}
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <SampleDisclaimer compact />
           </div>
-          <div
-            className="card-hover cursor-pointer text-center py-12"
-            onClick={() => csvInputRef.current?.click()}
-          >
-            <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload CSV</h3>
-            <p className="text-sm text-slate-600 mb-4">Export your trade history as CSV for more accuracy</p>
-            <Tooltip content="CSV files give more accurate results than screenshots. Most brokerages let you export trade history as a CSV file from your account settings.">
-              <span className="text-xs text-slate-500">CSV files up to 5MB</span>
-            </Tooltip>
-            <input
-              ref={csvInputRef}
-              type="file"
-              accept=".csv"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && handleCSV(e.target.files[0])}
-            />
+
+          <div className="relative mb-8">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-slate-200"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="bg-white px-4 text-slate-500">or upload your own trades</span>
+            </div>
           </div>
-        </div>
+
+          <div className="grid gap-6 md:grid-cols-2">
+            <div
+              className="card-hover cursor-pointer text-center py-12"
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Image className="h-12 w-12 text-brand-accent mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Screenshot</h3>
+              <p className="text-sm text-slate-600 mb-4">Take a screenshot of your brokerage trade history</p>
+              <Tooltip content="Our AI reads your screenshot and automatically extracts trade data. Works with most brokerages. For best results, make sure the text is clearly visible.">
+                <span className="text-xs text-slate-500">PNG, JPG up to 10MB</span>
+              </Tooltip>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleScreenshot(e.target.files[0])}
+              />
+            </div>
+            <div
+              className="card-hover cursor-pointer text-center py-12"
+              onClick={() => csvInputRef.current?.click()}
+            >
+              <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload CSV</h3>
+              <p className="text-sm text-slate-600 mb-4">Export your trade history as CSV for more accuracy</p>
+              <Tooltip content="CSV files give more accurate results than screenshots. Most brokerages let you export trade history as a CSV file from your account settings.">
+                <span className="text-xs text-slate-500">CSV files up to 5MB</span>
+              </Tooltip>
+              <input
+                ref={csvInputRef}
+                type="file"
+                accept=".csv"
+                className="hidden"
+                onChange={(e) => e.target.files?.[0] && handleCSV(e.target.files[0])}
+              />
+            </div>
+          </div>
+        </>
       )}
 
       {loading && (
         <div className="card text-center py-16">
           <Loader2 className="h-10 w-10 text-brand-accent mx-auto mb-4 animate-spin" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Extracting trades...</h3>
-          <p className="text-sm text-slate-600">Our AI is reading your trade data. This may take a moment.</p>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            {isSample ? "Loading sample trades..." : "Extracting trades..."}
+          </h3>
+          <p className="text-sm text-slate-600">
+            {isSample ? "Preparing example trade data for review." : "Our AI is reading your trade data. This may take a moment."}
+          </p>
         </div>
       )}
 
       {step === "confirm" && !loading && (
         <div>
+          {isSample && (
+            <div className="mb-4">
+              <SampleDisclaimer compact />
+            </div>
+          )}
           <div className="flex items-center justify-between mb-4">
-            <Tooltip content="Review the trades our AI extracted. You can edit any values or remove incorrect rows before generating your report.">
-              <h2 className="text-xl font-semibold text-slate-900">Confirm Extracted Trades ({trades.length})</h2>
+            <Tooltip content={isSample ? "Review the sample trades. You can edit values or remove rows before generating the report." : "Review the trades our AI extracted. You can edit any values or remove incorrect rows before generating your report."}>
+              <h2 className="text-xl font-semibold text-slate-900">
+                {isSample ? `Sample Trades — ${SAMPLE_TYPES.find(s => s.type === sampleType)?.label || "Example"} (${trades.length})` : `Confirm Extracted Trades (${trades.length})`}
+              </h2>
             </Tooltip>
             <button onClick={handleGenerateReport} className="btn-primary" disabled={trades.length === 0}>
               Generate Leak Report
@@ -278,7 +393,7 @@ export default function UploadPage() {
                     </Tooltip>
                   </th>
                   <th className="pb-3 text-center font-medium text-slate-500">
-                    <Tooltip content="How confident our AI is about the extracted data for this trade. Below 50% means you should double-check the values.">
+                    <Tooltip content={isSample ? "Sample data is always 100% confidence." : "How confident our AI is about the extracted data for this trade. Below 50% means you should double-check the values."}>
                       <span>Confidence</span>
                     </Tooltip>
                   </th>
@@ -349,8 +464,15 @@ export default function UploadPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
             <Check className="h-8 w-8 text-green-600" />
           </div>
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">Your Leak Report is Ready!</h3>
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">
+            {isSample ? "Your Sample Leak Report is Ready!" : "Your Leak Report is Ready!"}
+          </h3>
           <p className="text-sm text-slate-600 mb-6">We analyzed {trades.length} trades and found actionable insights.</p>
+          {isSample && (
+            <div className="mb-4 max-w-md mx-auto">
+              <SampleDisclaimer compact />
+            </div>
+          )}
           <button onClick={() => router.push(`/reports/${reportId}`)} className="btn-primary px-8 py-3">
             View My Leak Report
             <ArrowRight className="h-4 w-4" />
@@ -369,6 +491,41 @@ export default function UploadPage() {
               <a href="/pricing" className="btn-secondary w-full py-3">View Plans</a>
               <button onClick={() => setShowPaywall(false)} className="text-sm text-slate-500 hover:text-slate-700 mt-1">
                 Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showDisclaimerModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">Before using sample data</h3>
+            <SampleDisclaimer />
+            <label className="flex items-start gap-3 mt-5 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={disclaimerAccepted}
+                onChange={(e) => setDisclaimerAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+              />
+              <span className="text-sm text-slate-700">
+                I understand this is example data for demonstration purposes only, not financial advice.
+              </span>
+            </label>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowDisclaimerModal(false)}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDisclaimerConfirm}
+                disabled={!disclaimerAccepted}
+                className="btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Continue
               </button>
             </div>
           </div>

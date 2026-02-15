@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { Loader2, ArrowLeft, CheckCircle, XCircle, AlertTriangle, Calendar, TrendingDown } from "lucide-react";
 import Link from "next/link";
 import Tooltip from "@/components/Tooltip";
+import SampleDisclaimer from "@/components/SampleDisclaimer";
 
 interface FullReport {
   id: string;
@@ -16,7 +17,17 @@ interface FullReport {
   fixPlan: Array<{ day: number; task: string }>;
   riskChecklist: Array<{ item: string; status: string }>;
   createdAt: string;
+  isSample?: boolean;
+  sampleType?: string | null;
 }
+
+const SAMPLE_LABELS: Record<string, string> = {
+  DAY_TRADER: "Day Trader",
+  SWING_TRADER: "Swing Trader",
+  MESSY: "Messy Trader (High Leaks)",
+  DISCIPLINED: "Disciplined Trader (Low Leaks)",
+  OPTIONS: "Options Trader",
+};
 
 export default function ReportDetailPage() {
   const { user } = useAuth();
@@ -65,6 +76,17 @@ export default function ReportDetailPage() {
         Back to Reports
       </Link>
 
+      {report.isSample && (
+        <div className="mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
+              Example Data {report.sampleType ? `— ${SAMPLE_LABELS[report.sampleType] || report.sampleType}` : ""}
+            </span>
+          </div>
+          <SampleDisclaimer />
+        </div>
+      )}
+
       <div className="card mb-6">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="flex-shrink-0">
@@ -83,7 +105,9 @@ export default function ReportDetailPage() {
             </div>
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-2xl font-bold text-slate-900 mb-1">Your Leak Report</h1>
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">
+              {report.isSample ? "Leak Report (Example)" : "Your Leak Report"}
+            </h1>
             <p className="text-sm text-slate-500 flex items-center gap-1 justify-center md:justify-start">
               <Calendar className="h-3.5 w-3.5" />
               {new Date(report.createdAt).toLocaleDateString()}
@@ -199,9 +223,9 @@ export default function ReportDetailPage() {
 
       <div className="card bg-amber-50 border-amber-200">
         <p className="text-xs text-amber-800">
-          This report is for informational and educational purposes only. It is not financial advice, 
-          a trading recommendation, or a guarantee of future performance. Always do your own research 
-          and consult a qualified financial professional.
+          {report.isSample
+            ? "EXAMPLE ONLY — This report was generated from sample data for demonstration purposes. It is not financial advice, a trading recommendation, or a guarantee of future performance. These examples may not reflect real market conditions, execution quality, slippage, commissions, taxes, or brokerage constraints."
+            : "This report is for informational and educational purposes only. It is not financial advice, a trading recommendation, or a guarantee of future performance. Always do your own research and consult a qualified financial professional."}
         </p>
       </div>
     </div>

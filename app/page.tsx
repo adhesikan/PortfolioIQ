@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
 import { Upload, CheckCircle, FileText, TrendingDown, AlertTriangle, Target, ArrowRight, Brain, Sparkles, Zap, ScanSearch, BarChart3, ShieldCheck } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
+import SampleDisclaimer from "@/components/SampleDisclaimer";
 
 const sampleLeaks = [
   {
@@ -152,6 +153,9 @@ export default function HomePage() {
             </span>
             <h2 className="text-3xl font-bold text-slate-900 mb-4">Sample AI Leak Report</h2>
             <p className="text-lg text-slate-600">Here&apos;s what an AI-generated Leak Report looks like</p>
+          </div>
+          <div className="max-w-4xl mx-auto mb-8">
+            <SampleDisclaimer compact />
           </div>
 
           <div className="max-w-4xl mx-auto">

@@ -17,6 +17,7 @@ export async function GET() {
       email: user.email,
       name: user.name,
       role: user.role,
+      sampleDisclaimerAcceptedAt: user.sampleDisclaimerAcceptedAt?.toISOString() || null,
       usage: usage ? { freeReportsUsed: usage.freeReportsUsed, totalReports: usage.totalReports } : null,
       subscription: subscription ? { status: subscription.status, currentPeriodEnd: subscription.currentPeriodEnd } : null,
     },

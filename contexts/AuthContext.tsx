@@ -7,6 +7,7 @@ interface UserData {
   email: string;
   name: string | null;
   role: string;
+  sampleDisclaimerAcceptedAt: string | null;
   usage: { freeReportsUsed: number; totalReports: number } | null;
   subscription: { status: string; currentPeriodEnd: string | null } | null;
 }

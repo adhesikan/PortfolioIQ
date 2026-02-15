@@ -6,6 +6,14 @@ import OpenAI from "openai";
 
 const openai = new OpenAI();
 
+const SAMPLE_PROMPT_PREFIX = `IMPORTANT CONTEXT: The user is viewing an EXAMPLE dataset for demonstration purposes.
+- Do not imply this reflects real user results or actual trading performance.
+- Use compliance-safe language throughout. Do not promise outcomes or improvements.
+- Avoid phrases like "you should buy/sell" or "you will improve returns."
+- Frame all observations as educational examples of how the tool works.
+- The report title should include "(Example)" to clearly mark it as demonstration data.
+`;
+
 export async function POST(req: NextRequest) {
   try {
     const user = await getCurrentUser();
@@ -21,7 +29,7 @@ export async function POST(req: NextRequest) {
       }, { status: 402 });
     }
 
-    const { uploadId, trades } = await req.json();
+    const { uploadId, trades, isSample, sampleType } = await req.json();
     if (!uploadId || !trades?.length) {
       return NextResponse.json({ error: "Upload ID and trades are required" }, { status: 400 });
     }
@@ -29,34 +37,33 @@ export async function POST(req: NextRequest) {
     const upload = await prisma.upload.findFirst({ where: { id: uploadId, userId: user.id } });
     if (!upload) return NextResponse.json({ error: "Upload not found" }, { status: 404 });
 
-    await prisma.trade.createMany({
-      data: trades.map((t: any) => ({
-        uploadId,
-        ticker: t.ticker || "UNKNOWN",
-        action: t.action || "BUY",
-        quantity: t.quantity || 0,
-        entryPrice: t.entryPrice ?? null,
-        exitPrice: t.exitPrice ?? null,
-        entryDate: t.entryDate ?? null,
-        exitDate: t.exitDate ?? null,
-        pnl: t.pnl ?? null,
-        pnlPercent: t.pnlPercent ?? null,
-        holdingDays: t.holdingDays ?? null,
-        confidence: t.confidence ?? null,
-      })),
-    });
+    const isSampleReport = upload.isSample || isSample === true;
+
+    if (!isSampleReport) {
+      await prisma.trade.createMany({
+        data: trades.map((t: any) => ({
+          uploadId,
+          ticker: t.ticker || "UNKNOWN",
+          action: t.action || "BUY",
+          quantity: t.quantity || 0,
+          entryPrice: t.entryPrice ?? null,
+          exitPrice: t.exitPrice ?? null,
+          entryDate: t.entryDate ?? null,
+          exitDate: t.exitDate ?? null,
+          pnl: t.pnl ?? null,
+          pnlPercent: t.pnlPercent ?? null,
+          holdingDays: t.holdingDays ?? null,
+          confidence: t.confidence ?? null,
+        })),
+      });
+    }
 
     const tradesSummary = JSON.stringify(trades, null, 2);
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
-      max_tokens: 4000,
-      messages: [
-        {
-          role: "system",
-          content: `You are a trading performance analyst. Analyze trade data and generate a Leak Report.
+    const systemPrompt = `${isSampleReport ? SAMPLE_PROMPT_PREFIX : ""}You are a trading performance analyst. Analyze trade data and generate a Leak Report.
 You MUST return ONLY valid JSON with this exact structure:
 {
+  "reportTitle": "${isSampleReport ? "Trading Leak Finder Report (Example)" : "Trading Leak Finder Report"}",
   "leakScore": 42,
   "topLeaks": [
     {
@@ -95,7 +102,11 @@ You MUST return ONLY valid JSON with this exact structure:
     { "item": "Risk control item", "status": "pass" },
     { "item": "Risk control item", "status": "fail" },
     { "item": "Risk control item", "status": "warning" }
-  ]
+  ]${isSampleReport ? `,
+  "compliance": {
+    "isSample": true,
+    "disclaimerShort": "Example only — sample trade data for demonstration purposes. Not financial advice."
+  }` : ""}
 }
 Rules:
 - leakScore is 0-100 where lower means more leaks (worse)
@@ -104,12 +115,14 @@ Rules:
 - Focus on behavior and process, not specific stocks
 - Use novice-friendly language
 - All evidence must be data-backed from the actual trades provided
-- The fix plan should be practical and progressive`
-        },
-        {
-          role: "user",
-          content: `Analyze these trades and generate a Leak Report:\n\n${tradesSummary}`
-        }
+- The fix plan should be practical and progressive${isSampleReport ? "\n- Remember: this is EXAMPLE data for demonstration. Frame all findings as educational examples." : ""}`;
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_tokens: 4000,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: `Analyze these trades and generate a Leak Report:\n\n${tradesSummary}` }
       ]
     });
 
