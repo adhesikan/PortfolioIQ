@@ -274,6 +274,14 @@ export default function HomePage() {
               No guarantees of trading profits or loss prevention are made or implied. Consult a qualified
               financial professional before making any investment decisions.
             </p>
+            <p className="text-sm text-amber-600 mt-3">
+              Read our full{" "}
+              <Link href="/disclaimer" className="underline hover:text-amber-800">Disclaimer</Link>
+              {", "}
+              <Link href="/privacy" className="underline hover:text-amber-800">Privacy Policy</Link>
+              {", and "}
+              <Link href="/terms" className="underline hover:text-amber-800">Terms of Service</Link>.
+            </p>
           </div>
         </div>
       </section>

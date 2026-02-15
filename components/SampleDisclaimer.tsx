@@ -1,6 +1,7 @@
 "use client";
 
 import { AlertTriangle } from "lucide-react";
+import Link from "next/link";
 
 interface SampleDisclaimerProps {
   compact?: boolean;
@@ -13,7 +14,7 @@ export default function SampleDisclaimer({ compact = false }: SampleDisclaimerPr
         <div className="flex items-start gap-2">
           <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
           <p className="text-xs text-amber-800">
-            <span className="font-semibold">EXAMPLE ONLY</span> — Sample trade history for demonstration. Not financial advice. No guarantees. Past performance is not indicative of future results.
+            <span className="font-semibold">EXAMPLE ONLY</span> — Sample trade history for demonstration. Not financial advice. No guarantees. Past performance is not indicative of future results. See our <Link href="/disclaimer" className="underline hover:text-amber-950">Disclaimer</Link>.
           </p>
         </div>
       </div>
@@ -33,6 +34,9 @@ export default function SampleDisclaimer({ compact = false }: SampleDisclaimerPr
             <li>No recommendation is being made to buy, sell, or hold any security or strategy.</li>
             <li>These examples may not reflect real market conditions, execution quality, slippage, commissions, taxes, or brokerage constraints.</li>
           </ul>
+          <p className="text-xs text-amber-700 pt-1">
+            By continuing, you agree to our <Link href="/terms" className="underline hover:text-amber-950">Terms of Service</Link>, <Link href="/privacy" className="underline hover:text-amber-950">Privacy Policy</Link>, and <Link href="/disclaimer" className="underline hover:text-amber-950">Disclaimer</Link>.
+          </p>
         </div>
       </div>
     </div>

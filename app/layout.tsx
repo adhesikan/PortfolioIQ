@@ -53,11 +53,23 @@ export default function RootLayout({
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white mb-2">Legal</p>
-                    <p className="text-xs leading-relaxed">For informational and educational purposes only. Not financial advice. No guarantees of trading results. Past performance is not indicative of future results.</p>
+                    <div className="space-y-1 text-xs mb-3">
+                      <p><Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link></p>
+                      <p><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></p>
+                      <p><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></p>
+                    </div>
+                    <p className="text-xs leading-relaxed text-slate-500">For informational and educational purposes only. Not financial advice. No guarantees of trading results.</p>
                   </div>
                 </div>
                 <div className="mt-8 pt-6 border-t border-slate-800 text-xs text-center">
-                  &copy; {new Date().getFullYear()} PortfolioIQ. All rights reserved.
+                  <p>&copy; {new Date().getFullYear()} PortfolioIQ. All rights reserved.</p>
+                  <p className="mt-1 text-slate-500">
+                    <Link href="/disclaimer" className="hover:text-slate-300 transition-colors">Disclaimer</Link>
+                    {" · "}
+                    <Link href="/privacy" className="hover:text-slate-300 transition-colors">Privacy</Link>
+                    {" · "}
+                    <Link href="/terms" className="hover:text-slate-300 transition-colors">Terms</Link>
+                  </p>
                 </div>
               </div>
             </footer>

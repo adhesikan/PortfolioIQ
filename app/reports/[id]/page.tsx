@@ -298,6 +298,14 @@ export default function ReportDetailPage() {
             ? "EXAMPLE ONLY — This report was generated from sample data for demonstration purposes. It is not financial advice, a trading recommendation, or a guarantee of future performance. These examples may not reflect real market conditions, execution quality, slippage, commissions, taxes, or brokerage constraints."
             : "This report is for informational and educational purposes only. It is not financial advice, a trading recommendation, or a guarantee of future performance. Always do your own research and consult a qualified financial professional."}
         </p>
+        <p className="text-xs text-amber-600 mt-2">
+          See our{" "}
+          <Link href="/disclaimer" className="underline hover:text-amber-800">Disclaimer</Link>
+          {", "}
+          <Link href="/privacy" className="underline hover:text-amber-800">Privacy Policy</Link>
+          {", and "}
+          <Link href="/terms" className="underline hover:text-amber-800">Terms of Service</Link>.
+        </p>
       </div>
     </div>
   );
