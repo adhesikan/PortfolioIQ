@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getSampleTrades, getSampleDataset, SampleType } from "@/lib/sampleTrades";
+import { getSampleTrades, getSampleDataset, SampleType, type SampleDataset } from "@/lib/sampleTrades";
 import { canGenerateReport } from "@/lib/usage";
 import { logAbuse } from "@/lib/abuse";
 import OpenAI from "openai";
@@ -141,6 +141,11 @@ export async function POST(req: NextRequest) {
 
     if (cachedReport) {
       const trades = getSampleTrades(sampleType as SampleType);
+      const dataset = getSampleDataset(sampleType as SampleType);
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+      const sampleTitle = `${dataset.label} Sample — ${dateStr}, ${timeStr}`;
 
       const upload = await prisma.upload.create({
         data: {
@@ -174,12 +179,11 @@ export async function POST(req: NextRequest) {
         })),
       });
 
-      const cachedData = cachedReport.fullReport as any;
       const report = await prisma.leakReport.create({
         data: {
           userId: user.id,
           uploadId: upload.id,
-          title: cachedData?.reportTitle || `Sample Leak Report (${sampleType})`,
+          title: sampleTitle,
           leakScore: cachedReport.leakScore,
           topLeaks: cachedReport.topLeaks as any,
           keyStats: cachedReport.keyStats as any ?? undefined,
@@ -258,11 +262,17 @@ export async function POST(req: NextRequest) {
     if (!jsonMatch) throw new Error("Could not parse AI response");
     const reportData = JSON.parse(jsonMatch[0]);
 
+    const dataset = getSampleDataset(sampleType as SampleType);
+    const nowGen = new Date();
+    const dateStrGen = nowGen.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const timeStrGen = nowGen.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    const genTitle = `${dataset.label} Sample — ${dateStrGen}, ${timeStrGen}`;
+
     const report = await prisma.leakReport.create({
       data: {
         userId: user.id,
         uploadId: upload.id,
-        title: reportData.reportTitle || `Sample Leak Report (${sampleType})`,
+        title: genTitle,
         leakScore: reportData.leakScore || 50,
         topLeaks: reportData.topLeaks || [],
         keyStats: reportData.keyStats || {},

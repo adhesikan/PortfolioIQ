@@ -208,10 +208,16 @@ Rules:
         }
       }
 
+      const now = new Date();
+      const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+      const reportTitle = `Leak Report — ${dateStr}, ${timeStr}`;
+
       const leakReport = await tx.leakReport.create({
         data: {
           userId: user.id,
           uploadId,
+          title: reportTitle,
           leakScore: report.leakScore || 50,
           topLeaks: report.topLeaks || [],
           keyStats: report.keyStats || {},
