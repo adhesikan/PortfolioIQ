@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useCallback } from "react";
 import {
   FileText, Calendar, ArrowRight, Loader2, Beaker, Pencil, Check, X,
@@ -45,7 +45,6 @@ type FilterType = "all" | "uploaded" | "sample";
 export default function ReportsPage() {
   const { user } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   const [reports, setReports] = useState<ReportSummary[]>([]);
   const [pagination, setPagination] = useState<Pagination>({ page: 1, perPage: 10, total: 0, totalPages: 0 });
@@ -57,16 +56,19 @@ export default function ReportsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(() => {
-    if (typeof window !== "undefined") {
+  const [perPage, setPerPage] = useState(10);
+  const [perPageLoaded, setPerPageLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!perPageLoaded) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const n = parseInt(saved);
-        if (PER_PAGE_OPTIONS.includes(n)) return n;
+        if (PER_PAGE_OPTIONS.includes(n)) setPerPage(n);
       }
+      setPerPageLoaded(true);
     }
-    return 10;
-  });
+  }, [perPageLoaded]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");

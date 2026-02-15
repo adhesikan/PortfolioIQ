@@ -1,0 +1,84 @@
+stage-0
+RUN npm ci
+25s
+Run `npm audit` for details.
+
+stage-0
+COPY . /app/.
+226ms
+
+stage-0
+RUN npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/
+34s
+npm warn config production Use `--omit=dev` instead.
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 191ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+up to date, audited 612 packages in 12s
+194 packages are looking for funding
+  run `npm fund` for details
+9 vulnerabilities (1 low, 4 moderate, 4 high)
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+npm warn config production Use `--omit=dev` instead.
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 186ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Interested in query caching in just a few lines of code? Try Accelerate today! https://pris.ly/tip-3-accelerate
+npm warn config production Use `--omit=dev` instead.
+> portfolioiq@0.1.0 build
+> next build
+Attention: Next.js now collects completely anonymous telemetry regarding usage.
+This information is used to shape Next.js' roadmap and prioritize features.
+You can learn more, including how to opt-out if you'd not like to participate in this anonymous program, by visiting the following URL:
+https://nextjs.org/telemetry
+  ▲ Next.js 14.2.35
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Linting and checking validity of types ...
+   Collecting page data ...
+   Generating static pages (0/29) ...
+   Generating static pages (7/29) 
+ReferenceError: location is not defined
+    at /app/.next/server/chunks/889.js:1:9524
+    at /app/.next/server/chunks/889.js:1:10389
+    at t.startTransition (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:109047)
+    at Object.push (/app/.next/server/chunks/889.js:1:10377)
+    at k (/app/.next/server/app/upload/page.js:1:3551)
+    at nj (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
+    at nM (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
+    at nL (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+    at nI (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47011)
+    at nM (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47718)
+   Generating static pages (14/29) 
+   Generating static pages (21/29) 
+ ⨯ useSearchParams() should be wrapped in a suspense boundary at page "/reports". Read more: https://nextjs.org/docs/messages/missing-suspense-with-csr-bailout
+    at l (/app/.next/server/chunks/889.js:1:14047)
+    at s (/app/.next/server/chunks/889.js:1:24892)
+    at Z (/app/.next/server/app/reports/page.js:1:3113)
+    at nj (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:46252)
+    at nM (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47572)
+    at nL (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+    at nI (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47011)
+    at nM (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:47718)
+    at nM (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:61547)
+    at nL (/app/node_modules/next/dist/compiled/next-server/app-page.runtime.prod.js:12:64547)
+Error occurred prerendering page "/reports". Read more: https://nextjs.org/docs/messages/prerender-error
+ ✓ Generating static pages (29/29)
+> Export encountered errors on following paths:
+	/reports/page: /reports
+cp: cannot create directory '.next/standalone/.next/': No such file or directory
+Dockerfile:24
+-------------------
+22 |     # build phase
+23 |     COPY . /app/.
+24 | >>> RUN --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-next/cache,target=/app/.next/cache --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-node_modules/cache,target=/app/node_modules/.cache npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/
+25 |
+26 |
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/bash -ol pipefail -c npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/" did not complete successfully: exit code: 1
+Error: Docker build failed
