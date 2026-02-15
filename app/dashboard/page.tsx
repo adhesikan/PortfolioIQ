@@ -9,9 +9,12 @@ import Tooltip from "@/components/Tooltip";
 
 interface ReportSummary {
   id: string;
+  title: string | null;
   leakScore: number;
   createdAt: string;
   tradesCount: number;
+  isSample: boolean;
+  sampleType: string | null;
 }
 
 export default function DashboardPage() {
@@ -156,7 +159,7 @@ export default function DashboardPage() {
                     {report.leakScore}
                   </div>
                   <div>
-                    <p className="font-medium text-slate-900">Leak Report</p>
+                    <p className="font-medium text-slate-900">{report.title || "Leak Report"}</p>
                     <p className="text-xs text-slate-500">{new Date(report.createdAt).toLocaleDateString()} · {report.tradesCount} trades</p>
                   </div>
                 </div>
