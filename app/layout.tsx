@@ -26,7 +26,7 @@ export default function RootLayout({
             <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 flex items-center justify-between py-3">
                 <Link href="/" className="flex items-center">
-                  <img src="/logo-clean.png" alt="PortfolioIQ — Trading Performance Intelligence" className="h-16 w-auto" />
+                  <img src="/logo-clean.png" alt="PortfolioIQ — Trading Performance Intelligence" className="h-28 w-auto" />
                 </Link>
                 <Navigation />
               </div>
