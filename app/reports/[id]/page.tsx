@@ -21,17 +21,19 @@ export default function ReportDetailPage() {
   const { user } = useAuth();
   const router = useRouter();
   const params = useParams();
+  const reportId = params?.id as string;
   const [report, setReport] = useState<FullReport | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
-    fetch(`/api/reports/${params.id}`)
+    if (!reportId) return;
+    fetch(`/api/reports/${reportId}`)
       .then((r) => r.json())
       .then((data) => setReport(data.report))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [user, router, params.id]);
+  }, [user, router, reportId]);
 
   if (!user) return null;
 
