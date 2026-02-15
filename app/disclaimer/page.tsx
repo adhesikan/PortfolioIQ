@@ -69,7 +69,7 @@ export default function DisclaimerPage() {
         </section>
 
         <div className="pt-4 border-t border-slate-200 text-sm text-slate-500">
-          <p>If you have questions about this disclaimer, contact us at <span className="text-brand-accent">support@portfolioiq.pro</span>.</p>
+          <p>If you have questions about this disclaimer, contact us at <span className="text-brand-accent">team@portfolioiq.pro</span>.</p>
           <p className="mt-2">See also: <Link href="/privacy" className="text-brand-accent hover:underline">Privacy Policy</Link> · <Link href="/terms" className="text-brand-accent hover:underline">Terms of Service</Link></p>
         </div>
       </div>
