@@ -185,6 +185,11 @@ export default function UploadPage() {
         setStep("confirm");
         return;
       }
+      if (res.status === 429) {
+        setError(data.message || "You've reached today's sample report limit. Try again tomorrow.");
+        setStep("confirm");
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Report generation failed");
       setReportId(data.reportId);
       await refresh();
@@ -202,22 +207,6 @@ export default function UploadPage() {
   const removeTrade = (index: number) => {
     setTrades((prev) => prev.filter((_, i) => i !== index));
   };
-
-  if (atLimit) {
-    return (
-      <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-12">
-        <div className="card text-center py-12">
-          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">You&apos;ve used your 3 free reports</h2>
-          <p className="text-slate-600 mb-2">Upgrade for unlimited reports, saved history, and weekly insights.</p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
-            <a href="/pricing?reason=limit" className="btn-primary px-8 py-3">Upgrade Now</a>
-            <a href="/pricing" className="btn-secondary px-8 py-3">View Plans</a>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 py-8">
@@ -241,7 +230,7 @@ export default function UploadPage() {
 
       {!isPro && (
         <div className="mb-6 p-3 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-between">
-          <Tooltip content="Each successful report generation counts as one use. You get 3 free reports for life.">
+          <Tooltip content="Each successful report generation counts as one use. Sample reports do not count. You get 3 free reports for life.">
             <span className="text-sm text-blue-800">Free reports used: {freeUsed} / 3</span>
           </Tooltip>
           <div className="w-32 h-2 rounded-full bg-blue-200 overflow-hidden">
@@ -288,6 +277,7 @@ export default function UploadPage() {
             </div>
 
             <SampleDisclaimer compact />
+            <p className="text-xs text-center text-green-700 mt-2">Sample reports are for demonstration only and do not count toward your 3 free reports.</p>
           </div>
 
           <div className="relative mb-8">
@@ -299,10 +289,22 @@ export default function UploadPage() {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          {atLimit && (
+            <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-center">
+              <AlertCircle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
+              <h3 className="font-semibold text-slate-900 mb-1">You&apos;ve used your 3 free reports</h3>
+              <p className="text-sm text-slate-600 mb-3">Upgrade for unlimited reports, or try a sample report above.</p>
+              <div className="flex flex-col sm:flex-row gap-2 justify-center">
+                <a href="/pricing?reason=limit" className="btn-primary px-6 py-2 text-sm">Upgrade Now</a>
+                <a href="/pricing" className="btn-secondary px-6 py-2 text-sm">View Plans</a>
+              </div>
+            </div>
+          )}
+
+          <div className={`grid gap-6 md:grid-cols-2 ${atLimit ? "opacity-50 pointer-events-none" : ""}`}>
             <div
               className="card-hover cursor-pointer text-center py-12"
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => !atLimit && fileInputRef.current?.click()}
             >
               <Image className="h-12 w-12 text-brand-accent mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Screenshot</h3>

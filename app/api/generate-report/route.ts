@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canGenerateReport, FREE_REPORTS_LIFETIME_LIMIT } from "@/lib/usage";
+import { logAbuse } from "@/lib/abuse";
 import OpenAI from "openai";
 
 const openai = new OpenAI();
@@ -19,17 +20,7 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const check = await canGenerateReport(user.id);
-    if (!check.allowed) {
-      return NextResponse.json({
-        error: "FREE_LIMIT_REACHED",
-        freeUsed: check.freeUsed,
-        freeLimit: check.freeLimit,
-        paywallUrl: "/pricing?reason=limit",
-      }, { status: 402 });
-    }
-
-    const { uploadId, trades, isSample, sampleType } = await req.json();
+    const { uploadId, trades } = await req.json();
     if (!uploadId || !trades?.length) {
       return NextResponse.json({ error: "Upload ID and trades are required" }, { status: 400 });
     }
@@ -37,7 +28,30 @@ export async function POST(req: NextRequest) {
     const upload = await prisma.upload.findFirst({ where: { id: uploadId, userId: user.id } });
     if (!upload) return NextResponse.json({ error: "Upload not found" }, { status: 404 });
 
-    const isSampleReport = upload.isSample || isSample === true;
+    const isSampleReport = upload.isSample === true;
+
+    const check = await canGenerateReport(user.id, isSampleReport);
+
+    if (!check.allowed) {
+      const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+      const userAgent = req.headers.get("user-agent") || undefined;
+
+      if (check.reason === "SAMPLE_RATE_LIMIT") {
+        await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_RATE_LIMIT_HIT" });
+        return NextResponse.json({
+          error: "SAMPLE_RATE_LIMIT",
+          message: check.message,
+        }, { status: 429 });
+      }
+
+      await logAbuse({ userId: user.id, ip, userAgent, action: "FREE_LIMIT_REACHED" });
+      return NextResponse.json({
+        error: "FREE_LIMIT_REACHED",
+        freeUsed: check.freeUsed,
+        freeLimit: check.freeLimit,
+        paywallUrl: "/pricing?reason=limit",
+      }, { status: 402 });
+    }
 
     if (!isSampleReport) {
       await prisma.trade.createMany({
@@ -132,11 +146,13 @@ Rules:
     const report = JSON.parse(jsonMatch[0]);
 
     const result = await prisma.$transaction(async (tx) => {
-      const currentUsage = await tx.usageCounter.findUnique({ where: { userId: user.id } });
-      const freeUsed = currentUsage?.freeReportsUsed ?? 0;
+      if (!isSampleReport && !check.isSubscriber) {
+        const currentUsage = await tx.usageCounter.findUnique({ where: { userId: user.id } });
+        const freeUsed = currentUsage?.freeReportsUsed ?? 0;
 
-      if (!check.isSubscriber && freeUsed >= FREE_REPORTS_LIFETIME_LIMIT) {
-        throw new Error("FREE_LIMIT_REACHED");
+        if (freeUsed >= FREE_REPORTS_LIFETIME_LIMIT) {
+          throw new Error("FREE_LIMIT_REACHED");
+        }
       }
 
       const leakReport = await tx.leakReport.create({
@@ -155,7 +171,13 @@ Rules:
 
       await tx.upload.update({ where: { id: uploadId }, data: { status: "completed" } });
 
-      if (!check.isSubscriber) {
+      if (isSampleReport) {
+        await tx.usageCounter.upsert({
+          where: { userId: user.id },
+          create: { userId: user.id, freeReportsUsed: 0, totalReports: 1, lastReportAt: new Date() },
+          update: { totalReports: { increment: 1 }, lastReportAt: new Date() },
+        });
+      } else if (!check.isSubscriber) {
         await tx.usageCounter.upsert({
           where: { userId: user.id },
           create: { userId: user.id, freeReportsUsed: 1, totalReports: 1, lastReportAt: new Date() },
@@ -171,6 +193,12 @@ Rules:
 
       return leakReport;
     });
+
+    if (isSampleReport) {
+      const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+      const userAgent = req.headers.get("user-agent") || undefined;
+      await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_REPORT_GENERATED" });
+    }
 
     return NextResponse.json({ reportId: result.id, report });
   } catch (error: any) {

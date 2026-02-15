@@ -121,6 +121,10 @@ export default function ReportDetailPage() {
               Example Data {report.sampleType ? `— ${SAMPLE_LABELS[report.sampleType] || report.sampleType}` : ""}
             </span>
           </div>
+          <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 mb-3">
+            <p className="text-sm font-medium text-blue-900">Example Data</p>
+            <p className="text-sm text-blue-800 mt-1">This report was generated using sample trades for demonstration purposes and does not count toward your free reports.</p>
+          </div>
           <SampleDisclaimer />
         </div>
       )}

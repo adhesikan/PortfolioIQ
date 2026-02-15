@@ -41,6 +41,7 @@ export default function AdminPage() {
   const [emailBody, setEmailBody] = useState("");
   const [emailSending, setEmailSending] = useState(false);
   const [emailResult, setEmailResult] = useState("");
+  const [abuseFilter, setAbuseFilter] = useState("all");
 
   useEffect(() => {
     if (!user || user.role !== "ADMIN") { router.push("/dashboard"); return; }
@@ -246,10 +247,29 @@ export default function AdminPage() {
             </div>
           )}
 
-          {tab === "abuse" && (
+          {tab === "abuse" && (() => {
+            const actionTypes = Array.from(new Set(abuseLogs.map((l) => l.action)));
+            const filteredLogs = abuseFilter === "all" ? abuseLogs : abuseLogs.filter((l) => l.action === abuseFilter);
+            return (
             <div className="card">
-              <h2 className="text-lg font-semibold text-slate-900 mb-4">Abuse Logs</h2>
-              {abuseLogs.length === 0 ? (
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-slate-900">Abuse Logs</h2>
+                <div className="flex items-center gap-2">
+                  <label className="text-xs text-slate-500">Filter:</label>
+                  <select
+                    className="text-sm border border-slate-200 rounded-lg px-2 py-1 bg-white"
+                    value={abuseFilter}
+                    onChange={(e) => setAbuseFilter(e.target.value)}
+                  >
+                    <option value="all">All Actions</option>
+                    {actionTypes.map((a) => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                  <span className="text-xs text-slate-500">{filteredLogs.length} entries</span>
+                </div>
+              </div>
+              {filteredLogs.length === 0 ? (
                 <p className="text-sm text-slate-500 py-8 text-center">No abuse logs recorded</p>
               ) : (
                 <div className="overflow-x-auto">
@@ -264,11 +284,18 @@ export default function AdminPage() {
                       </tr>
                     </thead>
                     <tbody>
-                      {abuseLogs.map((log) => (
+                      {filteredLogs.map((log) => (
                         <tr key={log.id} className="border-b border-slate-100 last:border-0">
                           <td className="py-3 text-xs text-slate-600">{new Date(log.createdAt).toLocaleString()}</td>
                           <td className="py-3 text-slate-900">{log.userEmail || "Anonymous"}</td>
-                          <td className="py-3 text-slate-600">{log.action}</td>
+                          <td className="py-3">
+                            <span className={`tag ${
+                              log.action === "SAMPLE_REPORT_GENERATED" ? "bg-blue-100 text-blue-700" :
+                              log.action === "FREE_LIMIT_REACHED" ? "bg-amber-100 text-amber-700" :
+                              log.action === "SAMPLE_RATE_LIMIT_HIT" ? "bg-red-100 text-red-700" :
+                              "bg-slate-100 text-slate-600"
+                            }`}>{log.action}</span>
+                          </td>
                           <td className="py-3 text-xs text-slate-500 font-mono">{log.hashedIp.substring(0, 12)}...</td>
                           <td className="py-3 text-right">
                             <span className={`tag ${log.riskScore > 5 ? "bg-red-100 text-red-700" : "bg-slate-100"}`}>{log.riskScore}</span>
@@ -280,7 +307,8 @@ export default function AdminPage() {
                 </div>
               )}
             </div>
-          )}
+            );
+          })()}
         </>
       )}
     </div>
