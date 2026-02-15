@@ -2,8 +2,8 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { FileText, Upload, ArrowRight, TrendingUp, AlertCircle, Loader2, BarChart3 } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { FileText, Upload, ArrowRight, TrendingUp, AlertCircle, Loader2, BarChart3, Pencil, Check, X } from "lucide-react";
 import Link from "next/link";
 import Tooltip from "@/components/Tooltip";
 
@@ -31,11 +31,53 @@ export default function DashboardPage() {
       .finally(() => setLoading(false));
   }, [user, router]);
 
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const editInputRef = useRef<HTMLInputElement>(null);
+
   if (!user) return null;
 
   const freeUsed = user.usage?.freeReportsUsed ?? 0;
   const isPro = user.subscription?.status === "active";
   const latestReport = reports[0];
+
+  const startEditing = (report: ReportSummary, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingId(report.id);
+    setEditValue(report.title || "Leak Report");
+    setTimeout(() => editInputRef.current?.focus(), 50);
+  };
+
+  const cancelEditing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const saveTitle = async (reportId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const trimmed = editValue.trim();
+    if (!trimmed) return;
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/reports/${reportId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: trimmed }),
+      });
+      if (res.ok) {
+        setReports((prev) => prev.map((r) => r.id === reportId ? { ...r, title: trimmed } : r));
+      }
+    } finally {
+      setSaving(false);
+      setEditingId(null);
+      setEditValue("");
+    }
+  };
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-8 animate-fade-in">
@@ -151,20 +193,67 @@ export default function DashboardPage() {
           <h2 className="text-lg font-semibold text-slate-900 mb-4">Recent Reports</h2>
           <div className="space-y-3">
             {reports.slice(0, 5).map((report) => (
-              <Link key={report.id} href={`/reports/${report.id}`} className="card-hover flex items-center justify-between group block">
-                <div className="flex items-center gap-4">
-                  <div className={`flex h-11 w-11 items-center justify-center rounded-xl text-sm font-bold text-white ${
-                    report.leakScore >= 70 ? "bg-green-500" : report.leakScore >= 40 ? "bg-yellow-500" : "bg-red-500"
-                  }`}>
-                    {report.leakScore}
-                  </div>
-                  <div>
-                    <p className="font-medium text-slate-900">{report.title || "Leak Report"}</p>
+              <div key={report.id} className="card-hover flex items-center justify-between group">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <Link href={`/reports/${report.id}`} className="shrink-0">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-xl text-sm font-bold text-white ${
+                      report.leakScore >= 70 ? "bg-green-500" : report.leakScore >= 40 ? "bg-yellow-500" : "bg-red-500"
+                    }`}>
+                      {report.leakScore}
+                    </div>
+                  </Link>
+                  <div className="flex-1 min-w-0">
+                    {editingId === report.id ? (
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <input
+                          ref={editInputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") saveTitle(report.id, e as any);
+                            if (e.key === "Escape") { setEditingId(null); setEditValue(""); }
+                          }}
+                          maxLength={100}
+                          className="input py-1 text-sm font-medium w-full max-w-xs"
+                          disabled={saving}
+                        />
+                        <button
+                          onClick={(e) => saveTitle(report.id, e)}
+                          disabled={saving || !editValue.trim()}
+                          className="p-1 rounded hover:bg-green-100 text-green-600 disabled:opacity-50"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          disabled={saving}
+                          className="p-1 rounded hover:bg-red-100 text-red-500"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Link href={`/reports/${report.id}`} className="block min-w-0">
+                          <p className="font-medium text-slate-900 truncate">{report.title || "Leak Report"}</p>
+                        </Link>
+                        <button
+                          onClick={(e) => startEditing(report, e)}
+                          className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-opacity shrink-0"
+                          title="Rename report"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    )}
                     <p className="text-xs text-slate-500">{new Date(report.createdAt).toLocaleDateString()} · {report.tradesCount} trades</p>
                   </div>
                 </div>
-                <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-brand-accent transition-colors" />
-              </Link>
+                <Link href={`/reports/${report.id}`} className="shrink-0 ml-2">
+                  <ArrowRight className="h-5 w-5 text-slate-400 group-hover:text-brand-accent transition-colors" />
+                </Link>
+              </div>
             ))}
           </div>
           {reports.length > 5 && (
