@@ -90,10 +90,12 @@ prisma/
    - Risk Control Checklist
 
 ### Free Tier + Paywall
-- 10 free Leak Reports per user
-- Usage tracked in UsageCounter table
-- After 10 reports → redirect to pricing page
+- 3 free Leak Reports per user (lifetime)
+- Usage tracked in UsageCounter table with transactional enforcement
+- Usage only increments on successful report generation (not extraction)
+- After 3 reports → HTTP 402 paywall with modal + redirect to pricing page
 - Stripe subscription for unlimited (Pro plan)
+- Constant: `FREE_REPORTS_LIFETIME_LIMIT = 3` in `lib/usage.ts`
 
 ### Admin Panel (/admin)
 - User management (view, disable, reset reports, change role)

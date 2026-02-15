@@ -156,7 +156,7 @@ export default function AdminPage() {
                         </td>
                         <td className="py-3 text-right">
                           <span className="text-slate-900">{u.totalReports}</span>
-                          <span className="text-slate-500"> ({u.freeReportsUsed} free)</span>
+                          <span className="text-slate-500"> ({u.freeReportsUsed}/3 free)</span>
                         </td>
                         <td className="py-3">
                           {u.isDisabled ? (

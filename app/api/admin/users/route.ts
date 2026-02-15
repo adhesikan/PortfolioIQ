@@ -37,7 +37,16 @@ export async function PATCH(req: NextRequest) {
   } else if (action === "enable") {
     await prisma.user.update({ where: { id: userId }, data: { isDisabled: false } });
   } else if (action === "resetReports") {
+    const current = await prisma.usageCounter.findUnique({ where: { userId } });
     await prisma.usageCounter.update({ where: { userId }, data: { freeReportsUsed: 0 } });
+    await prisma.adminAuditLog.create({
+      data: {
+        adminId: admin.id,
+        action: "reset_free_reports",
+        targetId: userId,
+        details: { previousCount: current?.freeReportsUsed ?? 0, resetTo: 0 },
+      },
+    });
   } else if (action === "makeAdmin") {
     await prisma.user.update({ where: { id: userId }, data: { role: "ADMIN" } });
   } else if (action === "makeUser") {

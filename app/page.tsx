@@ -61,7 +61,7 @@ export default function HomePage() {
                 See Sample Report
               </a>
             </div>
-            <p className="text-xs text-slate-500 mt-4">10 free reports. No credit card required.</p>
+            <p className="text-xs text-slate-500 mt-4">3 free reports lifetime. No credit card required.</p>
           </div>
         </div>
       </section>

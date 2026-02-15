@@ -1,0 +1,84 @@
+You are working inside the existing **PortfolioIQ** codebase (Next.js App Router + Prisma/Postgres + Stripe + SendGrid + OpenAI). Update the free usage system from “10 free reports” to **“3 free reports lifetime”**.
+
+GOAL
+- Each user gets **exactly 3 free Leak Reports total (lifetime)**.
+- Attempting to generate report #4 must trigger the **Stripe paywall** (unless user has an active paid subscription).
+- The counter should increment **only after** the user confirms the extracted trades on the validation screen and the report generation succeeds (to avoid charging a free credit for failed OCR/parsing).
+
+REQUIREMENTS
+
+1) DATABASE / PRISMA
+- Ensure there is a `UsageCounter` (or equivalent) table that tracks usage per user.
+- Add/confirm fields:
+  - `userId` (unique)
+  - `freeReportsUsed` (int, default 0)
+  - `lifetimeFreeLimit` (int, default 3)  // optional; can be global config
+  - `updatedAt`
+- If you already store limits globally, keep only `freeReportsUsed` and implement a constant `FREE_REPORTS_LIFETIME_LIMIT = 3`.
+
+2) SERVER-SIDE ENFORCEMENT (AUTHORITATIVE)
+- Add a server-side function `canGenerateReport(userId)` that returns:
+  - allowed: boolean
+  - reason: "FREE_LIMIT_REACHED" | "OK" | "NO_SUBSCRIPTION" | etc.
+  - freeUsed, freeLimit, isSubscriber
+- Enforce this check in the report generation endpoint (e.g. `POST /api/reports/generate`).
+- Logic:
+  - If user has active Stripe subscription => allow unlimited.
+  - Else if `freeReportsUsed < 3` => allow.
+  - Else => deny and return HTTP 402 (Payment Required) with a structured JSON payload:
+    {
+      "error":"FREE_LIMIT_REACHED",
+      "freeUsed": 3,
+      "freeLimit": 3,
+      "paywallUrl": "/pricing?reason=limit"
+    }
+
+3) INCREMENT LOGIC (ONLY ON SUCCESS)
+- Update generation flow so that `freeReportsUsed` increments only when:
+  - user is NOT subscriber
+  - report generation succeeds and is persisted
+- Use a DB transaction to avoid race conditions:
+  - Re-check current `freeReportsUsed`
+  - Insert report
+  - Increment `freeReportsUsed`
+  - Commit
+- Handle concurrent requests safely (no more than 3 free reports can be created even with multiple tabs).
+
+4) UI UPDATES
+- Replace all “10 free reports” text with “**3 free reports lifetime**”.
+- Update the dashboard usage meter:
+  - Show “X / 3 free reports used”
+  - When X=3 and no subscription: show a locked state + “Upgrade to continue”
+- Update paywall modal copy:
+  - Headline: “You’ve used your 3 free reports”
+  - Sub: “Upgrade for unlimited reports, saved history, and weekly insights.”
+  - CTA: “Upgrade Now”
+  - Secondary: “View Plans”
+- On generate attempt when limit reached, show paywall modal immediately (based on server response).
+
+5) ADMIN PANEL
+- In `/admin/users/[id]`, show:
+  - freeReportsUsed
+  - subscription status
+- Add ADMIN-only action:
+  - “Reset free reports” (sets freeReportsUsed to 0)
+  - Log this to AdminAuditLog
+
+6) EMAIL + COPY
+- If you send “report ready” emails, add a small note in the footer on free tier:
+  - “You have used X of 3 free reports. Upgrade anytime for unlimited.”
+- Make sure this is not spammy.
+
+7) TESTS / QA CHECKLIST (ADD TO README)
+- New user can generate 3 free reports successfully.
+- 4th attempt returns HTTP 402 + paywall payload.
+- Subscriber can generate unlimited.
+- Usage does not increment on failed OCR/extraction or failed report generation.
+- Concurrency: multiple generate requests cannot exceed 3 total free reports.
+
+IMPLEMENTATION NOTES
+- Keep all enforcement server-side (UI is secondary).
+- Use a single source of truth constant: `FREE_REPORTS_LIFETIME_LIMIT = 3`.
+- Make sure the validation step is required before generation (do not count extraction-only attempts).
+
+Now implement these changes across backend, frontend, admin, and copy. Ensure the app remains clean, premium-looking, and mobile-friendly.

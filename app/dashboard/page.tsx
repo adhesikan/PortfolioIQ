@@ -53,22 +53,28 @@ export default function DashboardPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-blue-900">Free Reports</p>
-              <p className="text-xs text-blue-700 mt-0.5">{freeUsed} of 10 used</p>
+              <p className="text-xs text-blue-700 mt-0.5">{freeUsed} of 3 free reports used</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-40 h-3 rounded-full bg-blue-200 overflow-hidden">
-                <div className="h-full bg-brand-accent rounded-full transition-all" style={{ width: `${(freeUsed / 10) * 100}%` }}></div>
+                <div className="h-full bg-brand-accent rounded-full transition-all" style={{ width: `${Math.min((freeUsed / 3) * 100, 100)}%` }}></div>
               </div>
-              <span className="text-sm font-bold text-blue-900">{10 - freeUsed} left</span>
+              <span className="text-sm font-bold text-blue-900">{Math.max(3 - freeUsed, 0)} left</span>
             </div>
           </div>
-          {freeUsed >= 8 && (
+          {freeUsed >= 3 ? (
+            <div className="mt-3 pt-3 border-t border-blue-200">
+              <Link href="/pricing" className="text-sm text-red-600 font-medium hover:underline flex items-center gap-1">
+                You&apos;ve used all 3 free reports. Upgrade to continue <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          ) : freeUsed >= 2 ? (
             <div className="mt-3 pt-3 border-t border-blue-200">
               <Link href="/pricing" className="text-sm text-brand-accent font-medium hover:underline flex items-center gap-1">
                 Upgrade to Pro for unlimited reports <ArrowRight className="h-3.5 w-3.5" />
               </Link>
             </div>
-          )}
+          ) : null}
         </div>
       )}
 

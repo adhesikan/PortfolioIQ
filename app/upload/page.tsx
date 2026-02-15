@@ -33,6 +33,7 @@ export default function UploadPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [reportId, setReportId] = useState<string | null>(null);
+  const [showPaywall, setShowPaywall] = useState(false);
 
   if (!user) {
     router.push("/login");
@@ -41,7 +42,7 @@ export default function UploadPage() {
 
   const freeUsed = user.usage?.freeReportsUsed ?? 0;
   const isPro = user.subscription?.status === "active";
-  const atLimit = !isPro && freeUsed >= 10;
+  const atLimit = !isPro && freeUsed >= 3;
 
   const handleScreenshot = async (file: File) => {
     setError("");
@@ -93,6 +94,11 @@ export default function UploadPage() {
         body: JSON.stringify({ uploadId, trades }),
       });
       const data = await res.json();
+      if (res.status === 402) {
+        setShowPaywall(true);
+        setStep("confirm");
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Report generation failed");
       setReportId(data.reportId);
       await refresh();
@@ -116,9 +122,12 @@ export default function UploadPage() {
       <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-12">
         <div className="card text-center py-12">
           <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Free Report Limit Reached</h2>
-          <p className="text-slate-600 mb-6">You&apos;ve used all 10 free reports. Upgrade to Pro for unlimited access.</p>
-          <a href="/pricing" className="btn-primary px-8 py-3">Upgrade to Pro</a>
+          <h2 className="text-2xl font-bold text-slate-900 mb-2">You&apos;ve used your 3 free reports</h2>
+          <p className="text-slate-600 mb-2">Upgrade for unlimited reports, saved history, and weekly insights.</p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center mt-6">
+            <a href="/pricing?reason=limit" className="btn-primary px-8 py-3">Upgrade Now</a>
+            <a href="/pricing" className="btn-secondary px-8 py-3">View Plans</a>
+          </div>
         </div>
       </div>
     );
@@ -146,9 +155,9 @@ export default function UploadPage() {
 
       {!isPro && (
         <div className="mb-6 p-3 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-between">
-          <span className="text-sm text-blue-800">Free reports used: {freeUsed} / 10</span>
+          <span className="text-sm text-blue-800">Free reports used: {freeUsed} / 3</span>
           <div className="w-32 h-2 rounded-full bg-blue-200 overflow-hidden">
-            <div className="h-full bg-brand-accent rounded-full" style={{ width: `${(freeUsed / 10) * 100}%` }}></div>
+            <div className="h-full bg-brand-accent rounded-full" style={{ width: `${Math.min((freeUsed / 3) * 100, 100)}%` }}></div>
           </div>
         </div>
       )}
@@ -298,6 +307,23 @@ export default function UploadPage() {
             View My Leak Report
             <ArrowRight className="h-4 w-4" />
           </button>
+        </div>
+      )}
+
+      {showPaywall && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+            <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">You&apos;ve used your 3 free reports</h2>
+            <p className="text-slate-600 mb-6">Upgrade for unlimited reports, saved history, and weekly insights.</p>
+            <div className="flex flex-col gap-3">
+              <a href="/pricing?reason=limit" className="btn-primary w-full py-3">Upgrade Now</a>
+              <a href="/pricing" className="btn-secondary w-full py-3">View Plans</a>
+              <button onClick={() => setShowPaywall(false)} className="text-sm text-slate-500 hover:text-slate-700 mt-1">
+                Maybe later
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

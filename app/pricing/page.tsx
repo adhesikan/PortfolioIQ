@@ -34,7 +34,7 @@ export default function PricingPage() {
           <p className="text-sm text-slate-500 mb-4">Get started with trading analysis</p>
           <p className="text-4xl font-bold text-slate-900 mb-6">$0 <span className="text-base font-normal text-slate-500">/forever</span></p>
           <ul className="space-y-3 mb-8">
-            {["10 Leak Reports", "Screenshot & CSV upload", "AI trade extraction", "Behavior pattern analysis", "7-day fix plans"].map((f) => (
+            {["3 Leak Reports (lifetime)", "Screenshot & CSV upload", "AI trade extraction", "Behavior pattern analysis", "7-day fix plans"].map((f) => (
               <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
                 <Check className="h-4 w-4 text-green-500 shrink-0" />
                 {f}

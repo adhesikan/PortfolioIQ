@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { canGenerateReport, FREE_REPORTS_LIFETIME_LIMIT } from "@/lib/usage";
 import OpenAI from "openai";
 
 const openai = new OpenAI();
@@ -10,12 +11,14 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const usage = await prisma.usageCounter.findUnique({ where: { userId: user.id } });
-    const subscription = await prisma.subscription.findUnique({ where: { userId: user.id } });
-    const isPro = subscription?.status === "active";
-
-    if (!isPro && (usage?.freeReportsUsed ?? 0) >= 10) {
-      return NextResponse.json({ error: "Free report limit reached. Please upgrade to Pro." }, { status: 403 });
+    const check = await canGenerateReport(user.id);
+    if (!check.allowed) {
+      return NextResponse.json({
+        error: "FREE_LIMIT_REACHED",
+        freeUsed: check.freeUsed,
+        freeLimit: check.freeLimit,
+        paywallUrl: "/pricing?reason=limit",
+      }, { status: 402 });
     }
 
     const { uploadId, trades } = await req.json();
@@ -115,30 +118,57 @@ Rules:
     if (!jsonMatch) throw new Error("Could not parse AI response");
     const report = JSON.parse(jsonMatch[0]);
 
-    const leakReport = await prisma.leakReport.create({
-      data: {
-        userId: user.id,
-        uploadId,
-        leakScore: report.leakScore || 50,
-        topLeaks: report.topLeaks || [],
-        keyStats: report.keyStats || {},
-        behaviorPatterns: report.behaviorPatterns || [],
-        fixPlan: report.fixPlan || [],
-        riskChecklist: report.riskChecklist || [],
-        fullReport: report,
-      },
+    const result = await prisma.$transaction(async (tx) => {
+      const currentUsage = await tx.usageCounter.findUnique({ where: { userId: user.id } });
+      const freeUsed = currentUsage?.freeReportsUsed ?? 0;
+
+      if (!check.isSubscriber && freeUsed >= FREE_REPORTS_LIFETIME_LIMIT) {
+        throw new Error("FREE_LIMIT_REACHED");
+      }
+
+      const leakReport = await tx.leakReport.create({
+        data: {
+          userId: user.id,
+          uploadId,
+          leakScore: report.leakScore || 50,
+          topLeaks: report.topLeaks || [],
+          keyStats: report.keyStats || {},
+          behaviorPatterns: report.behaviorPatterns || [],
+          fixPlan: report.fixPlan || [],
+          riskChecklist: report.riskChecklist || [],
+          fullReport: report,
+        },
+      });
+
+      await tx.upload.update({ where: { id: uploadId }, data: { status: "completed" } });
+
+      if (!check.isSubscriber) {
+        await tx.usageCounter.upsert({
+          where: { userId: user.id },
+          create: { userId: user.id, freeReportsUsed: 1, totalReports: 1, lastReportAt: new Date() },
+          update: { freeReportsUsed: { increment: 1 }, totalReports: { increment: 1 }, lastReportAt: new Date() },
+        });
+      } else {
+        await tx.usageCounter.upsert({
+          where: { userId: user.id },
+          create: { userId: user.id, freeReportsUsed: 0, totalReports: 1, lastReportAt: new Date() },
+          update: { totalReports: { increment: 1 }, lastReportAt: new Date() },
+        });
+      }
+
+      return leakReport;
     });
 
-    await prisma.upload.update({ where: { id: uploadId }, data: { status: "completed" } });
-
-    await prisma.usageCounter.upsert({
-      where: { userId: user.id },
-      create: { userId: user.id, freeReportsUsed: 1, totalReports: 1, lastReportAt: new Date() },
-      update: { freeReportsUsed: { increment: 1 }, totalReports: { increment: 1 }, lastReportAt: new Date() },
-    });
-
-    return NextResponse.json({ reportId: leakReport.id, report });
+    return NextResponse.json({ reportId: result.id, report });
   } catch (error: any) {
+    if (error.message === "FREE_LIMIT_REACHED") {
+      return NextResponse.json({
+        error: "FREE_LIMIT_REACHED",
+        freeUsed: FREE_REPORTS_LIFETIME_LIMIT,
+        freeLimit: FREE_REPORTS_LIFETIME_LIMIT,
+        paywallUrl: "/pricing?reason=limit",
+      }, { status: 402 });
+    }
     console.error("Generate report error:", error);
     return NextResponse.json({ error: error.message || "Report generation failed" }, { status: 500 });
   }
