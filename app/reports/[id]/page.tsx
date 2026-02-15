@@ -3,13 +3,14 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Loader2, ArrowLeft, CheckCircle, XCircle, AlertTriangle, Calendar, TrendingDown } from "lucide-react";
+import { Loader2, ArrowLeft, CheckCircle, XCircle, AlertTriangle, Calendar, TrendingDown, Pencil, Check, X } from "lucide-react";
 import Link from "next/link";
 import Tooltip from "@/components/Tooltip";
 import SampleDisclaimer from "@/components/SampleDisclaimer";
 
 interface FullReport {
   id: string;
+  title?: string | null;
   leakScore: number;
   topLeaks: Array<{ title: string; severity: number; evidence: string; meaning: string; quickFix: string }>;
   keyStats: Record<string, any>;
@@ -36,6 +37,9 @@ export default function ReportDetailPage() {
   const reportId = params?.id as string;
   const [report, setReport] = useState<FullReport | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState("");
+  const [savingTitle, setSavingTitle] = useState(false);
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
@@ -65,6 +69,40 @@ export default function ReportDetailPage() {
       </div>
     );
   }
+
+  const getDefaultTitle = () => report.isSample ? "Leak Report (Example)" : "Your Leak Report";
+
+  const startEditingTitle = () => {
+    setTitleValue(report.title || getDefaultTitle());
+    setIsEditingTitle(true);
+  };
+
+  const cancelEditingTitle = () => {
+    setIsEditingTitle(false);
+    setTitleValue("");
+  };
+
+  const saveTitle = async () => {
+    setSavingTitle(true);
+    try {
+      const res = await fetch(`/api/reports/${reportId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: titleValue }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReport((prev) => prev ? { ...prev, title: data.title } : prev);
+      }
+    } catch {}
+    setSavingTitle(false);
+    setIsEditingTitle(false);
+  };
+
+  const handleTitleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") saveTitle();
+    else if (e.key === "Escape") cancelEditingTitle();
+  };
 
   const scoreColor = report.leakScore >= 70 ? "text-green-600" : report.leakScore >= 40 ? "text-yellow-600" : "text-red-600";
   const scoreBg = report.leakScore >= 70 ? "stroke-green-500" : report.leakScore >= 40 ? "stroke-yellow-500" : "stroke-red-500";
@@ -105,9 +143,38 @@ export default function ReportDetailPage() {
             </div>
           </div>
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-2xl font-bold text-slate-900 mb-1">
-              {report.isSample ? "Leak Report (Example)" : "Your Leak Report"}
-            </h1>
+            {isEditingTitle ? (
+              <div className="flex items-center gap-2 mb-1">
+                <input
+                  type="text"
+                  value={titleValue}
+                  onChange={(e) => setTitleValue(e.target.value)}
+                  onKeyDown={handleTitleKeyDown}
+                  maxLength={100}
+                  autoFocus
+                  className="text-2xl font-bold text-slate-900 border border-brand-accent rounded-lg px-3 py-1 outline-none focus:ring-2 focus:ring-brand-accent/30 w-full max-w-md"
+                />
+                <button onClick={saveTitle} disabled={savingTitle} className="p-1.5 rounded-lg hover:bg-green-100 text-green-600 transition-colors">
+                  <Check className="h-5 w-5" />
+                </button>
+                <button onClick={cancelEditingTitle} className="p-1.5 rounded-lg hover:bg-red-100 text-red-500 transition-colors">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 mb-1 group/title">
+                <h1 className="text-2xl font-bold text-slate-900">
+                  {report.title || getDefaultTitle()}
+                </h1>
+                <button
+                  onClick={startEditingTitle}
+                  className="p-1.5 rounded-lg opacity-0 group-hover/title:opacity-100 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
+                  title="Rename report"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              </div>
+            )}
             <p className="text-sm text-slate-500 flex items-center gap-1 justify-center md:justify-start">
               <Calendar className="h-3.5 w-3.5" />
               {new Date(report.createdAt).toLocaleDateString()}

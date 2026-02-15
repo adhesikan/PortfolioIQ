@@ -16,6 +16,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   return NextResponse.json({
     report: {
       id: report.id,
+      title: report.title,
       leakScore: report.leakScore,
       topLeaks: report.topLeaks,
       keyStats: report.keyStats,
@@ -28,4 +29,25 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       inputType: report.upload?.inputType || "IMAGE",
     },
   });
+}
+
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const body = await req.json();
+  const title = typeof body.title === "string" ? body.title.trim().slice(0, 100) : null;
+
+  const report = await prisma.leakReport.findFirst({
+    where: { id: params.id, userId: user.id },
+  });
+
+  if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
+
+  const updated = await prisma.leakReport.update({
+    where: { id: params.id },
+    data: { title: title || null },
+  });
+
+  return NextResponse.json({ title: updated.title });
 }

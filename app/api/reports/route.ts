@@ -9,17 +9,26 @@ export async function GET() {
   const reports = await prisma.leakReport.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
-    include: { upload: { include: { trades: true } } },
+    include: { upload: true },
   });
+
+  const reportIds = reports.map((r) => r.uploadId);
+  const tradeCounts = await prisma.trade.groupBy({
+    by: ["uploadId"],
+    where: { uploadId: { in: reportIds } },
+    _count: { id: true },
+  });
+  const tradeCountMap = Object.fromEntries(tradeCounts.map((t) => [t.uploadId, t._count.id]));
 
   return NextResponse.json({
     reports: reports.map((r) => ({
       id: r.id,
+      title: r.title,
       leakScore: r.leakScore,
       createdAt: r.createdAt.toISOString(),
-      tradesCount: r.upload.trades.length,
-      isSample: r.upload.isSample || false,
-      sampleType: r.upload.sampleType || null,
+      tradesCount: tradeCountMap[r.uploadId] || 0,
+      isSample: r.upload?.isSample || false,
+      sampleType: r.upload?.sampleType || null,
     })),
   });
 }

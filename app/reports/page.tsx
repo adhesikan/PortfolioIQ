@@ -2,12 +2,13 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
-import { FileText, Calendar, ArrowRight, Loader2, Beaker } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { FileText, Calendar, ArrowRight, Loader2, Beaker, Pencil, Check, X } from "lucide-react";
 import Link from "next/link";
 
 interface ReportSummary {
   id: string;
+  title?: string | null;
   leakScore: number;
   createdAt: string;
   tradesCount: number;
@@ -28,6 +29,10 @@ export default function ReportsPage() {
   const router = useRouter();
   const [reports, setReports] = useState<ReportSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [saving, setSaving] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
@@ -36,6 +41,62 @@ export default function ReportsPage() {
       .then((data) => setReports(data.reports || []))
       .finally(() => setLoading(false));
   }, [user, router]);
+
+  useEffect(() => {
+    if (editingId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [editingId]);
+
+  const startEditing = (e: React.MouseEvent, report: ReportSummary) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingId(report.id);
+    setEditValue(report.title || getDefaultTitle(report));
+  };
+
+  const cancelEditing = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setEditingId(null);
+    setEditValue("");
+  };
+
+  const saveTitle = async (e: React.MouseEvent, reportId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/reports/${reportId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: editValue }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setReports((prev) =>
+          prev.map((r) => (r.id === reportId ? { ...r, title: data.title } : r))
+        );
+      }
+    } catch {}
+    setSaving(false);
+    setEditingId(null);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent, reportId: string) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveTitle(e as any, reportId);
+    } else if (e.key === "Escape") {
+      setEditingId(null);
+    }
+  };
+
+  const getDefaultTitle = (report: ReportSummary) => {
+    if (report.isSample) return "Leak Report (Example)";
+    return "Leak Report";
+  };
 
   if (!user) return null;
 
@@ -72,10 +133,47 @@ export default function ReportsPage() {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-slate-900">
-                      {report.isSample ? "Leak Report (Example)" : "Leak Report"}
-                    </p>
-                    {report.isSample && (
+                    {editingId === report.id ? (
+                      <div className="flex items-center gap-1.5" onClick={(e) => e.preventDefault()}>
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(e, report.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          maxLength={100}
+                          className="px-2 py-0.5 text-sm font-semibold text-slate-900 border border-brand-accent rounded-md outline-none focus:ring-2 focus:ring-brand-accent/30 w-56"
+                        />
+                        <button
+                          onClick={(e) => saveTitle(e, report.id)}
+                          disabled={saving}
+                          className="p-1 rounded hover:bg-green-100 text-green-600 transition-colors"
+                        >
+                          <Check className="h-4 w-4" />
+                        </button>
+                        <button
+                          onClick={cancelEditing}
+                          className="p-1 rounded hover:bg-red-100 text-red-500 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-semibold text-slate-900">
+                          {report.title || getDefaultTitle(report)}
+                        </p>
+                        <button
+                          onClick={(e) => startEditing(e, report)}
+                          className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all"
+                          title="Rename report"
+                        >
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      </>
+                    )}
+                    {report.isSample && editingId !== report.id && (
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-800">
                         <Beaker className="h-2.5 w-2.5" />
                         {report.sampleType ? SAMPLE_LABELS[report.sampleType] || "Sample" : "Sample"}

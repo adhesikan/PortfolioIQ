@@ -1,0 +1,161 @@
+You are working inside the existing PortfolioIQ codebase 
+(Next.js App Router + TypeScript + Prisma/Postgres + Stripe + OpenAI + SendGrid).
+
+We already implemented:
+
+- 3 free lifetime reports
+- Stripe subscription unlocks unlimited reports
+- Report.inputType enum: IMAGE | CSV | SAMPLE
+- Current increment logic:
+
+if (!isSubscriber && report.inputType !== 'SAMPLE') {
+  increment freeReportsUsed
+}
+
+Now implement the COMPLETE, CORRECT behavior below.
+
+-----------------------------------------
+GOAL
+-----------------------------------------
+
+1) SAMPLE reports:
+   - DO NOT count toward 3 free lifetime limit
+   - DO NOT trigger paywall
+   - ARE still rate-limited for cost protection
+
+2) IMAGE and CSV reports:
+   - Count toward 3 lifetime free reports
+   - Trigger paywall at report #4 (unless subscriber)
+
+3) All enforcement must be server-side.
+
+-----------------------------------------
+STEP 1 — PAYWALL CHECK UPDATE
+-----------------------------------------
+
+Locate your server-side entitlement logic (e.g. canGenerateReport or inside /api/reports/generate).
+
+Modify logic:
+
+- Fetch report by reportId.
+- If report.inputType === 'SAMPLE':
+    → Always allow generation (even if freeReportsUsed >= 3)
+- Else:
+    → If subscriber (active/trialing) → allow
+    → Else if freeReportsUsed < 3 → allow
+    → Else return 402 FREE_LIMIT_REACHED
+
+Return structured JSON on paywall:
+
+{
+  "error": "FREE_LIMIT_REACHED",
+  "freeUsed": 3,
+  "freeLimit": 3,
+  "paywallUrl": "/pricing?reason=limit"
+}
+
+-----------------------------------------
+STEP 2 — SAFE USAGE INCREMENT
+-----------------------------------------
+
+Ensure increment only happens AFTER successful report generation and persistence.
+
+Keep this logic:
+
+if (!isSubscriber && report.inputType !== 'SAMPLE') {
+  increment freeReportsUsed
+}
+
+Wrap inside a DB transaction:
+- Re-check current freeReportsUsed
+- Insert report output
+- Increment counter
+- Commit
+
+This prevents race conditions across multiple tabs.
+
+-----------------------------------------
+STEP 3 — SAMPLE REPORT RATE LIMIT
+-----------------------------------------
+
+Add daily rate limit for SAMPLE reports.
+
+Constant:
+SAMPLE_REPORTS_PER_DAY_LIMIT = 5
+
+Implementation:
+
+Before generating SAMPLE report:
+- Count reports where:
+  - userId = current user
+  - inputType = SAMPLE
+  - createdAt >= NOW() - 24 hours
+
+If count >= 5:
+  return 429 with:
+
+{
+  "error": "SAMPLE_RATE_LIMIT",
+  "message": "You’ve reached today’s sample report limit. Please upload your own trade history or try again tomorrow."
+}
+
+Also log attempt in AbuseLog:
+- action: SAMPLE_REPORT_GENERATED
+- ipHash
+- deviceId
+- userAgent
+- timestamp
+
+-----------------------------------------
+STEP 4 — UI UPDATES
+-----------------------------------------
+
+On /app/new:
+
+Under sample trader buttons add:
+
+“Sample reports are for demonstration only and do not count toward your 3 free reports.”
+
+On report page when inputType === SAMPLE:
+
+Show banner (shadcn Alert):
+
+Title: Example Data
+Text: This report was generated using sample trades for demonstration purposes and does not count toward your free reports.
+
+Usage meter must NOT increment after sample reports.
+
+If user has used 3/3 real reports:
+- Paywall should block IMAGE/CSV
+- SAMPLE reports should still work
+
+-----------------------------------------
+STEP 5 — ADMIN PANEL
+-----------------------------------------
+
+In admin audit logs:
+- Log SAMPLE_REPORT_GENERATED events
+- Log FREE_LIMIT_REACHED events
+
+Allow filtering by action type.
+
+-----------------------------------------
+STEP 6 — QA CHECKLIST (Add to README)
+-----------------------------------------
+
+Test these cases:
+
+1) New free user generates 3 IMAGE reports → freeReportsUsed = 3
+2) 4th IMAGE report → 402 paywall
+3) Same user generates SAMPLE report after hitting limit → allowed
+4) Sample reports do not increment freeReportsUsed
+5) >5 sample reports in 24h → 429 rate limit
+6) Subscriber → unlimited IMAGE/CSV reports
+7) Subscriber still limited to 5 SAMPLE per day (optional but recommended)
+
+-----------------------------------------
+
+Implement this end-to-end now.
+All enforcement must be server-side.
+UI should reflect server state.
+Keep code clean and production-safe.
