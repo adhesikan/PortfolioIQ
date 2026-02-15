@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { Menu, X, BarChart3, Upload, FileText, Settings, Shield, LogOut, CreditCard } from "lucide-react";
+import { Menu, X, BarChart3, Upload, FileText, Settings, Shield, LogOut, CreditCard, TrendingUp } from "lucide-react";
 
 export default function Navigation() {
   const pathname = usePathname() || "";
@@ -27,10 +27,13 @@ export default function Navigation() {
     );
   }
 
+  const isPro = user.subscription?.status === "active" || user.subscription?.status === "trialing";
+
   const navItems = [
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/upload", label: "Upload", icon: Upload },
     { href: "/reports", label: "Reports", icon: FileText },
+    ...(isPro ? [{ href: "/progress", label: "Progress", icon: TrendingUp }] : []),
     { href: "/pricing", label: "Pricing", icon: CreditCard },
   ];
 
