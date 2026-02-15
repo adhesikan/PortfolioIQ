@@ -32,43 +32,19 @@ export async function POST(req: NextRequest) {
 
       const response = await openai.chat.completions.create({
         model: "gpt-4o-mini",
-        max_tokens: 4000,
+        max_tokens: 2000,
         messages: [
           {
             role: "system",
-            content: `You are a trade data extraction specialist. Extract structured trade data from brokerage screenshots.
-Return ONLY valid JSON with this exact structure:
-{
-  "trades": [
-    {
-      "ticker": "AAPL",
-      "action": "BUY",
-      "quantity": 100,
-      "entryPrice": 150.50,
-      "exitPrice": 155.00,
-      "entryDate": "2024-01-15",
-      "exitDate": "2024-01-20",
-      "pnl": 450.00,
-      "pnlPercent": 2.99,
-      "holdingDays": 5,
-      "confidence": 0.95
-    }
-  ]
-}
-Rules:
-- action must be BUY, SELL, SHORT, or COVER. If not visible, infer from context (positive P&L with long position = BUY, etc). Default to "BUY" if truly unknown.
-- ticker, action, and quantity must never be null
-- Set unknown optional fields (entryPrice, exitPrice, entryDate, exitDate, pnl, pnlPercent, holdingDays) to null
-- Assign confidence 0.0-1.0 per row based on how clearly you can read the data
-- Never fabricate data that isn't visible in the image
-- Calculate pnl and pnlPercent if entry and exit prices are available
-- Calculate holdingDays if dates are available`
+            content: `Extract trades from this brokerage screenshot. Return ONLY valid JSON:
+{"trades":[{"ticker":"AAPL","action":"BUY","quantity":100,"entryPrice":150.50,"exitPrice":155.00,"entryDate":"2024-01-15","exitDate":"2024-01-20","pnl":450.00,"pnlPercent":2.99,"holdingDays":5,"confidence":0.95}]}
+Rules: action=BUY/SELL/SHORT/COVER (default BUY). ticker/action/quantity never null. Unknown optional fields=null. confidence 0-1 per row. Never fabricate data.`
           },
           {
             role: "user",
             content: [
-              { type: "text", text: "Extract all trades from this brokerage screenshot." },
-              { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}` } }
+              { type: "text", text: "Extract all trades from this screenshot." },
+              { type: "image_url", image_url: { url: `data:${mimeType};base64,${base64}`, detail: "low" } }
             ]
           }
         ]

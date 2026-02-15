@@ -44,12 +44,35 @@ export default function UploadPage() {
   const isPro = user.subscription?.status === "active";
   const atLimit = !isPro && freeUsed >= 3;
 
+  const compressImage = (file: File, maxWidth = 1200): Promise<File> => {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      img.onload = () => {
+        if (img.width <= maxWidth) {
+          resolve(file);
+          return;
+        }
+        const scale = maxWidth / img.width;
+        const canvas = document.createElement("canvas");
+        canvas.width = maxWidth;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext("2d")!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          resolve(new File([blob!], file.name, { type: "image/jpeg" }));
+        }, "image/jpeg", 0.8);
+      };
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleScreenshot = async (file: File) => {
     setError("");
     setLoading(true);
     try {
+      const compressed = await compressImage(file);
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", compressed);
       const res = await fetch("/api/extract-trades", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Extraction failed");
