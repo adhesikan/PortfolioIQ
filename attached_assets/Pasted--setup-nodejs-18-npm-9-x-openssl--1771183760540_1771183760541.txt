@@ -1,0 +1,91 @@
+║ setup      │ nodejs_18, npm-9_x, openssl                                     ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ install    │ npm ci                                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ build      │ npm install && npx prisma generate && npm run build && cp -r    ║
+║            │ public .next/standalone/ 2>/dev/null || true && cp -r           ║
+║            │ .next/static .next/standalone/.next/                            ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ start      │ npx prisma migrate deploy && HOSTNAME=0.0.0.0 node              ║
+║            │ .next/standalone/server.js                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+74ms
+
+internal
+load .dockerignore
+0ms
+
+stage-0
+FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+10ms
+
+internal
+load build context
+0ms
+
+stage-0
+WORKDIR /app/ cached
+0ms
+
+stage-0
+COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix
+206ms
+
+stage-0
+RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d
+34s
+61 store paths deleted, 559.37 MiB freed
+
+stage-0
+COPY . /app/.
+384ms
+
+stage-0
+RUN npm ci
+24s
+Run `npm audit` for details.
+
+stage-0
+COPY . /app/.
+149ms
+
+stage-0
+RUN npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/
+40s
+ƒ (Dynamic) server-rendered on demand
+
+stage-0
+RUN printf '\nPATH=/app/node_modules/.bin:$PATH' >> /root/.profile
+96ms
+
+stage-0
+COPY . /app
+83ms
+
+auth
+sharing credentials for production-us-east4-eqdc4a.railway-registry.com
+0ms
+=== Successfully Built! ===
+Run:
+docker run -it production-us-east4-eqdc4a.railway-registry.com/4a75d1f1-9a80-4679-85cd-9cdc316f3d95:a4d8bee9-ac4c-4068-91db-e294a911484c
+Build time: 132.31 seconds
+ 
+====================
+Starting Healthcheck
+====================
+Path: /
+Retry window: 5m0s
+ 
+Attempt #1 failed with service unavailable. Continuing to retry for 4m49s
+Attempt #2 failed with service unavailable. Continuing to retry for 4m38s
+Attempt #3 failed with service unavailable. Continuing to retry for 4m26s
+Attempt #4 failed with service unavailable. Continuing to retry for 4m12s
+Attempt #5 failed with service unavailable. Continuing to retry for 3m54s
+Attempt #6 failed with service unavailable. Continuing to retry for 3m28s
