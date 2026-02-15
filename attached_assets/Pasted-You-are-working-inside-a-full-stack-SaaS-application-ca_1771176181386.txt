@@ -1,0 +1,301 @@
+You are working inside a full-stack SaaS application called **PortfolioIQ** using the domain portfolioiq.pro.
+
+IMPORTANT STRATEGIC UPDATE:
+PortfolioIQ is NOT just a portfolio analytics tool.
+PortfolioIQ is now positioned as:
+
+"Trading Performance Intelligence"
+
+The HERO feature is:
+👉 The Trader Leak Report
+
+This must be the primary conversion hook.
+
+The tone must be:
+- Emotionally compelling
+- Aggressive enough to attract struggling traders
+- Professionally designed
+- Compliance-safe
+- Clean and premium looking
+
+Use GPT-4o-mini for all AI operations.
+
+-----------------------------------------
+STACK REQUIREMENTS
+-----------------------------------------
+
+Frontend:
+- Next.js (App Router) + TypeScript
+- TailwindCSS
+- shadcn/ui
+- lucide icons
+- Responsive and mobile-first
+
+Backend:
+- Next.js API routes
+- Prisma ORM
+- Postgres database
+
+Auth:
+- Email/password authentication
+- Secure httpOnly session cookies
+- Role-based access (USER, ADMIN, SUPPORT)
+
+Payments:
+- Stripe subscription (Monthly Pro Plan)
+- 10 Free Leak Reports per user
+- After 10 reports → paywall
+- Stripe Customer Portal integration
+
+Email:
+- SendGrid API
+- Transactional email for:
+  - Report ready
+  - Admin broadcast
+  - Subscription confirmation
+
+AI:
+- OpenAI GPT-4o-mini
+  - Screenshot → trade extraction
+  - Leak Report generation
+
+-----------------------------------------
+PRODUCT STRUCTURE
+-----------------------------------------
+
+PortfolioIQ has 3 modules:
+
+1) Leak Report (Primary)
+2) Portfolio Performance (Secondary)
+3) Risk & Capital Insights (Future)
+
+Leak Report is the homepage focus and main CTA.
+
+-----------------------------------------
+HOMEPAGE (CRITICAL)
+-----------------------------------------
+
+Hero Section:
+
+Headline:
+"Find what’s leaking in your trading."
+
+Subheadline:
+"Upload your trade history. Get a clear breakdown of what’s holding you back — in minutes."
+
+Primary CTA:
+"Get My Free Leak Report"
+
+Secondary CTA:
+"See Sample Report"
+
+Add a premium-looking Sample Leak Report section:
+- Leak Score gauge
+- 3 example leaks
+- Clear “Example Report – For Demonstration Only”
+- Compliance note
+
+Add social proof placeholders.
+Add simple 3-step flow section:
+1) Upload screenshot
+2) Confirm extracted trades
+3) Get your Leak Report
+
+Footer must include:
+- Informational only
+- Not financial advice
+- No guarantees
+
+-----------------------------------------
+USER FLOW
+-----------------------------------------
+
+Primary Input: Screenshot upload of brokerage trade history.
+
+Secondary Input: CSV upload (more accurate option)
+
+Flow:
+1) User signs up
+2) Upload screenshot
+3) GPT-4o-mini extracts structured trades
+4) Show validation screen (editable table)
+5) User confirms
+6) Generate Leak Report
+7) Save report in history
+
+-----------------------------------------
+AI PROMPTS
+-----------------------------------------
+
+Use GPT-4o-mini.
+
+Extraction prompt must:
+- Return strict JSON
+- Never fabricate missing data
+- Assign confidence per row
+- Set unknown fields to null
+
+Leak Report prompt must:
+- Be compliance-safe
+- No promises
+- No buy/sell recommendations
+- Focus on behavior and process
+- Novice-friendly language
+- Return structured JSON
+
+-----------------------------------------
+LEAK REPORT STRUCTURE
+-----------------------------------------
+
+Include:
+
+- Leak Score (0–100)
+- Top 3 Leaks
+  - Evidence
+  - What it means
+  - Quick Fix
+- Key stats
+- Behavior patterns
+- 7-Day Fix Plan
+- Risk Control Checklist
+- Upsell section (VCP Trader optional future integration)
+- Compliance disclaimer
+
+-----------------------------------------
+FREE LIMIT + PAYWALL
+-----------------------------------------
+
+Each user gets 10 free reports.
+
+Track usage in UsageCounter table.
+
+On 11th attempt:
+- Show modal
+- Redirect to pricing
+- Require Stripe subscription
+
+Show usage progress bar inside dashboard.
+
+-----------------------------------------
+ABUSE PREVENTION
+-----------------------------------------
+
+Log:
+- Hashed IP (sha256 + salt)
+- deviceId (UUID in httpOnly cookie)
+- user agent
+- timestamp
+
+Store in AbuseLog table.
+
+Do NOT block by IP alone.
+Instead:
+- Increase risk score
+- Require verification or CAPTCHA if suspicious.
+
+-----------------------------------------
+ADMIN PANEL
+-----------------------------------------
+
+Create /admin with RBAC.
+
+Admin features:
+
+Users:
+- View
+- Disable
+- Reset free reports
+- Change role
+
+Payments:
+- Stripe status
+- Subscription state
+- Customer ID
+
+Email:
+- Send to individual user
+- Send to all users
+- Send to filtered users (free tier, paid tier, inactive)
+
+Abuse:
+- View abuse logs
+- Flag suspicious accounts
+
+Audit Logs:
+- Log all admin actions
+
+-----------------------------------------
+DATABASE TABLES
+-----------------------------------------
+
+User
+Session
+Subscription
+Report
+Trade
+Upload
+UsageCounter
+AbuseLog
+AdminAuditLog
+MarketingContent
+
+-----------------------------------------
+ENV VARIABLES
+-----------------------------------------
+
+DATABASE_URL
+OPENAI_API_KEY
+SENDGRID_API_KEY
+SENDGRID_FROM_EMAIL
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+STRIPE_PRO_PRICE_ID
+APP_BASE_URL
+IP_HASH_SALT
+
+-----------------------------------------
+UI REQUIREMENTS
+-----------------------------------------
+
+- Extremely clean
+- Modern SaaS look
+- Mobile-friendly
+- Dark mode optional
+- 3-step progress indicator (Upload → Confirm → Report)
+- Premium typography
+- Clear spacing
+- Large buttons
+- Professional tone
+
+-----------------------------------------
+ACCEPTANCE CRITERIA
+-----------------------------------------
+
+A user can:
+- Sign up
+- Upload screenshot
+- Confirm extracted trades
+- Generate Leak Report
+- Use up to 10 free reports
+- Subscribe via Stripe for unlimited
+- Access history
+
+Admin can:
+- Manage users
+- Send emails
+- View subscriptions
+- Monitor abuse
+
+-----------------------------------------
+
+Build this now end-to-end with:
+
+- Working pages
+- Prisma schema
+- Seed admin user
+- Stripe webhook
+- Clean README
+- Local setup instructions
+
+PortfolioIQ must feel like a premium trading performance intelligence platform.
