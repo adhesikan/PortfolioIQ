@@ -171,6 +171,9 @@ export default function UploadPage() {
   const loadSampleData = async (type: string) => {
     setError("");
     setLoading(true);
+    setIsSample(true);
+    setSampleType(type);
+    setStep("generating");
     try {
       const res = await fetch("/api/reports/sample", {
         method: "POST",
@@ -178,18 +181,18 @@ export default function UploadPage() {
         body: JSON.stringify({ sampleType: type, disclaimerAccepted: true }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to load sample data");
-      setUploadId(data.uploadId);
-      setIsSample(true);
-      setSampleType(type);
-      const tradesRes = await fetch(`/api/reports/sample-trades?uploadId=${data.uploadId}`);
-      const tradesData = await tradesRes.json();
-      if (tradesRes.ok && tradesData.trades) {
-        setTrades(tradesData.trades);
+      if (res.status === 429) {
+        setError(data.message || "You've reached today's sample report limit. Try again tomorrow.");
+        setStep("upload");
+        return;
       }
-      setStep("confirm");
+      if (!res.ok) throw new Error(data.error || "Failed to load sample report");
+      setReportId(data.reportId);
+      await refresh();
+      setStep("done");
     } catch (err: any) {
       setError(err.message);
+      setStep("upload");
     } finally {
       setLoading(false);
     }
@@ -402,12 +405,6 @@ export default function UploadPage() {
 
       {step === "confirm" && !loading && (
         <div>
-          {isSample && (
-            <div className="mb-4">
-              <SampleDisclaimer compact />
-            </div>
-          )}
-
           {requiresTradeSelection && (
             <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
               <div className="flex items-start gap-3">
@@ -439,9 +436,9 @@ export default function UploadPage() {
           )}
 
           <div className="flex items-center justify-between mb-4">
-            <Tooltip content={isSample ? "Review the sample trades. You can edit values or remove rows before generating the report." : "Review the trades our AI extracted. You can edit any values or remove incorrect rows before generating your report."}>
+            <Tooltip content="Review the trades our AI extracted. You can edit any values or remove incorrect rows before generating your report.">
               <h2 className="text-xl font-semibold text-slate-900">
-                {isSample ? `Sample Trades — ${SAMPLE_TYPES.find(s => s.type === sampleType)?.label || "Example"} (${trades.length})` : `Confirm Extracted Trades (${trades.length})`}
+                Confirm Extracted Trades ({trades.length})
               </h2>
             </Tooltip>
             <button
@@ -485,7 +482,7 @@ export default function UploadPage() {
                     </Tooltip>
                   </th>
                   <th className="pb-3 text-center font-medium text-slate-500">
-                    <Tooltip content={isSample ? "Sample data is always 100% confidence." : "How confident our AI is about the extracted data for this trade. Below 50% means you should double-check the values."}>
+                    <Tooltip content="How confident our AI is about the extracted data for this trade. Below 50% means you should double-check the values.">
                       <span>Confidence</span>
                     </Tooltip>
                   </th>
@@ -557,8 +554,14 @@ export default function UploadPage() {
       {step === "generating" && (
         <div className="card text-center py-16">
           <Loader2 className="h-10 w-10 text-brand-accent mx-auto mb-4 animate-spin" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Generating your Leak Report...</h3>
-          <p className="text-sm text-slate-600">Analyzing patterns, identifying leaks, building your fix plan. This takes about 15-30 seconds.</p>
+          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            {isSample ? "Loading Sample Report..." : "Generating your Leak Report..."}
+          </h3>
+          <p className="text-sm text-slate-600">
+            {isSample
+              ? "Preparing your sample leak report. This should only take a moment."
+              : "Analyzing patterns, identifying leaks, building your fix plan. This takes about 15-30 seconds."}
+          </p>
         </div>
       )}
 

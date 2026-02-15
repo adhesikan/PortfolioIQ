@@ -1,9 +1,101 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getSampleTrades, SampleType } from "@/lib/sampleTrades";
+import { getSampleTrades, getSampleDataset, SampleType } from "@/lib/sampleTrades";
+import { canGenerateReport } from "@/lib/usage";
+import { logAbuse } from "@/lib/abuse";
+import OpenAI from "openai";
+
+const openai = new OpenAI();
 
 const VALID_TYPES: SampleType[] = ["DAY_TRADER", "SWING_TRADER", "MESSY", "DISCIPLINED", "OPTIONS"];
+
+const SAMPLE_SYSTEM_PROMPT = `IMPORTANT CONTEXT: The user is viewing an EXAMPLE dataset for demonstration purposes.
+- Do not imply this reflects real user results or actual trading performance.
+- Use compliance-safe language throughout. Do not promise outcomes or improvements.
+- Avoid phrases like "you should buy/sell" or "you will improve returns."
+- Frame all observations as educational examples of how the tool works.
+- The report title should include "(Example)" to clearly mark it as demonstration data.
+
+You are a trading performance analyst. Analyze trade data and generate a Leak Report.
+Each trade has a "tradeIndex" field — use it to reference specific trades in leakDrivingTrades.
+You MUST return ONLY valid JSON with this exact structure:
+{
+  "reportTitle": "Trading Leak Finder Report (Example)",
+  "leakScore": 42,
+  "topLeaks": [
+    {
+      "title": "Leak name",
+      "severity": 82,
+      "evidence": "Specific data-backed evidence",
+      "meaning": "What this pattern means for their trading",
+      "quickFix": "Actionable fix they can implement today",
+      "leakDrivingTrades": [
+        {
+          "tradeIndex": 0,
+          "symbol": "AAPL",
+          "openDate": "2024-01-15",
+          "closeDate": "2024-01-16",
+          "pnl": -250,
+          "holdDays": 1,
+          "notes": "Why this specific trade contributed to this leak"
+        }
+      ],
+      "fixPlan": [
+        {
+          "rule": "A specific rule to follow",
+          "howToApply": "Step-by-step instructions",
+          "whyItHelps": "Educational reasoning"
+        }
+      ]
+    }
+  ],
+  "keyStats": {
+    "totalTrades": 47,
+    "winRate": 0.41,
+    "avgRR": 0.8,
+    "avgWin": 250,
+    "avgLoss": -312,
+    "biggestWin": 1200,
+    "biggestLoss": -890,
+    "avgHoldWinDays": 1.8,
+    "avgHoldLossDays": 4.2,
+    "profitFactor": 0.75
+  },
+  "behaviorPatterns": [
+    "Pattern description with evidence"
+  ],
+  "fixPlan": [
+    { "day": 1, "task": "Action item for day 1" },
+    { "day": 2, "task": "Action item for day 2" },
+    { "day": 3, "task": "Action item for day 3" },
+    { "day": 4, "task": "Action item for day 4" },
+    { "day": 5, "task": "Action item for day 5" },
+    { "day": 6, "task": "Action item for day 6" },
+    { "day": 7, "task": "Action item for day 7" }
+  ],
+  "riskChecklist": [
+    { "item": "Risk control item", "status": "pass" },
+    { "item": "Risk control item", "status": "fail" },
+    { "item": "Risk control item", "status": "warning" }
+  ],
+  "compliance": {
+    "isSample": true,
+    "disclaimerShort": "Example only — sample trade data for demonstration purposes. Not financial advice."
+  }
+}
+Rules:
+- leakScore is 0-100 where lower means more leaks (worse)
+- Identify exactly 3 top leaks
+- For each leak, include 2-5 leakDrivingTrades — specific trades that contributed to this leak pattern. Use the tradeIndex from the input data.
+- For each leak, include 1-3 fixPlan items with rule, howToApply, and whyItHelps fields
+- leakDrivingTrades notes should explain WHY this particular trade demonstrates the leak (educational, not advice)
+- Be compliance-safe: no promises, no buy/sell recommendations
+- Focus on behavior and process, not specific stocks
+- Use novice-friendly language
+- All evidence must be data-backed from the actual trades provided
+- The 7-day fix plan should be practical and progressive
+- Remember: this is EXAMPLE data for demonstration. Frame all findings as educational examples.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -25,6 +117,93 @@ export async function POST(req: NextRequest) {
       await prisma.user.update({
         where: { id: user.id },
         data: { sampleDisclaimerAcceptedAt: new Date() },
+      });
+    }
+
+    const check = await canGenerateReport(user.id, true);
+    if (!check.allowed && check.reason === "SAMPLE_RATE_LIMIT") {
+      return NextResponse.json({
+        error: "SAMPLE_RATE_LIMIT",
+        message: check.message,
+      }, { status: 429 });
+    }
+
+    const cachedReport = await prisma.leakReport.findFirst({
+      where: {
+        upload: {
+          isSample: true,
+          sampleType,
+        },
+      },
+      include: { upload: true },
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (cachedReport) {
+      const trades = getSampleTrades(sampleType as SampleType);
+
+      const upload = await prisma.upload.create({
+        data: {
+          userId: user.id,
+          type: "sample",
+          inputType: "SAMPLE",
+          sampleType,
+          isSample: true,
+          fileName: `sample_${sampleType.toLowerCase()}.json`,
+          status: "completed",
+          extractedData: trades as any,
+          confidence: 1.0,
+        },
+      });
+
+      await prisma.trade.createMany({
+        data: trades.map((t) => ({
+          uploadId: upload.id,
+          ticker: t.ticker,
+          action: t.action,
+          quantity: t.quantity,
+          entryPrice: t.entryPrice,
+          exitPrice: t.exitPrice,
+          entryDate: t.entryDate,
+          exitDate: t.exitDate,
+          pnl: t.pnl,
+          pnlPercent: t.pnlPercent,
+          holdingDays: t.holdingDays,
+          confidence: 1.0,
+          notes: t.notes,
+        })),
+      });
+
+      const cachedData = cachedReport.fullReport as any;
+      const report = await prisma.leakReport.create({
+        data: {
+          userId: user.id,
+          uploadId: upload.id,
+          title: cachedData?.reportTitle || `Sample Leak Report (${sampleType})`,
+          leakScore: cachedReport.leakScore,
+          topLeaks: cachedReport.topLeaks as any,
+          keyStats: cachedReport.keyStats as any ?? undefined,
+          behaviorPatterns: cachedReport.behaviorPatterns as any ?? undefined,
+          fixPlan: cachedReport.fixPlan as any ?? undefined,
+          riskChecklist: cachedReport.riskChecklist as any ?? undefined,
+          fullReport: cachedReport.fullReport as any,
+        },
+      });
+
+      await prisma.usageCounter.upsert({
+        where: { userId: user.id },
+        create: { userId: user.id, freeReportsUsed: 0, totalReports: 1, lastReportAt: new Date() },
+        update: { totalReports: { increment: 1 }, lastReportAt: new Date() },
+      });
+
+      const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+      const userAgent = req.headers.get("user-agent") || undefined;
+      await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_REPORT_CACHED" });
+
+      return NextResponse.json({
+        reportId: report.id,
+        cached: true,
+        tradesCount: trades.length,
       });
     }
 
@@ -62,18 +241,57 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    await prisma.abuseLog.create({
+    const indexedTrades = trades.map((t, i) => ({ tradeIndex: i, ...t }));
+    const tradesSummary = JSON.stringify(indexedTrades, null, 2);
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      max_tokens: 6000,
+      messages: [
+        { role: "system", content: SAMPLE_SYSTEM_PROMPT },
+        { role: "user", content: `Analyze these ${trades.length} trades and generate a Leak Report:\n\n${tradesSummary}` },
+      ],
+    });
+
+    const content = response.choices[0].message.content || "";
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("Could not parse AI response");
+    const reportData = JSON.parse(jsonMatch[0]);
+
+    const report = await prisma.leakReport.create({
       data: {
         userId: user.id,
-        hashedIp: "sample",
-        action: "SAMPLE_REPORT_CREATED",
-        riskScore: 0,
+        uploadId: upload.id,
+        title: reportData.reportTitle || `Sample Leak Report (${sampleType})`,
+        leakScore: reportData.leakScore || 50,
+        topLeaks: reportData.topLeaks || [],
+        keyStats: reportData.keyStats || {},
+        behaviorPatterns: reportData.behaviorPatterns || [],
+        fixPlan: reportData.fixPlan || [],
+        riskChecklist: reportData.riskChecklist || [],
+        fullReport: reportData,
       },
     });
 
-    return NextResponse.json({ uploadId: upload.id, tradesCount: trades.length });
+    await prisma.upload.update({ where: { id: upload.id }, data: { status: "completed" } });
+
+    await prisma.usageCounter.upsert({
+      where: { userId: user.id },
+      create: { userId: user.id, freeReportsUsed: 0, totalReports: 1, lastReportAt: new Date() },
+      update: { totalReports: { increment: 1 }, lastReportAt: new Date() },
+    });
+
+    const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
+    const userAgent = req.headers.get("user-agent") || undefined;
+    await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_REPORT_GENERATED" });
+
+    return NextResponse.json({
+      reportId: report.id,
+      cached: false,
+      tradesCount: trades.length,
+    });
   } catch (error: any) {
     console.error("Sample report error:", error);
-    return NextResponse.json({ error: error.message || "Failed to create sample data" }, { status: 500 });
+    return NextResponse.json({ error: error.message || "Failed to create sample report" }, { status: 500 });
   }
 }

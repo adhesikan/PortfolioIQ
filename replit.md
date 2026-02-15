@@ -85,11 +85,12 @@ prisma/
 
 ### Leak Report Flow
 1. User uploads screenshot or CSV of trade history, OR selects a sample dataset
-2. GPT-4o-mini extracts structured trade data (or sample trades are loaded directly)
-3. User reviews and confirms trades in editable table
+2. For uploads: GPT-4o-mini extracts structured trade data
+3. For uploads: User reviews and confirms trades in editable table
    - Free users with >10 trades must select 10 to analyze (trade selector UI with checkboxes)
    - Pro users analyze all trades (up to 500)
-4. AI generates Leak Report with:
+4. For samples: Report is served from cache (generated once via AI, then reused). No editing allowed.
+5. AI generates Leak Report with:
    - Leak Score (0-100)
    - Top 3 Leaks with evidence, meaning, and quick fix
    - Leak-Driving Trades: specific trades that contributed to each leak (2-5 per leak)
