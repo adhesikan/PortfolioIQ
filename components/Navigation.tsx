@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
-import { Menu, X, BarChart3, Upload, FileText, Settings, Shield, LogOut } from "lucide-react";
+import { Menu, X, BarChart3, Upload, FileText, Settings, Shield, LogOut, CreditCard } from "lucide-react";
 
 export default function Navigation() {
   const pathname = usePathname() || "";
@@ -20,6 +20,7 @@ export default function Navigation() {
   if (!user) {
     return (
       <nav className="flex items-center gap-2">
+        <Link href="/pricing" className="btn-ghost text-sm">Pricing</Link>
         <Link href="/login" className="btn-ghost text-sm">Log In</Link>
         <Link href="/signup" className="btn-primary text-sm">Sign Up</Link>
       </nav>
@@ -30,6 +31,7 @@ export default function Navigation() {
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/upload", label: "Upload", icon: Upload },
     { href: "/reports", label: "Reports", icon: FileText },
+    { href: "/pricing", label: "Pricing", icon: CreditCard },
   ];
 
   if (user.role === "ADMIN") {
