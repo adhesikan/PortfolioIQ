@@ -1,0 +1,76 @@
+You are working inside the existing PortfolioIQ codebase 
+(Next.js App Router + TypeScript + Tailwind + shadcn/ui).
+
+Update the homepage hero section messaging only. 
+Do NOT modify routing, auth, pricing, or backend logic.
+
+--------------------------------------------
+GOAL
+--------------------------------------------
+
+Replace the current hero subheadline with the new compliant, high-conversion version below.
+
+Keep the main headline:
+“Find What’s Leaking in Your Trading.”
+
+Replace the subheadline with:
+
+“Your trade history already shows where the leaks are happening — 
+PortfolioIQ helps you uncover them clearly and gives you a structured plan to improve your process.”
+
+--------------------------------------------
+IMPLEMENTATION DETAILS
+--------------------------------------------
+
+1) Locate the homepage file:
+   - app/page.tsx OR
+   - components/HomeHero.tsx OR similar hero component
+
+2) Replace only the hero description/subheadline text.
+
+3) Maintain:
+   - Responsive layout
+   - Typography hierarchy
+   - Spacing consistency
+   - Dark/light mode compatibility
+
+4) Format the subheadline as two visual lines on desktop:
+   Line 1:
+   Your trade history already shows where the leaks are happening —
+   Line 2:
+   PortfolioIQ helps you uncover them clearly and gives you a structured plan to improve your process.
+
+   On mobile, allow natural wrapping.
+
+5) Keep the CTA buttons unchanged:
+   - “Get My Free Leak Report”
+   - “See Sample Report”
+
+6) Under CTA, ensure the micro trust line remains:
+   “3 Free Reports • No Credit Card Required”
+
+--------------------------------------------
+COMPLIANCE REQUIREMENTS
+--------------------------------------------
+
+Do NOT add:
+- Any performance guarantees
+- Profit claims
+- “Make more money” language
+- Buy/sell recommendations
+
+Ensure wording remains informational and process-focused.
+
+--------------------------------------------
+UI QUALITY CHECK
+--------------------------------------------
+
+After updating:
+- Confirm hero looks balanced on:
+  - Desktop
+  - Tablet
+  - Mobile
+- Ensure no text overflow
+- Maintain premium SaaS aesthetic
+
+Commit changes cleanly.

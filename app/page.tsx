@@ -47,7 +47,8 @@ export default function HomePage() {
               Find what&apos;s <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">leaking</span> in your trading.
             </h1>
             <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto">
-              Upload your trade history. Our AI analyzes your patterns and gives you a clear breakdown of what&apos;s holding you back — in minutes.
+              <span className="block">Your trade history already shows where the leaks are happening —</span>
+              <span className="block mt-1">PortfolioIQ helps you uncover them clearly and gives you a structured plan to improve your process.</span>
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -64,7 +65,7 @@ export default function HomePage() {
                 See Sample Report
               </a>
             </div>
-            <p className="text-xs text-slate-500 mt-4">3 free reports lifetime. No credit card required.</p>
+            <p className="text-xs text-slate-500 mt-4">3 Free Reports &bull; No Credit Card Required</p>
           </div>
         </div>
       </section>
