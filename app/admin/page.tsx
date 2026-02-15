@@ -15,6 +15,7 @@ interface AdminUser {
   freeReportsUsed: number;
   totalReports: number;
   subscriptionStatus: string | null;
+  accountStatus: string;
 }
 
 interface AbuseLogEntry {
@@ -89,10 +90,14 @@ export default function AdminPage() {
 
   if (!user || user.role !== "ADMIN") return null;
 
-  const filteredUsers = users.filter((u) =>
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    (u.name || "").toLowerCase().includes(search.toLowerCase())
-  );
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch = u.email.toLowerCase().includes(search.toLowerCase()) ||
+      (u.name || "").toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = statusFilter === "all" || u.accountStatus === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   const tabs = [
     { id: "users" as Tab, label: "Users", icon: Users },
@@ -132,7 +137,20 @@ export default function AdminPage() {
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                   <input className="input pl-9" placeholder="Search users..." value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
-                <span className="text-sm text-slate-500">{users.length} users</span>
+                <select
+                  className="text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white text-slate-700"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="all">All Statuses</option>
+                  <option value="free">Free</option>
+                  <option value="pro">Pro</option>
+                  <option value="free_exhausted">Free (Limit Reached)</option>
+                  <option value="past_due">Past Due</option>
+                  <option value="canceled">Canceled</option>
+                  <option value="disabled">Disabled</option>
+                </select>
+                <span className="text-sm text-slate-500 whitespace-nowrap">{filteredUsers.length} of {users.length}</span>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
@@ -160,11 +178,21 @@ export default function AdminPage() {
                           <span className="text-slate-500"> ({u.freeReportsUsed}/3 free)</span>
                         </td>
                         <td className="py-3">
-                          {u.isDisabled ? (
-                            <span className="tag bg-red-100 text-red-700">Disabled</span>
-                          ) : (
-                            <span className="tag bg-green-100 text-green-700">Active</span>
-                          )}
+                          <span className={`tag ${
+                            u.accountStatus === "pro" ? "bg-blue-100 text-blue-700" :
+                            u.accountStatus === "disabled" ? "bg-red-100 text-red-700" :
+                            u.accountStatus === "past_due" ? "bg-amber-100 text-amber-700" :
+                            u.accountStatus === "canceled" ? "bg-orange-100 text-orange-700" :
+                            u.accountStatus === "free_exhausted" ? "bg-slate-200 text-slate-600" :
+                            "bg-green-100 text-green-700"
+                          }`}>
+                            {u.accountStatus === "pro" ? "Pro" :
+                             u.accountStatus === "disabled" ? "Disabled" :
+                             u.accountStatus === "past_due" ? "Past Due" :
+                             u.accountStatus === "canceled" ? "Canceled" :
+                             u.accountStatus === "free_exhausted" ? "Free (Limit Reached)" :
+                             "Free"}
+                          </span>
                         </td>
                         <td className="py-3 text-right">
                           <div className="flex items-center gap-1 justify-end">

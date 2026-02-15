@@ -12,17 +12,35 @@ export async function GET() {
   });
 
   return NextResponse.json({
-    users: users.map((u) => ({
-      id: u.id,
-      email: u.email,
-      name: u.name,
-      role: u.role,
-      isDisabled: u.isDisabled,
-      createdAt: u.createdAt.toISOString(),
-      freeReportsUsed: u.usageCounter?.freeReportsUsed ?? 0,
-      totalReports: u.usageCounter?.totalReports ?? 0,
-      subscriptionStatus: u.subscription?.status ?? null,
-    })),
+    users: users.map((u) => {
+      const subStatus = u.subscription?.status ?? null;
+      let accountStatus: string;
+      if (u.isDisabled) {
+        accountStatus = "disabled";
+      } else if (subStatus === "active") {
+        accountStatus = "pro";
+      } else if (subStatus === "past_due") {
+        accountStatus = "past_due";
+      } else if (subStatus === "canceled" || subStatus === "cancelled") {
+        accountStatus = "canceled";
+      } else if ((u.usageCounter?.freeReportsUsed ?? 0) >= 3) {
+        accountStatus = "free_exhausted";
+      } else {
+        accountStatus = "free";
+      }
+      return {
+        id: u.id,
+        email: u.email,
+        name: u.name,
+        role: u.role,
+        isDisabled: u.isDisabled,
+        createdAt: u.createdAt.toISOString(),
+        freeReportsUsed: u.usageCounter?.freeReportsUsed ?? 0,
+        totalReports: u.usageCounter?.totalReports ?? 0,
+        subscriptionStatus: subStatus,
+        accountStatus,
+      };
+    }),
   });
 }
 
