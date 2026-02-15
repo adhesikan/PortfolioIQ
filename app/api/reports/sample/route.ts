@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
-    const { sampleType, disclaimerAccepted } = body;
+    const { sampleType, disclaimerAccepted, timezone } = body;
 
     if (!sampleType || !VALID_TYPES.includes(sampleType)) {
       return NextResponse.json({ error: "Invalid sample type" }, { status: 400 });
@@ -143,8 +143,9 @@ export async function POST(req: NextRequest) {
       const trades = getSampleTrades(sampleType as SampleType);
       const dataset = getSampleDataset(sampleType as SampleType);
       const now = new Date();
-      const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+      const tz = timezone || "UTC";
+      const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: tz });
+      const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz });
       const sampleTitle = `${dataset.label} Sample — ${dateStr}, ${timeStr}`;
 
       const upload = await prisma.upload.create({
@@ -264,8 +265,9 @@ export async function POST(req: NextRequest) {
 
     const dataset = getSampleDataset(sampleType as SampleType);
     const nowGen = new Date();
-    const dateStrGen = nowGen.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-    const timeStrGen = nowGen.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+    const tzGen = timezone || "UTC";
+    const dateStrGen = nowGen.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: tzGen });
+    const timeStrGen = nowGen.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tzGen });
     const genTitle = `${dataset.label} Sample — ${dateStrGen}, ${timeStrGen}`;
 
     const report = await prisma.leakReport.create({

@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     const user = await getCurrentUser();
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { uploadId, trades, selectedTradeIndices } = await req.json();
+    const { uploadId, trades, selectedTradeIndices, timezone } = await req.json();
     if (!uploadId || !trades?.length) {
       return NextResponse.json({ error: "Upload ID and trades are required" }, { status: 400 });
     }
@@ -209,8 +209,9 @@ Rules:
       }
 
       const now = new Date();
-      const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
-      const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+      const tz = timezone || "UTC";
+      const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: tz });
+      const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz });
       const reportTitle = `Leak Report — ${dateStr}, ${timeStr}`;
 
       const leakReport = await tx.leakReport.create({

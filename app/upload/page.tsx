@@ -178,7 +178,7 @@ export default function UploadPage() {
       const res = await fetch("/api/reports/sample", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sampleType: type, disclaimerAccepted: true }),
+        body: JSON.stringify({ sampleType: type, disclaimerAccepted: true, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
       });
       const data = await res.json();
       if (res.status === 429) {
@@ -212,7 +212,7 @@ export default function UploadPage() {
     setStep("generating");
     setError("");
     try {
-      const body: any = { uploadId, trades };
+      const body: any = { uploadId, trades, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
       if (requiresTradeSelection) {
         body.selectedTradeIndices = Array.from(selectedIndices);
       }
