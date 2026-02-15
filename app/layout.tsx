@@ -8,7 +8,11 @@ export const metadata: Metadata = {
   title: "PortfolioIQ — Trading Performance Intelligence",
   description: "Find what's leaking in your trading. Upload your trade history and get a clear breakdown of what's holding you back.",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/favicon.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/favicon.png",
   }
 };
