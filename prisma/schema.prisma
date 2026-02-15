@@ -20,6 +20,7 @@ model User {
   passwordHash  String
   role          Role         @default(USER)
   isDisabled    Boolean      @default(false)
+  sampleDisclaimerAcceptedAt DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   sessions      Session[]
@@ -62,6 +63,9 @@ model Upload {
   userId        String
   type          String
   fileName      String?
+  inputType     String   @default("IMAGE")
+  sampleType    String?
+  isSample      Boolean  @default(false)
   status        String   @default("pending")
   extractedData Json?
   confidence    Float?

@@ -1,0 +1,174 @@
+You are working inside the existing **PortfolioIQ** codebase (Next.js App Router + TypeScript + Tailwind + shadcn/ui + Prisma/Postgres + Stripe + SendGrid + OpenAI). Add a **“Try Sample Data”** feature that includes multiple trader archetypes (Day Trader, Swing Trader, Messy Trader, Disciplined Trader, Options Trader) with strong legal/compliance-safe disclaimers.
+
+GOAL
+- On the “New Leak Report” flow (`/app/new`), allow users to generate a Leak Report instantly using **sample trade datasets** (no screenshot/CSV required).
+- Users can click a sample type button and the app should:
+  1) Load sample trades into the same normalized trade table structure
+  2) Send them to the existing validation step (pre-filled, editable)
+  3) Generate report like normal
+- Ensure all sample content is clearly marked “EXAMPLE ONLY” with disclaimers.
+- Sample datasets should NOT count against free reports unless the user explicitly clicks “Generate Report” (same rules as regular flow).
+- Add optional toggle to NOT count sample reports against free usage (config flag), but default to COUNTING them the same as real reports to keep system simple.
+
+----------------------------------------
+1) UI/UX UPDATES
+----------------------------------------
+Update `/app/new` to include a prominent section above upload:
+
+Title: “Try a Sample Leak Report”
+Subtitle: “See how the Leak Report works using example trade history. Example only — not real trades.”
+
+Buttons (shadcn Button group / cards):
+- “Day Trader (Sample)”
+- “Swing Trader (Sample)”
+- “Messy Trader (High Leaks)”
+- “Disciplined Trader (Low Leaks)”
+- “Options Trader (Sample)”
+
+Each button shows a tiny pill badge:
+- “Example Data”
+- and optionally “High Leaks” / “Low Leaks”
+
+On click:
+- Create a new draft Report in DB with inputType = SAMPLE and sampleType field stored in metadata
+- Create Trades rows in DB (normalized schema) linked to the draft report
+- Redirect user to `/app/validate/[reportId]` with table pre-filled
+
+Add a small link below:
+- “Prefer to upload your own? Use Screenshot Upload or CSV.”
+
+----------------------------------------
+2) LEGAL / COMPLIANCE DISCLAIMERS (STRONG)
+----------------------------------------
+Add a reusable Disclaimer component used on:
+- `/` homepage sample report section (if present)
+- `/app/new` sample data section
+- `/app/validate/[reportId]` when sampleType is present
+- `/app/report/[reportId]` when sampleType is present
+
+Required disclaimer copy (must appear above the fold for sample reports):
+- “EXAMPLE ONLY — Sample trade history is provided for demonstration and testing purposes.”
+- “This is not financial advice. No guarantees. Past performance is not indicative of future results.”
+- “Reports are informational and based on user-provided or example data. You are responsible for all decisions.”
+- “No recommendation is being made to buy, sell, or hold any security or strategy.”
+
+For sample reports specifically, also include:
+- “These examples may not reflect real market conditions, execution quality, slippage, commissions, taxes, or brokerage constraints.”
+
+Add “I understand” checkbox gate ONLY for sample reports (optional but recommended):
+- On first time running a sample report, show a small modal:
+  - checkbox + “Continue”
+  - store acceptance in user profile (`sampleDisclaimerAcceptedAt`)
+
+----------------------------------------
+3) DATABASE CHANGES (PRISMA)
+----------------------------------------
+Update Report model:
+- Add `inputType` enum: IMAGE | CSV | SAMPLE
+- Add optional fields:
+  - `sampleType` (string|null) // e.g. DAY_TRADER, SWING_TRADER, MESSY, DISCIPLINED, OPTIONS
+  - `isSample` (boolean default false) OR derive from inputType
+- Add `User.sampleDisclaimerAcceptedAt` datetime nullable (optional)
+
+Run migration.
+
+----------------------------------------
+4) SAMPLE DATASETS (SERVER-SIDE SOURCE OF TRUTH)
+----------------------------------------
+Create `lib/sampleTrades.ts` that exports:
+- `getSampleTrades(sampleType)` returning an array of normalized trade rows with:
+  symbol, side, qty, openDate, closeDate, entryPrice, exitPrice, pnl, fees
+Include 5 sample sets:
+
+A) DAY_TRADER
+- 10–20 same-day trades
+- mixed wins/losses
+- moderate leaks
+
+B) SWING_TRADER
+- 10–20 multi-day holds
+- include some “held losers longer” behavior
+
+C) MESSY_TRADER (HIGH LEAKS)
+- frequent trading clusters
+- large size variance
+- bigger losers than winners
+- more red than green
+- will produce high severity leaks
+
+D) DISCIPLINED_TRADER (LOW LEAKS)
+- consistent sizing
+- winners larger than losers
+- fewer trades
+- shows “structure” but DO NOT imply profitability guaranteed
+- keep it realistic (still some losses)
+
+E) OPTIONS_TRADER (SAMPLE)
+IMPORTANT: Keep options sample in a “trade history” format, not requiring option greeks.
+Represent option positions using:
+- symbol field as an option identifier string (e.g., “AAPL 2026-03-20 190C”)
+- side BUY/SELL
+- qty as contracts
+- entryPrice/exitPrice as premium (per contract) or total—choose one and document it
+- pnl value
+Also include a note in the report generator input:
+- “Options P/L may reflect premium and contract multiplier assumptions; user should confirm broker conventions.”
+
+Add a “Sample Data Notes” object returned from getSampleTrades that the UI can show.
+
+----------------------------------------
+5) API ROUTES
+----------------------------------------
+Add:
+POST `/api/reports/sample`
+Input: { sampleType: "DAY_TRADER" | "SWING_TRADER" | "MESSY" | "DISCIPLINED" | "OPTIONS" }
+Server:
+- require auth
+- create Report with inputType=SAMPLE, sampleType, isSample=true
+- insert Trade rows
+- return { reportId }
+
+Update existing generate endpoint:
+- If report.inputType === SAMPLE:
+  - Ensure disclaimers are included in report output (compliance fields)
+  - Add a banner on report page: “Example data”
+
+----------------------------------------
+6) REPORT GENERATION PROMPT UPDATE (GPT-4o-mini)
+----------------------------------------
+When inputType=SAMPLE or sampleType is set, prepend to the report generation prompt:
+
+- “The user is viewing an EXAMPLE dataset for demonstration. Do not imply this reflects real user results.”
+- “Use compliance-safe language. Do not promise outcomes.”
+- “Avoid phrases like ‘you should buy/sell’ or ‘you will improve returns’.”
+
+Also add a visible label in generated report JSON:
+- `reportTitle`: “Trading Leak Finder Report (Example)”
+- `compliance.disclaimerShort`: include “Example only…”
+
+----------------------------------------
+7) HOMEPAGE SAMPLE REPORT
+----------------------------------------
+If your homepage has a sample report preview:
+- Ensure it is fed from a stored JSON blob in DB (MarketingContent) OR from the sample dataset generator.
+- Must clearly show “Example only” banner + disclaimers.
+
+----------------------------------------
+8) ADMIN PANEL
+----------------------------------------
+In `/admin/content` add ability to edit:
+- sample report preview text blocks and disclaimer blocks (MarketingContent keys)
+In `/admin/audit-logs`, log:
+- sample report generation events (action “SAMPLE_REPORT_CREATED”) including sampleType
+
+----------------------------------------
+9) QA CHECKLIST
+----------------------------------------
+- All sample buttons load trades and reach validation screen
+- Sample reports show “Example only” banner on validate + report pages
+- Disclaimers appear above the fold
+- Options sample renders correctly and doesn’t break analytics
+- Sample report generation respects free limit + paywall unless config says otherwise
+- Admin can edit homepage sample blocks
+
+IMPLEMENT NOW end-to-end with clean, premium UI, consistent components, and strong disclaimers.
