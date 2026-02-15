@@ -8,7 +8,8 @@ export const metadata: Metadata = {
   title: "PortfolioIQ — Trading Performance Intelligence",
   description: "Find what's leaking in your trading. Upload your trade history and get a clear breakdown of what's holding you back.",
   icons: {
-    icon: "/favicon.ico"
+    icon: "/favicon.png",
+    apple: "/favicon.png",
   }
 };
 
@@ -24,14 +25,8 @@ export default function RootLayout({
           <div className="min-h-screen bg-slate-50 flex flex-col">
             <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 flex items-center justify-between py-3">
-                <Link href="/" className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-accent text-lg font-bold text-white">
-                    P
-                  </div>
-                  <div>
-                    <p className="text-base font-semibold text-slate-900">PortfolioIQ</p>
-                    <p className="text-[10px] text-slate-500 leading-tight">Trading Performance Intelligence</p>
-                  </div>
+                <Link href="/" className="flex items-center">
+                  <img src="/logo-clean.png" alt="PortfolioIQ — Trading Performance Intelligence" className="h-16 w-auto" />
                 </Link>
                 <Navigation />
               </div>
@@ -41,7 +36,9 @@ export default function RootLayout({
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div>
-                    <p className="text-sm font-semibold text-white mb-2">PortfolioIQ</p>
+                    <div className="mb-2">
+                      <img src="/logo-clean.png" alt="PortfolioIQ" className="h-8 w-auto" />
+                    </div>
                     <p className="text-xs">Trading Performance Intelligence. Find and fix the leaks in your trading process.</p>
                   </div>
                   <div>
