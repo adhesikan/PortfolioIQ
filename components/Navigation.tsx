@@ -35,6 +35,7 @@ export default function Navigation() {
     { href: "/reports", label: "Reports", icon: FileText },
     ...(isPro ? [{ href: "/progress", label: "Progress", icon: TrendingUp }] : []),
     { href: "/pricing", label: "Pricing", icon: CreditCard },
+    { href: "/settings", label: "Settings", icon: Settings },
   ];
 
   if (user.role === "ADMIN") {
