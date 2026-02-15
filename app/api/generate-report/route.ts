@@ -32,17 +32,17 @@ export async function POST(req: NextRequest) {
     await prisma.trade.createMany({
       data: trades.map((t: any) => ({
         uploadId,
-        ticker: t.ticker,
-        action: t.action,
-        quantity: t.quantity,
-        entryPrice: t.entryPrice,
-        exitPrice: t.exitPrice,
-        entryDate: t.entryDate,
-        exitDate: t.exitDate,
-        pnl: t.pnl,
-        pnlPercent: t.pnlPercent,
-        holdingDays: t.holdingDays,
-        confidence: t.confidence,
+        ticker: t.ticker || "UNKNOWN",
+        action: t.action || "BUY",
+        quantity: t.quantity || 0,
+        entryPrice: t.entryPrice ?? null,
+        exitPrice: t.exitPrice ?? null,
+        entryDate: t.entryDate ?? null,
+        exitDate: t.exitDate ?? null,
+        pnl: t.pnl ?? null,
+        pnlPercent: t.pnlPercent ?? null,
+        holdingDays: t.holdingDays ?? null,
+        confidence: t.confidence ?? null,
       })),
     });
 

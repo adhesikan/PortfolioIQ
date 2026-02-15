@@ -56,8 +56,9 @@ Return ONLY valid JSON with this exact structure:
   ]
 }
 Rules:
-- action must be BUY, SELL, SHORT, or COVER
-- Set unknown fields to null
+- action must be BUY, SELL, SHORT, or COVER. If not visible, infer from context (positive P&L with long position = BUY, etc). Default to "BUY" if truly unknown.
+- ticker, action, and quantity must never be null
+- Set unknown optional fields (entryPrice, exitPrice, entryDate, exitDate, pnl, pnlPercent, holdingDays) to null
 - Assign confidence 0.0-1.0 per row based on how clearly you can read the data
 - Never fabricate data that isn't visible in the image
 - Calculate pnl and pnlPercent if entry and exit prices are available
