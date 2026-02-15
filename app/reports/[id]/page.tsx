@@ -155,6 +155,13 @@ export default function ReportDetailPage() {
         </div>
       )}
 
+      <div className="rounded-lg bg-blue-50 border border-blue-200 p-4 mb-6">
+        <p className="text-xs font-semibold text-blue-900 mb-1">Important</p>
+        <p className="text-xs text-blue-800">
+          This report summarizes patterns from the data you provided and may contain errors. It does not provide investment advice or recommendations. Use it as a structured review and verify any metrics before using it in your trading plan.
+        </p>
+      </div>
+
       <div className="card mb-6">
         <div className="flex flex-col md:flex-row items-center gap-8">
           <div className="flex-shrink-0">
@@ -232,7 +239,7 @@ export default function ReportDetailPage() {
 
       <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
         <TrendingDown className="h-5 w-5 text-red-500" />
-        <Tooltip content="These are the biggest behavioral patterns costing you money. Each leak includes evidence from your trades, what it means, and a quick fix.">
+        <Tooltip content="These are the biggest behavioral patterns detected in the data. Each leak includes evidence, what it may mean, and practical next steps to consider.">
           <span>Top Leaks Found</span>
         </Tooltip>
       </h2>
@@ -244,7 +251,7 @@ export default function ReportDetailPage() {
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-100 text-red-600 text-sm font-bold">{i + 1}</div>
                 <h3 className="font-semibold text-slate-900">{leak.title}</h3>
               </div>
-              <Tooltip content="How much this leak is hurting your performance. Higher severity means a bigger impact on your results.">
+              <Tooltip content="How significant this pattern appears in the data. Higher severity suggests a larger potential impact on performance.">
                 <span className="text-sm font-medium text-red-600">Severity: {leak.severity}/100</span>
               </Tooltip>
             </div>
@@ -258,7 +265,7 @@ export default function ReportDetailPage() {
                 <p className="text-sm text-slate-700">{leak.meaning}</p>
               </div>
               <div>
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Quick Fix</p>
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Practical Next Steps (to consider)</p>
                 <p className="text-sm text-slate-700 font-medium">{leak.quickFix}</p>
               </div>
 
@@ -300,8 +307,8 @@ export default function ReportDetailPage() {
 
               {leak.fixPlan && leak.fixPlan.length > 0 && (
                 <div className="mt-4 pt-4 border-t border-slate-100">
-                  <Tooltip content="Specific rules and strategies to fix this leak in your trading process.">
-                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Fix Plan for This Leak</p>
+                  <Tooltip content="Specific practices to consider testing in your trading process.">
+                    <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Review Plan for This Leak</p>
                   </Tooltip>
                   <div className="space-y-3">
                     {leak.fixPlan.map((fp, j) => (
@@ -329,7 +336,7 @@ export default function ReportDetailPage() {
 
       {report.behaviorPatterns && report.behaviorPatterns.length > 0 && (
         <div className="card mb-6">
-          <Tooltip content="Recurring tendencies our AI detected in your trading behavior. These patterns shape your overall performance.">
+          <Tooltip content="Recurring tendencies detected in the trading data. These patterns may influence overall performance.">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">Behavior Patterns</h2>
           </Tooltip>
           <ul className="space-y-2">
@@ -345,8 +352,8 @@ export default function ReportDetailPage() {
 
       {report.fixPlan && report.fixPlan.length > 0 && (
         <div className="card mb-6">
-          <Tooltip content="A personalized daily action plan to help you break bad habits and fix your biggest leaks over one week.">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">7-Day Fix Plan</h2>
+          <Tooltip content="A structured daily review plan with practice tasks to help you evaluate and refine your process over one week.">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">7-Day Review &amp; Practice Plan</h2>
           </Tooltip>
           <div className="space-y-3">
             {report.fixPlan.map((item, i) => (

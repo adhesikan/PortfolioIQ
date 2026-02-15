@@ -70,7 +70,7 @@ export default function PricingPage() {
               { text: "Screenshot & CSV upload", tip: "Upload screenshots from any brokerage or export your trade history as a CSV file." },
               { text: "AI trade extraction", tip: "Our AI automatically reads your screenshots and structures your trade data — no manual entry." },
               { text: "Behavior pattern analysis", tip: "AI identifies recurring patterns like revenge trading, early exits, and position sizing mistakes." },
-              { text: "7-day fix plans", tip: "Each report includes a personalized daily action plan to help fix your biggest trading leaks." },
+              { text: "7-day review plans", tip: "Each report includes a structured daily review plan with practice tasks to help evaluate your trading process." },
             ].map((f) => (
               <li key={f.text} className="flex items-center gap-2 text-sm text-slate-700">
                 <Check className="h-4 w-4 text-green-500 shrink-0" />
@@ -97,7 +97,7 @@ export default function PricingPage() {
           <ul className="space-y-3 mb-8">
             {[
               { text: "Unlimited Leak Reports", tip: "Generate as many Leak Reports as you want, every month. No caps or limits." },
-              { text: "Everything in Free", tip: "All Free plan features included: screenshot upload, AI extraction, pattern analysis, and fix plans." },
+              { text: "Everything in Free", tip: "All Free plan features included: screenshot upload, AI extraction, pattern analysis, and review plans." },
               { text: "Priority AI analysis", tip: "Your reports are processed with priority, giving you faster results." },
               { text: "Advanced behavior insights", tip: "Deeper analysis of your trading psychology including emotional patterns, time-of-day trends, and more." },
               { text: "Historical report comparison", tip: "Track your progress over time by comparing Leak Scores and patterns across multiple reports." },
@@ -121,6 +121,9 @@ export default function PricingPage() {
       <div className="text-center mt-8">
         <p className="text-xs text-slate-500">
           Cancel anytime. No long-term contracts. For educational purposes only.
+        </p>
+        <p className="text-xs text-slate-400 mt-2">
+          PortfolioIQ is a software analysis tool. It does not execute trades or provide investment advice.
         </p>
       </div>
 

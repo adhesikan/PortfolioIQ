@@ -12,15 +12,15 @@ const sampleLeaks = [
     score: 82,
     evidence: "67% of winning trades closed within 2 days. Average winner held 1.8 days vs 4.2 days for losers.",
     meaning: "You're letting fear drive exits on winning positions while holding losers hoping they recover.",
-    fix: "Set a minimum hold time of 3 days for winners. Use trailing stops instead of fixed targets.",
+    fix: "Consider testing a minimum hold time of 3 days for winners. Some traders use trailing stops instead of fixed targets.",
     drivingTrades: [
       { symbol: "AAPL", open: "Jan 8", close: "Jan 9", pnl: 120, hold: "1d", notes: "Closed at +2.1% despite strong uptrend continuing to +6.8%." },
       { symbol: "TSLA", open: "Jan 15", close: "Jan 16", pnl: 85, hold: "1d", notes: "Exited after first green candle. Stock ran another +4.2% over 3 days." },
       { symbol: "NVDA", open: "Jan 22", close: "Jan 23", pnl: 210, hold: "1d", notes: "Took profit at +1.8%. Position would have gained +5.1% by week end." },
     ],
     fixPlan: [
-      { rule: "3-Day Minimum Hold Rule", howToApply: "Do not close any winning trade before 3 full trading days unless your stop-loss is hit.", whyItHelps: "Forces you to ride winners longer and capture the full move instead of exiting on fear." },
-      { rule: "Trailing Stop at 1.5 ATR", howToApply: "Replace fixed targets with a trailing stop set at 1.5x the Average True Range.", whyItHelps: "Locks in profits as the trade moves in your favor while allowing room for continuation." },
+      { rule: "3-Day Minimum Hold Rule (to test)", howToApply: "Consider not closing winning trades before 3 full trading days unless your stop-loss is hit. Test in a demo account first.", whyItHelps: "May help capture larger moves by reducing premature exits driven by short-term volatility." },
+      { rule: "Trailing Stop Strategy (to test)", howToApply: "Consider replacing fixed targets with a trailing stop approach. Backtest different trailing distances before applying to live trades.", whyItHelps: "Can help lock in gains while allowing room for continuation, though results vary by market conditions." },
     ],
   },
   {
@@ -28,13 +28,13 @@ const sampleLeaks = [
     score: 74,
     evidence: "Position sizes on breakout trades average 3.2x your normal size. These trades have a 38% win rate.",
     meaning: "Excitement about momentum setups leads to larger positions that amplify losses.",
-    fix: "Cap all position sizes at 2% of account. No exceptions for any setup type.",
+    fix: "One common risk practice is limiting position sizing (e.g., a % cap). Test what fits your risk plan.",
     drivingTrades: [
       { symbol: "AMD", open: "Jan 10", close: "Jan 12", pnl: -480, hold: "2d", notes: "3.5x normal size on breakout. Failed breakout led to oversized loss." },
       { symbol: "MARA", open: "Jan 18", close: "Jan 19", pnl: -320, hold: "1d", notes: "4x position size on momentum setup. Gap down the next morning." },
     ],
     fixPlan: [
-      { rule: "2% Max Position Size", howToApply: "Before entering any trade, calculate position size so max loss is 2% of account. No exceptions.", whyItHelps: "Prevents any single trade from causing outsized damage to your account." },
+      { rule: "Position Size Review (to test)", howToApply: "Before entering any trade, consider reviewing whether your position size aligns with your overall risk tolerance. Define a max loss threshold that fits your plan.", whyItHelps: "May help prevent any single trade from causing outsized impact on your account balance." },
     ],
   },
   {
@@ -42,14 +42,14 @@ const sampleLeaks = [
     score: 68,
     evidence: "After a losing trade, 71% of next trades happen within 15 minutes. These have a 28% win rate.",
     meaning: "Emotional response to losses causes impulsive trades with poor risk/reward.",
-    fix: "Implement a 1-hour cooldown rule after any loss. Log your emotional state before each trade.",
+    fix: "Some traders use cooldown rules after losses; consider testing a cooldown window. Logging your emotional state before each trade may also help.",
     drivingTrades: [
       { symbol: "SPY", open: "Jan 11", close: "Jan 11", pnl: -195, hold: "<1d", notes: "Entered 8 minutes after previous -$310 loss. No setup, pure impulse." },
       { symbol: "QQQ", open: "Jan 20", close: "Jan 20", pnl: -240, hold: "<1d", notes: "Revenge entry 12 minutes after loss. Doubled down when it went against." },
     ],
     fixPlan: [
-      { rule: "60-Minute Cooldown", howToApply: "After any losing trade, set a timer for 60 minutes. No trading until timer completes.", whyItHelps: "Breaks the emotional cycle and gives your rational brain time to re-engage." },
-      { rule: "Pre-Trade Emotion Check", howToApply: "Before every trade, rate your emotional state 1-5. Do not trade if above 3.", whyItHelps: "Creates self-awareness about emotional trading and prevents impulsive entries." },
+      { rule: "Cooldown Period (to test)", howToApply: "After any losing trade, consider setting a timer for 60 minutes. Some traders find this helps them reset before the next trade.", whyItHelps: "May help break the emotional cycle and give time for objective reassessment." },
+      { rule: "Pre-Trade Emotion Check (to test)", howToApply: "Before every trade, consider rating your emotional state 1-5. If elevated, review whether the setup still meets your criteria.", whyItHelps: "Can build self-awareness about emotional trading and support more deliberate decision-making." },
     ],
   },
 ];
@@ -94,11 +94,11 @@ export default function HomePage() {
               AI-Powered Trading Intelligence
             </span>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Find what&apos;s <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">leaking</span> in your trading.
+              Turn your trade history into a clear <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">performance review</span>.
             </h1>
             <p className="text-lg md:text-xl text-slate-300 leading-relaxed mb-8 max-w-2xl mx-auto">
-              <span className="block">Your trade history already shows where the leaks are happening —</span>
-              <span className="block mt-1">PortfolioIQ helps you uncover them clearly and gives you a structured plan to improve your process.</span>
+              <span className="block">PortfolioIQ highlights recurring patterns and process gaps you may be missing —</span>
+              <span className="block mt-1">and suggests practical review steps to test in your own plan.</span>
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
@@ -116,6 +116,7 @@ export default function HomePage() {
               </a>
             </div>
             <p className="text-xs text-slate-500 mt-4">3 Free Reports &bull; No Credit Card Required</p>
+            <p className="text-xs text-slate-500 mt-2">For informational purposes only — not investment advice. Verify all data before acting.</p>
           </div>
         </div>
       </section>
@@ -130,7 +131,7 @@ export default function HomePage() {
             {[
               { icon: Upload, step: "1", title: "Upload Screenshot", desc: "Take a screenshot of your trade history from any brokerage. Or upload a CSV for more accuracy." },
               { icon: Brain, step: "2", title: "AI Extracts Your Trades", desc: "Our AI reads your screenshot, extracts every trade automatically, and lets you review the data before analysis." },
-              { icon: Sparkles, step: "3", title: "Get Your AI Leak Report", desc: "AI analyzes your behavioral patterns, identifies leaks costing you money, and builds a personalized 7-day fix plan." },
+              { icon: Sparkles, step: "3", title: "Get Your AI Leak Report", desc: "AI analyzes your behavioral patterns, highlights recurring process gaps, and suggests a structured 7-day review plan to test." },
             ].map((item, i) => (
               <div key={i} className="relative text-center p-6">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-50">
@@ -155,7 +156,7 @@ export default function HomePage() {
               Powered by AI
             </span>
             <h2 className="text-3xl font-bold text-slate-900 mb-4">What Our AI Does For You</h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Advanced machine learning analyzes your trading data to surface insights you&apos;d never find on your own</p>
+            <p className="text-lg text-slate-600 max-w-2xl mx-auto">Advanced machine learning analyzes your trading data to surface patterns and process gaps worth reviewing</p>
           </div>
           <div className="grid gap-6 md:grid-cols-3 max-w-5xl mx-auto">
             {[
@@ -173,8 +174,8 @@ export default function HomePage() {
               },
               {
                 icon: Zap,
-                title: "Personalized Fix Plans",
-                desc: "Based on your specific leaks, AI generates a custom 7-day action plan with daily tasks designed to break your losing patterns.",
+                title: "Structured Review Plans",
+                desc: "Based on detected patterns, AI suggests a 7-day review plan with daily practice tasks to help you evaluate and refine your process.",
                 gradient: "from-amber-500 to-orange-500",
               },
             ].map((item, i) => (
@@ -229,7 +230,7 @@ export default function HomePage() {
                 </div>
                 <div className="flex-1">
                   <h3 className="text-xl font-semibold text-slate-900 mb-2">Leak Score: 42 / 100</h3>
-                  <p className="text-slate-600 mb-4">Your trading has significant behavioral leaks that are costing you money. The good news: these are fixable with discipline and awareness.</p>
+                    <p className="text-slate-600 mb-4">This example shows several behavioral patterns that may be worth reviewing. Many of these patterns can be addressed with structured practice and self-awareness.</p>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {[
                       { label: "Win Rate", value: "41%", tip: "Percentage of trades that were profitable." },
@@ -251,7 +252,7 @@ export default function HomePage() {
 
             <h3 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
               <TrendingDown className="h-5 w-5 text-red-500" />
-              <Tooltip content="These are the biggest behavioral patterns costing you money. Each leak includes evidence from your trades, what it means, and a quick fix.">
+              <Tooltip content="These are the biggest behavioral patterns detected in the data. Each leak includes evidence, what it may mean, and practical next steps to consider.">
                 <span>Top Leaks Found</span>
               </Tooltip>
             </h3>
@@ -265,7 +266,7 @@ export default function HomePage() {
                       </div>
                       <h4 className="font-semibold text-slate-900">{leak.title}</h4>
                     </div>
-                    <Tooltip content="How much this leak is hurting your performance. Higher severity means a bigger impact on your results.">
+                    <Tooltip content="How significant this pattern appears in the data. Higher severity suggests a larger potential impact on performance.">
                       <span className="text-sm font-medium text-red-600">Severity: {leak.score}/100</span>
                     </Tooltip>
                   </div>
@@ -279,7 +280,7 @@ export default function HomePage() {
                       <p className="text-sm text-slate-700">{leak.meaning}</p>
                     </div>
                     <div>
-                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Quick Fix</p>
+                      <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Practical Next Steps (to consider)</p>
                       <p className="text-sm text-slate-700 font-medium">{leak.fix}</p>
                     </div>
 
@@ -318,8 +319,8 @@ export default function HomePage() {
                     </div>
 
                     <div className="mt-4 pt-4 border-t border-slate-100">
-                      <Tooltip content="Specific rules and strategies to fix this leak in your trading process.">
-                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Fix Plan for This Leak</p>
+                      <Tooltip content="Specific practices to consider testing in your trading process.">
+                        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Review Plan for This Leak</p>
                       </Tooltip>
                       <div className="space-y-3">
                         {leak.fixPlan.map((fp, j) => (
@@ -359,8 +360,8 @@ export default function HomePage() {
             </div>
 
             <div className="card mb-6">
-              <Tooltip content="A personalized daily action plan to help you break bad habits and fix your biggest leaks over one week.">
-                <h3 className="text-lg font-semibold text-slate-900 mb-4">7-Day Fix Plan</h3>
+              <Tooltip content="A structured daily review plan with practice tasks to help you evaluate and refine your process over one week.">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">7-Day Review &amp; Practice Plan</h3>
               </Tooltip>
               <div className="space-y-3">
                 {sampleFixPlan.map((item, i) => (
@@ -410,10 +411,10 @@ export default function HomePage() {
             AI-Powered Analysis
           </div>
           <h2 className="text-3xl font-bold text-white mb-4">
-            Stop guessing. Let AI find the fix.
+            Get clarity on your trading process.
           </h2>
           <p className="text-lg text-slate-400 mb-8 max-w-xl mx-auto">
-            Most traders lose money because of repeatable behavioral mistakes. Our AI finds yours in minutes — not months.
+            Many traders repeat the same process gaps without realizing it. Our AI highlights patterns worth reviewing — in minutes, not months.
           </p>
           <Link
             href={user ? "/upload" : "/signup"}
@@ -430,10 +431,10 @@ export default function HomePage() {
           <div className="card bg-amber-50 border-amber-200">
             <h3 className="font-semibold text-amber-900 mb-2">Educational Disclaimer</h3>
             <p className="text-sm text-amber-800">
-              PortfolioIQ provides informational and educational content only. It does not provide personalized
-              financial advice, investment recommendations, or trading signals. All analysis is based on
-              user-submitted data and AI-generated insights. Past performance is not indicative of future results.
-              No guarantees of trading profits or loss prevention are made or implied. Consult a qualified
+              PortfolioIQ is a software analysis tool that provides informational and educational content only. It does not
+              provide financial advice, investment recommendations, or trading signals. All analysis is based on
+              user-submitted data and AI-generated pattern detection. Past performance is not indicative of future results.
+              No outcomes, profits, or loss prevention are guaranteed or implied. Consult a qualified
               financial professional before making any investment decisions.
             </p>
             <p className="text-sm text-amber-600 mt-3">

@@ -6,7 +6,7 @@ import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "PortfolioIQ — Trading Performance Intelligence",
-  description: "Find what's leaking in your trading. Upload your trade history and get a clear breakdown of what's holding you back.",
+  description: "Turn your trade history into a clear performance review. PortfolioIQ highlights recurring patterns and process gaps — for informational purposes only.",
   icons: {
     icon: [
       { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
@@ -43,7 +43,7 @@ export default function RootLayout({
                     <div className="mb-2">
                       <img src="/logo-clean.png" alt="PortfolioIQ" className="h-8 w-auto" />
                     </div>
-                    <p className="text-xs">Trading Performance Intelligence. Find and fix the leaks in your trading process.</p>
+                    <p className="text-xs">Trading Performance Intelligence. Review and refine your trading process.</p>
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-white mb-2">Product</p>
@@ -59,7 +59,7 @@ export default function RootLayout({
                       <p><Link href="/privacy" className="hover:text-white transition-colors">Privacy Policy</Link></p>
                       <p><Link href="/terms" className="hover:text-white transition-colors">Terms of Service</Link></p>
                     </div>
-                    <p className="text-xs leading-relaxed text-slate-500">For informational and educational purposes only. Not financial advice. No guarantees of trading results.</p>
+                    <p className="text-xs leading-relaxed text-slate-500">For informational and educational purposes only. Not financial advice. No outcomes are guaranteed or implied.</p>
                   </div>
                 </div>
                 <div className="mt-8 pt-6 border-t border-slate-800 text-xs text-center">

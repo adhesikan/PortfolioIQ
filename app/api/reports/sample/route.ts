@@ -29,7 +29,7 @@ You MUST return ONLY valid JSON with this exact structure:
       "severity": 82,
       "evidence": "Specific data-backed evidence",
       "meaning": "What this pattern means for their trading",
-      "quickFix": "Actionable fix they can implement today",
+      "quickFix": "Non-directive practical next step to consider testing",
       "leakDrivingTrades": [
         {
           "tradeIndex": 0,
@@ -43,9 +43,9 @@ You MUST return ONLY valid JSON with this exact structure:
       ],
       "fixPlan": [
         {
-          "rule": "A specific rule to follow",
-          "howToApply": "Step-by-step instructions",
-          "whyItHelps": "Educational reasoning"
+          "rule": "A practice rule to consider testing",
+          "howToApply": "Non-directive step-by-step suggestion (use 'consider', 'you might test', etc.)",
+          "whyItHelps": "Educational reasoning for why this approach may help"
         }
       ]
     }
@@ -90,11 +90,15 @@ Rules:
 - For each leak, include 2-5 leakDrivingTrades — specific trades that contributed to this leak pattern. Use the tradeIndex from the input data.
 - For each leak, include 1-3 fixPlan items with rule, howToApply, and whyItHelps fields
 - leakDrivingTrades notes should explain WHY this particular trade demonstrates the leak (educational, not advice)
-- Be compliance-safe: no promises, no buy/sell recommendations
+- Be compliance-safe: no promises, no buy/sell recommendations, no directive language
+- Never use "you should", "you must", "always do X". Instead use "consider testing", "you might try", "one approach is"
+- The quickFix field should be renamed conceptually to "Practical Next Steps" — write non-directive suggestions, not commands
+- Do NOT give specific numerical thresholds as rules (e.g., "cap at 2%", "use 1.5 ATR"). Instead describe the concept and suggest the user determine their own parameters
 - Focus on behavior and process, not specific stocks
 - Use novice-friendly language
 - All evidence must be data-backed from the actual trades provided
-- The 7-day fix plan should be practical and progressive
+- The 7-day plan should be framed as a "Review & Practice Plan" — suggest review tasks, not commands
+- Never imply guaranteed improvement or profit. Use "may help", "could support", "worth testing"
 - Remember: this is EXAMPLE data for demonstration. Frame all findings as educational examples.`;
 
 export async function POST(req: NextRequest) {

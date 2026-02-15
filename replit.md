@@ -2,7 +2,7 @@
 
 ## Overview
 
-PortfolioIQ is a full-stack SaaS application positioned as "Trading Performance Intelligence." The hero feature is the **Trader Leak Report**, which analyzes trade history to find behavioral leaks and provides actionable fixes.
+PortfolioIQ is a full-stack SaaS application positioned as "Trading Performance Intelligence." The hero feature is the **Trader Leak Report**, which analyzes trade history to identify behavioral patterns and suggests structured review steps.
 
 **Domain:** portfolioiq.pro  
 **Status:** Active development  

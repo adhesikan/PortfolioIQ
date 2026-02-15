@@ -51,6 +51,7 @@ export default function UploadPage() {
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(false);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [needsSelection, setNeedsSelection] = useState(false);
+  const [uploadConsent, setUploadConsent] = useState(false);
 
   if (!user) {
     router.push("/login");
@@ -212,7 +213,7 @@ export default function UploadPage() {
     setStep("generating");
     setError("");
     try {
-      const body: any = { uploadId, trades, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone };
+      const body: any = { uploadId, trades, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone, uploadConsent: true };
       if (requiresTradeSelection) {
         body.selectedTradeIndices = Array.from(selectedIndices);
       }
@@ -350,6 +351,15 @@ export default function UploadPage() {
             </div>
           )}
 
+          <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-800">
+                <span className="font-semibold">Privacy Notice:</span> Please do not upload account numbers, addresses, or other personal identifiers. Crop or blur sensitive details before uploading.
+              </p>
+            </div>
+          </div>
+
           <div className={`grid gap-6 md:grid-cols-2 ${atLimit ? "opacity-50 pointer-events-none" : ""}`}>
             <div
               className="card-hover cursor-pointer text-center py-12"
@@ -444,13 +454,28 @@ export default function UploadPage() {
             <button
               onClick={handleGenerateReport}
               className="btn-primary"
-              disabled={trades.length === 0 || (requiresTradeSelection && selectedIndices.size !== FREE_MAX_TRADES)}
+              disabled={trades.length === 0 || !uploadConsent || (requiresTradeSelection && selectedIndices.size !== FREE_MAX_TRADES)}
             >
               {requiresTradeSelection
                 ? `Analyze ${selectedIndices.size === FREE_MAX_TRADES ? FREE_MAX_TRADES : "Selected"} Trades`
                 : "Generate Leak Report"}
               <ArrowRight className="h-4 w-4" />
             </button>
+          </div>
+
+          <div className="mb-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={uploadConsent}
+                onChange={(e) => setUploadConsent(e.target.checked)}
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+              />
+              <span className="text-xs text-slate-700 leading-relaxed">
+                I confirm I have permission to upload this data and it does not include sensitive personal identifiers. 
+                See our <a href="/disclaimer" className="underline text-brand-accent hover:text-blue-800">Disclaimer</a>.
+              </span>
+            </label>
           </div>
           <div className="card overflow-x-auto">
             <table className="w-full text-sm">
@@ -560,7 +585,7 @@ export default function UploadPage() {
           <p className="text-sm text-slate-600">
             {isSample
               ? "Preparing your sample leak report. This should only take a moment."
-              : "Analyzing patterns, identifying leaks, building your fix plan. This takes about 15-30 seconds."}
+              : "Analyzing patterns, identifying leaks, building your review plan. This takes about 15-30 seconds."}
           </p>
         </div>
       )}

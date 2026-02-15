@@ -1,0 +1,77 @@
+You are working inside an existing full-stack SaaS app called “PortfolioIQ” (Next.js/React + Tailwind UI + Node/Express or Next API routes + Postgres + Stripe). The public site is portfolioiq.pro and the app generates “Leak Reports” from uploaded trade history (CSV and/or screenshot parsing). There is a free tier limited to 3 reports.
+
+GOAL
+Update all marketing + report copy and a few UI flows to be more compliance-safe:
+- Avoid implied profit/outcome claims (“costing you money”, “find the fix”, “stop guessing”).
+- Avoid language that reads like personalized financial advice (“7-day fix plan”, “cap all positions at 2%”).
+- Keep the value proposition strong: clarity, pattern recognition, structured review, faster insights.
+- Add explicit upload consent and PII guidance.
+- Ensure disclaimer is present near CTAs and report outputs.
+
+NON-GOALS
+- Do NOT change core parsing/analysis logic, scoring model, or Stripe billing logic.
+- Minimal DB changes; only add DB fields if absolutely necessary (prefer no DB migration).
+- Maintain current free report limits and sample profiles counting toward free reports.
+
+IMPLEMENTATION TASKS
+
+1) HOMEPAGE COPY UPDATES (marketing)
+Find homepage sections that currently say things like:
+- “Find what’s leaking in your trading”
+- “Identifies leaks costing you money”
+- “Stop guessing. Let AI find the fix.”
+Replace with compliance-safer equivalents that emphasize process + clarity:
+- Hero headline: “Turn your trade history into a clear performance review.”
+- Subheadline: “PortfolioIQ highlights recurring patterns and process gaps you may be missing — and suggests practical review steps to test in your own plan.”
+- CTA button remains: “Get My Free Leak Report”
+- Add a short 1-line disclaimer directly under CTA (not just footer):
+  “For informational purposes only — not investment advice. Verify all data before acting.”
+
+2) REPORT LANGUAGE UPDATES (report output)
+Where the report currently shows “Personalized 7-Day Fix Plan” and “Quick Fix” bullets:
+- Rename “Personalized 7-Day Fix Plan” => “7-Day Review & Practice Plan”
+- Rename “Quick Fix” => “Practical Next Steps (to consider)”
+- Change directive language to non-directive:
+  Replace “Use trailing stops…” with “Consider testing trailing stops…”
+  Replace “Cap all position sizes at 2%” with “One common risk practice is limiting position sizing (e.g., a % cap). Test what fits your risk plan.”
+  Replace “Implement a 1-hour cooldown rule” with “Some traders use cooldown rules after losses; consider testing a cooldown window.”
+
+Add a compliance note block in the report (top or bottom):
+- Title: “Important”
+- Text: “This report summarizes patterns from the data you provided and may contain errors. It does not provide investment advice or recommendations. Use it as a structured review and verify any metrics before using it in your trading plan.”
+
+3) UPLOAD FLOW: CONSENT + PII WARNING (no DB change preferred)
+On the upload screen (CSV + screenshot upload):
+- Add a small callout above uploader:
+  “Please do not upload account numbers, addresses, or other personal identifiers. Crop/blur sensitive details before uploading.”
+- Add a required checkbox before enabling “Generate Report”:
+  Label: “I confirm I have permission to upload this data and it does not include sensitive personal identifiers.”
+- Store checkbox state only client-side for now (no DB). It must be required each upload attempt.
+
+4) TERMS/PRIVACY/DISCLAIMER UX IMPROVEMENTS
+- Ensure “Disclaimer” link is present in footer and also in the upload flow near the consent checkbox.
+- On pricing/signup modal (if exists), add a short note:
+  “PortfolioIQ is a software analysis tool. It does not execute trades or provide investment advice.”
+
+5) AUDIT ALL INSTANCES OF RISKY WORDING
+Search the repo for these phrases and update them:
+- “costing you money”
+- “find the fix”
+- “stop guessing”
+- “personalized”
+- “fix plan”
+- “guarantee”
+- “beat the market”
+Ensure we do not imply profits, guaranteed improvement, or personalized financial advice.
+
+6) ACCEPTANCE CHECKLIST
+- Homepage conversion flow still works (CTA -> signup/upload).
+- Report still renders fully and looks polished; only copy changes.
+- Consent checkbox blocks report generation until checked.
+- Disclaimers visible near CTA and inside report.
+- No breaking changes; all tests/build pass.
+
+OUTPUT REQUIREMENTS
+- Provide a list of modified files.
+- Include exact copy strings you changed (before/after) in a short changelog.
+- If any DB changes are needed, propose them first; otherwise avoid migrations.

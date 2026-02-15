@@ -22,7 +22,7 @@ export default function DisclaimerPage() {
         <section>
           <h2 className="text-lg font-semibold text-slate-900 mb-2">No Financial Advice</h2>
           <p className="text-sm text-slate-700 leading-relaxed">
-            The content provided through our Service, including but not limited to Leak Reports, trade analysis, behavioral insights, risk checklists, and fix plans, is generated using artificial intelligence and algorithmic analysis. This content is not intended to be and should not be construed as financial advice, investment recommendations, or trading signals. You should not make any financial decisions based solely on the information provided by PortfolioIQ.
+            The content provided through our Service, including but not limited to Leak Reports, trade analysis, behavioral insights, risk checklists, and review plans, is generated using artificial intelligence and algorithmic analysis. This content is not intended to be and should not be construed as financial advice, investment recommendations, or trading signals. You should not make any financial decisions based solely on the information provided by PortfolioIQ.
           </p>
         </section>
 
