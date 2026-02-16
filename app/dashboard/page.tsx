@@ -106,8 +106,8 @@ function getFixActions(report: DashboardData["latest"]): string[] {
   return actions.slice(0, 3);
 }
 
-function getSeverityColor(severity?: string) {
-  const s = (severity || "").toLowerCase();
+function getSeverityColor(severity?: any) {
+  const s = String(severity || "").toLowerCase();
   if (s === "high" || s === "critical") return "bg-red-100 text-red-700 border-red-200";
   if (s === "medium" || s === "moderate") return "bg-amber-100 text-amber-700 border-amber-200";
   return "bg-blue-100 text-blue-700 border-blue-200";
@@ -455,7 +455,7 @@ export default function DashboardPage() {
                 <Link key={i} href={`/reports/${latest!.id}`} className="block group">
                   <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors -mx-1">
                     <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase border shrink-0 mt-0.5 ${getSeverityColor(leak.severity)}`}>
-                      {leak.severity || "Info"}
+                      {typeof leak.severity === "string" ? leak.severity : "Info"}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-900 group-hover:text-brand-accent transition-colors">{leak.name || leak.title || `Leak ${i + 1}`}</p>
