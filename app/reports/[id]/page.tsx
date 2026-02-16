@@ -66,7 +66,7 @@ const SAMPLE_LABELS: Record<string, string> = {
 };
 
 export default function ReportDetailPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const params = useParams();
   const reportId = params?.id as string;
