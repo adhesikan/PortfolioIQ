@@ -17,6 +17,7 @@ export default function CookieConsent() {
 
   const handleConsent = async (accepted: boolean) => {
     setVisible(false);
+    document.cookie = `piq_cookie_consent=${accepted ? "accepted" : "declined"}; path=/; max-age=${365 * 24 * 60 * 60}; samesite=lax`;
     try {
       await fetch("/api/consent/cookie", {
         method: "POST",
