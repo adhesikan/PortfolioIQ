@@ -1,0 +1,175 @@
+You are working inside the existing **PortfolioIQ** codebase (Next.js App Router + TypeScript + Tailwind + shadcn/ui + lucide + Prisma/Postgres). 
+
+GOAL
+Redesign the **Dashboard UI** to feel like an **AI Trading Performance Assistant** (not a generic SaaS admin dashboard) while keeping all existing functionality intact. This is a UI/UX refactor only—do NOT break auth, report generation, uploads, paywall logic, or admin access.
+
+PRIORITIES (IN ORDER)
+1) Make the dashboard answer instantly:
+   - “What’s my current score?”
+   - “What’s broken?”
+   - “What do I do next?”
+   - “Am I improving?”
+2) Reduce cognitive load (fewer nav items, fewer vanity metrics).
+3) Add AI-feeling elements: insight summary, status labels, next actions, smart empty states, subtle micro-animations.
+
+---------------------------------------
+A) TOP NAV SIMPLIFICATION
+---------------------------------------
+Current top nav has too many items. Update as follows:
+
+- Keep primary nav items visible:
+  1) Dashboard
+  2) New Report (rename button/route to existing “New Leak Report” action)
+  3) History (or “Reports”)
+  4) Upgrade (or “Pricing”) — only show if user is not Pro
+
+- Move these into a profile dropdown (top right):
+  - Settings
+  - Admin (only if role is ADMIN)
+  - Sign out
+
+Make sure routing remains the same; only change labels/placement.
+
+---------------------------------------
+B) DASHBOARD LAYOUT (NEW HIERARCHY)
+---------------------------------------
+Replace current dashboard layout with this structure:
+
+1) HERO CARD (full-width)
+Title: “Your Trading Performance Snapshot”
+Show these items prominently:
+- Current Leak Score (big)
+- Status badge derived from score:
+  - 0–34 = “Strong Structure” (green)
+  - 35–64 = “Needs Attention” (amber)
+  - 65–100 = “High Leakage” (red)
+(Use compliance-safe language; avoid profit/return claims.)
+
+Also show:
+- Baseline / Trend state:
+  - If only 0–1 reports: badge “Baseline Established”
+  - If 2+ reports: badge “Trend Tracking Active”
+- A mini “score delta” label when 2+ reports:
+  - “Up/Down X points vs last report”
+  - Use neutral language: “Score changed by…”
+
+Primary button: “New Leak Report”
+Secondary link button: “View Latest Breakdown”
+
+2) AI INSIGHT SUMMARY CARD (full-width, below hero)
+Header: “AI Insight (Latest Report)”
+Body:
+- Display 1–2 sentences generated from the latest report summary JSON (already stored).
+- If not available, show placeholder:
+  “Generate a report to see your AI insight summary.”
+
+Add a button:
+- “See Trades Driving This” → links to latest report section anchored at leak-driving trades
+
+3) PROGRESS TRACKING CARD
+If user has 2+ reports:
+- Show your existing progress chart here (do not rebuild chart logic).
+- Add a small label above chart:
+  “Trend: Improving / Stable / Deteriorating”
+  Determine trend based on last 2–3 scores slope.
+
+If user has <2 reports (SMART EMPTY STATE):
+- Do NOT hide the chart area.
+- Show a placeholder chart frame with copy:
+  Title: “Progress Tracking”
+  Text: “Generate one more report to unlock trend analysis.”
+  Subtext: “Your first report sets a baseline. Run another after your next trades to see progress.”
+  CTA: “Run Your Next Report” → routes to upload/new report flow
+
+4) TOP 3 ACTIVE LEAKS CARD
+Create a card that shows:
+- “Top Leaks (Latest Report)”
+- List top 3 leaks with severity pill + short one-line explanation
+- Each leak item clickable → opens latest report and scrolls to that leak
+
+If no report exists:
+- Show: “No leaks yet — generate your first report.”
+
+5) NEXT ACTIONS CARD (COACHING)
+Add a “Next Actions” card (this is key):
+- Generate 3 actions derived from report JSON fix plan:
+  e.g. “Review the 3 trades driving your largest loss”
+       “Apply the size consistency rule for your next 10 trades”
+       “Run another report after your next trading session”
+If no report exists:
+- Show a generic 3-step onboarding checklist:
+  1) Upload trades
+  2) Confirm details
+  3) Get leak report
+
+6) RECENT REPORTS (existing)
+Keep the existing Recent Reports list, but visually de-emphasize it below the AI/insight sections.
+
+---------------------------------------
+C) REMOVE / DE-EMPHASIZE VANITY METRICS
+---------------------------------------
+The cards:
+- Total Reports
+- Trades Analyzed
+should be removed from the top row or moved lower and smaller.
+Traders care more about Score, Leaks, Actions, Trend.
+
+---------------------------------------
+D) FREE LIMIT UI (MAKE IT LESS “SaaS QUOTA”)
+---------------------------------------
+Replace “Free Reports used” progress bar style with a softer, trader-friendly module:
+
+If Free:
+- “Free Plan: 2 of 3 reports used (1 remaining)”
+- CTA: “Upgrade to Pro for unlimited reports”
+If Pro:
+- “Pro Active” + renewal date + “Manage Billing”
+
+Make sure SAMPLE reports do not affect this counter (keep current logic).
+
+---------------------------------------
+E) AI LOOK + FEEL (VISUAL TWEAKS)
+---------------------------------------
+Without changing the overall brand, apply:
+- Slight gradients or soft background tints on hero/insight cards
+- More whitespace and larger typography for the score
+- Subtle hover and transition animations on cards/buttons
+- Badges for “Baseline Established” / “Trend Tracking Active”
+- Optional: add Dark Mode toggle in dropdown (if already supported)
+
+Keep design clean, premium, not gamified casino-style.
+
+---------------------------------------
+F) COMPLIANCE COPY (LIGHT BUT PRESENT)
+---------------------------------------
+Under the AI Insight card (small muted text):
+“Informational only. Not financial advice. No guarantees.”
+
+Do not put heavy disclaimers in the hero; keep it clean but present.
+
+---------------------------------------
+G) IMPLEMENTATION NOTES
+---------------------------------------
+- Do NOT alter underlying report generation, storage, or scoring.
+- Use existing report JSON fields wherever possible.
+- If fields don’t exist, create small adapters/selectors in the UI layer:
+  - getLatestReport()
+  - getTopLeaks(report)
+  - getInsightSummary(report)
+  - getFixPlanActions(report)
+- Keep all links working.
+- Ensure mobile layout is excellent:
+  - hero score + buttons stack neatly
+  - cards become single-column
+- Keep Admin access intact (only visible to ADMIN).
+
+---------------------------------------
+H) ACCEPTANCE CRITERIA
+---------------------------------------
+- Dashboard feels like an AI assistant: Score + Trend + Insight + Actions visible above the fold.
+- If user has <2 reports, the progress chart area shows a motivating placeholder with CTA.
+- Navigation is simpler, Settings/Admin moved into dropdown.
+- Existing chart is still used (no regression).
+- UI is responsive and premium.
+
+Implement these UI changes now and verify on desktop + mobile.

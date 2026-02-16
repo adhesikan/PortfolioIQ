@@ -33,6 +33,7 @@ PortfolioIQ is a full-stack SaaS application positioned as "Trading Performance 
 app/
   api/
     auth/           # Login, signup, logout, me endpoints
+    dashboard/      # Dashboard summary API (latest report, trend, leaks)
     extract-trades/ # AI trade extraction from screenshots/CSV
     generate-report/# Leak Report generation
     reports/        # Report CRUD
