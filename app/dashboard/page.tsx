@@ -118,6 +118,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
@@ -127,8 +128,19 @@ export default function DashboardPage() {
     if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     fetch("/api/dashboard")
-      .then((r) => r.json())
-      .then((d) => setData(d))
+      .then((r) => {
+        if (!r.ok) throw new Error("Failed to load dashboard");
+        return r.json();
+      })
+      .then((d) => {
+        setData(d);
+        setError(null);
+      })
+      .catch((err) => {
+        console.error("Dashboard load error:", err);
+        setError("Unable to load dashboard data. Please try refreshing.");
+        setData({ latest: null, scoreDelta: null, trend: null, totalReports: 0, recentReports: [] });
+      })
       .finally(() => setLoading(false));
   }, [user, authLoading, router]);
 
@@ -183,6 +195,20 @@ export default function DashboardPage() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="h-8 w-8 text-brand-accent animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-12">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-6 text-center">
+          <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-3" />
+          <p className="text-sm text-red-700 mb-4">{error}</p>
+          <button onClick={() => { setLoading(true); setError(null); fetch("/api/dashboard").then(r => { if (!r.ok) throw new Error("Failed"); return r.json(); }).then(d => { setData(d); setError(null); }).catch(() => setError("Still unable to load. Please try again later.")).finally(() => setLoading(false)); }} className="inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
