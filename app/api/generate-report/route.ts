@@ -3,6 +3,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { canGenerateReport, FREE_REPORTS_LIFETIME_LIMIT, FREE_MAX_TRADES_PER_REPORT, PRO_MAX_TRADES_PER_REPORT } from "@/lib/usage";
 import { logAbuse } from "@/lib/abuse";
+import { calculateLeakScore } from "@/lib/leakScoring";
 import OpenAI from "openai";
 
 const openai = new OpenAI();
@@ -205,6 +206,22 @@ Rules:
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) throw new Error("Could not parse AI response");
     const report = JSON.parse(jsonMatch[0]);
+
+    const scoring = calculateLeakScore(tradesToAnalyze);
+    report.leakScore = scoring.leakScore;
+    report.scoreBreakdown = scoring.breakdown;
+    if (report.keyStats) {
+      report.keyStats.totalTrades = scoring.metrics.totalTrades;
+      report.keyStats.winRate = scoring.metrics.winRate;
+      report.keyStats.avgRR = scoring.metrics.avgRR;
+      report.keyStats.avgWin = scoring.metrics.avgWin;
+      report.keyStats.avgLoss = scoring.metrics.avgLoss;
+      report.keyStats.biggestWin = scoring.metrics.biggestWin;
+      report.keyStats.biggestLoss = scoring.metrics.biggestLoss;
+      report.keyStats.avgHoldWinDays = scoring.metrics.avgHoldWinDays;
+      report.keyStats.avgHoldLossDays = scoring.metrics.avgHoldLossDays;
+      report.keyStats.profitFactor = scoring.metrics.profitFactor;
+    }
 
     const result = await prisma.$transaction(async (tx) => {
       if (!isSampleReport && !check.isSubscriber) {

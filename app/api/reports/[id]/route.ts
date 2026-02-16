@@ -13,6 +13,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
   if (!report) return NextResponse.json({ error: "Report not found" }, { status: 404 });
 
+  const fullReport = (report.fullReport as Record<string, any>) || {};
+
   return NextResponse.json({
     report: {
       id: report.id,
@@ -23,6 +25,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       behaviorPatterns: report.behaviorPatterns,
       fixPlan: report.fixPlan,
       riskChecklist: report.riskChecklist,
+      scoreBreakdown: fullReport.scoreBreakdown || null,
       createdAt: report.createdAt.toISOString(),
       isSample: report.upload?.isSample || false,
       sampleType: report.upload?.sampleType || null,

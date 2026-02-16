@@ -6,7 +6,7 @@ PortfolioIQ is a full-stack SaaS application positioned as "Trading Performance 
 
 **Domain:** portfolioiq.pro  
 **Status:** Active development  
-**Last Updated:** 2026-02-15
+**Last Updated:** 2026-02-16
 
 ## Tech Stack
 
@@ -18,6 +18,7 @@ PortfolioIQ is a full-stack SaaS application positioned as "Trading Performance 
 - **AI:** OpenAI GPT-4o-mini (trade extraction + report generation)
 - **Payments:** Stripe (subscription model)
 - **Email:** SendGrid (transactional)
+- **Charts:** Recharts (progress tracking)
 - **Icons:** Lucide React
 
 ## Product Modules
@@ -91,7 +92,9 @@ prisma/
    - Pro users analyze all trades (up to 500)
 4. For samples: Report is served from cache (generated once via AI, then reused). No editing allowed.
 5. AI generates Leak Report with:
-   - Leak Score (0-100)
+   - Leak Score (0-100) — **deterministic**, calculated from trade metrics via `lib/leakScoring.ts`
+     - 7 scoring dimensions: Win Rate (20), Risk-to-Reward (20), Profit Factor (15), Hold Discipline (15), Loss Streak Control (10), Revenge Trading (10), Position Sizing (10)
+     - Score breakdown shown as progress bars on report detail page
    - Top 3 Leaks with evidence, meaning, and quick fix
    - Leak-Driving Trades: specific trades that contributed to each leak (2-5 per leak)
    - Per-Leak Fix Plan: rule, how to apply, why it helps
@@ -111,6 +114,14 @@ prisma/
 - Sample reports do NOT count toward free limit (separate 5/day rate limit)
 - Stripe subscription for unlimited (Pro plan)
 - Constants in `lib/usage.ts`: `FREE_REPORTS_LIFETIME_LIMIT = 3`, `FREE_MAX_TRADES_PER_REPORT = 10`, `PRO_MAX_TRADES_PER_REPORT = 500`
+
+### Progress Tracker (/progress) — Pro Only
+- Recharts-powered interactive area chart showing metrics over time
+- Switchable metrics: Leak Score, Win Rate, Profit Factor, Avg R:R
+- Summary stats: total reports, score change, best score, average
+- Recurring leaks tracker (leaks appearing in 2+ reports)
+- Side-by-side report comparison table with delta highlighting
+- All Reports Timeline table
 
 ### Admin Panel (/admin)
 - User management (view, disable, reset reports, change role)

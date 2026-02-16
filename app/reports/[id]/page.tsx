@@ -34,6 +34,14 @@ interface TopLeak {
   fixPlan?: LeakFixPlanItem[];
 }
 
+interface ScoreBreakdownItem {
+  category: string;
+  label: string;
+  score: number;
+  maxScore: number;
+  detail: string;
+}
+
 interface FullReport {
   id: string;
   title?: string | null;
@@ -43,6 +51,7 @@ interface FullReport {
   behaviorPatterns: string[];
   fixPlan: Array<{ day: number; task: string }>;
   riskChecklist: Array<{ item: string; status: string }>;
+  scoreBreakdown?: ScoreBreakdownItem[] | null;
   createdAt: string;
   isSample?: boolean;
   sampleType?: string | null;
@@ -236,6 +245,32 @@ export default function ReportDetailPage() {
           </div>
         </div>
       </div>
+
+      {report.scoreBreakdown && report.scoreBreakdown.length > 0 && (
+        <div className="card mb-6">
+          <Tooltip content="Your Leak Score is calculated deterministically from 7 measurable dimensions of your trading data. Each bar shows how you scored in that area.">
+            <h2 className="text-lg font-semibold text-slate-900 mb-4">Score Breakdown</h2>
+          </Tooltip>
+          <div className="space-y-3">
+            {report.scoreBreakdown.map((item, i) => {
+              const pct = item.maxScore > 0 ? (item.score / item.maxScore) * 100 : 0;
+              const barColor = pct >= 70 ? "bg-green-500" : pct >= 40 ? "bg-yellow-500" : "bg-red-500";
+              return (
+                <div key={i}>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                    <span className="text-xs text-slate-500">{item.score}/{item.maxScore}</span>
+                  </div>
+                  <div className="w-full bg-slate-100 rounded-full h-2.5">
+                    <div className={`h-2.5 rounded-full ${barColor} transition-all`} style={{ width: `${pct}%` }} />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-0.5">{item.detail}</p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <h2 className="text-xl font-semibold text-slate-900 mb-4 flex items-center gap-2">
         <TrendingDown className="h-5 w-5 text-red-500" />

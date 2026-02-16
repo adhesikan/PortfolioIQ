@@ -2,12 +2,16 @@
 
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Loader2, TrendingUp, TrendingDown, ArrowRight, Lock, AlertCircle,
   BarChart3, Repeat, CheckCircle, XCircle, ArrowUpDown
 } from "lucide-react";
 import Link from "next/link";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip as RechartsTooltip, Legend, Area, AreaChart, ReferenceLine
+} from "recharts";
 
 interface HistoryReport {
   id: string;
@@ -31,6 +35,15 @@ interface RecurringLeak {
   resolved: boolean;
 }
 
+type ChartMetric = "leakScore" | "winRate" | "profitFactor" | "avgRR";
+
+const METRIC_CONFIG: Record<ChartMetric, { label: string; color: string; format: (v: number) => string; domain?: [number, number] }> = {
+  leakScore: { label: "Leak Score", color: "#3b82f6", format: (v) => `${v}`, domain: [0, 100] },
+  winRate: { label: "Win Rate", color: "#10b981", format: (v) => `${v}%` },
+  profitFactor: { label: "Profit Factor", color: "#f59e0b", format: (v) => v.toFixed(2) },
+  avgRR: { label: "Avg R:R", color: "#8b5cf6", format: (v) => `${v.toFixed(1)}:1` },
+};
+
 export default function ProgressPage() {
   const { user } = useAuth();
   const router = useRouter();
@@ -40,6 +53,7 @@ export default function ProgressPage() {
   const [error, setError] = useState("");
   const [compareA, setCompareA] = useState<string>("");
   const [compareB, setCompareB] = useState<string>("");
+  const [activeMetric, setActiveMetric] = useState<ChartMetric>("leakScore");
 
   const isPro = user?.subscription?.status === "active" || user?.subscription?.status === "trialing";
 
@@ -147,11 +161,43 @@ export default function ProgressPage() {
   const avgScore = Math.round(chartReports.reduce((s, r) => s + r.leakScore, 0) / chartReports.length);
   const bestScore = Math.max(...chartReports.map((r) => r.leakScore));
 
+  const chartData = chartReports.map((r) => ({
+    date: new Date(r.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" }),
+    leakScore: r.leakScore,
+    winRate: r.winRate,
+    profitFactor: r.profitFactor,
+    avgRR: r.avgRR,
+    fullDate: new Date(r.createdAt).toLocaleDateString(),
+    title: r.title || (r.isSample ? "Sample" : "Report"),
+  }));
+
+  const mc = METRIC_CONFIG[activeMetric];
+
   const reportA = history.find((r) => r.id === compareA);
   const reportB = history.find((r) => r.id === compareB);
 
   const getLabel = (r: HistoryReport) =>
     r.title || (r.isSample ? `Sample` : `Report`) + ` — ${new Date(r.createdAt).toLocaleDateString()}`;
+
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (!active || !payload || !payload.length) return null;
+    const data = payload[0].payload;
+    return (
+      <div className="bg-white border border-slate-200 rounded-lg shadow-lg p-3 text-xs">
+        <p className="font-semibold text-slate-900 mb-1">{data.title}</p>
+        <p className="text-slate-500 mb-2">{data.fullDate}</p>
+        {payload.map((entry: any, i: number) => (
+          <p key={i} className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
+            <span className="text-slate-600">{entry.name}:</span>
+            <span className="font-medium text-slate-900">
+              {entry.value != null ? mc.format(entry.value) : "—"}
+            </span>
+          </p>
+        ))}
+      </div>
+    );
+  };
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 sm:px-6 py-8">
@@ -182,79 +228,63 @@ export default function ProgressPage() {
       </div>
 
       <div className="card mb-8">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-brand-accent" />
-          Leak Score Over Time
-        </h2>
-        <div className="relative h-64 w-full">
-          <div className="absolute left-0 top-0 bottom-8 w-10 flex flex-col justify-between text-[10px] text-slate-400 text-right pr-1">
-            <span>100</span>
-            <span>75</span>
-            <span>50</span>
-            <span>25</span>
-            <span>0</span>
-          </div>
-          <div className="absolute left-10 right-0 top-0 bottom-8">
-            {[0, 25, 50, 75, 100].map((v) => (
-              <div
-                key={v}
-                className="absolute left-0 right-0 border-t border-slate-100"
-                style={{ bottom: `${v}%` }}
-              />
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-brand-accent" />
+            Progress Over Time
+          </h2>
+          <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+            {(Object.keys(METRIC_CONFIG) as ChartMetric[]).map((key) => (
+              <button
+                key={key}
+                onClick={() => setActiveMetric(key)}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors border-l first:border-l-0 border-slate-200 ${
+                  activeMetric === key
+                    ? "bg-brand-accent text-white"
+                    : "bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {METRIC_CONFIG[key].label}
+              </button>
             ))}
-            <svg className="w-full h-full" viewBox={`0 0 ${chartReports.length * 100} 200`} preserveAspectRatio="none">
+          </div>
+        </div>
+
+        <div className="h-72 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
               <defs>
-                <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="rgb(59, 130, 246)" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="rgb(59, 130, 246)" stopOpacity="0.02" />
+                <linearGradient id="colorMetric" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor={mc.color} stopOpacity={0.2} />
+                  <stop offset="95%" stopColor={mc.color} stopOpacity={0.02} />
                 </linearGradient>
               </defs>
-              {chartReports.length > 1 && (
-                <>
-                  <path
-                    d={`M ${chartReports.map((r, i) => {
-                      const x = (i / (chartReports.length - 1)) * (chartReports.length * 100 - 20) + 10;
-                      const y = 200 - (r.leakScore / 100) * 190 - 5;
-                      return `${x},${y}`;
-                    }).join(" L ")} L ${(chartReports.length * 100 - 10)},200 L 10,200 Z`}
-                    fill="url(#scoreGradient)"
-                  />
-                  <polyline
-                    points={chartReports.map((r, i) => {
-                      const x = (i / (chartReports.length - 1)) * (chartReports.length * 100 - 20) + 10;
-                      const y = 200 - (r.leakScore / 100) * 190 - 5;
-                      return `${x},${y}`;
-                    }).join(" ")}
-                    fill="none"
-                    stroke="rgb(59, 130, 246)"
-                    strokeWidth="3"
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                  />
-                </>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="#94a3b8" />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                stroke="#94a3b8"
+                domain={mc.domain || ["auto", "auto"]}
+                tickFormatter={(v) => mc.format(v)}
+                width={50}
+              />
+              <RechartsTooltip content={<CustomTooltip />} />
+              {activeMetric === "leakScore" && (
+                <ReferenceLine y={avgScore} stroke="#94a3b8" strokeDasharray="3 3" label={{ value: `Avg: ${avgScore}`, position: "right", fontSize: 10, fill: "#94a3b8" }} />
               )}
-              {chartReports.map((r, i) => {
-                const x = chartReports.length === 1 ? (chartReports.length * 100) / 2 : (i / (chartReports.length - 1)) * (chartReports.length * 100 - 20) + 10;
-                const y = 200 - (r.leakScore / 100) * 190 - 5;
-                const color = r.leakScore >= 70 ? "rgb(34,197,94)" : r.leakScore >= 40 ? "rgb(234,179,8)" : "rgb(239,68,68)";
-                return (
-                  <g key={r.id}>
-                    <circle cx={x} cy={y} r="6" fill="white" stroke={color} strokeWidth="3" />
-                    <text x={x} y={y - 12} textAnchor="middle" className="text-[11px] font-bold" fill={color}>
-                      {r.leakScore}
-                    </text>
-                  </g>
-                );
-              })}
-            </svg>
-          </div>
-          <div className="absolute left-10 right-0 bottom-0 flex justify-between text-[10px] text-slate-400">
-            {chartReports.map((r, i) => (
-              <span key={r.id} className="text-center truncate max-w-[80px]">
-                {new Date(r.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-              </span>
-            ))}
-          </div>
+              <Area
+                type="monotone"
+                dataKey={activeMetric}
+                stroke={mc.color}
+                strokeWidth={2.5}
+                fill="url(#colorMetric)"
+                dot={{ r: 5, fill: "white", stroke: mc.color, strokeWidth: 2 }}
+                activeDot={{ r: 7, stroke: mc.color, strokeWidth: 2 }}
+                name={mc.label}
+                connectNulls
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
@@ -491,7 +521,7 @@ export default function ProgressPage() {
               </tr>
             </thead>
             <tbody>
-              {[...history].reverse().map((r, i) => (
+              {[...history].reverse().map((r) => (
                 <tr key={r.id} className="border-b border-slate-50 hover:bg-slate-50 transition-colors">
                   <td className="px-3 py-2.5 text-xs text-slate-500 whitespace-nowrap">
                     {new Date(r.createdAt).toLocaleDateString()}
@@ -519,9 +549,9 @@ export default function ProgressPage() {
         </div>
       </div>
 
-      <div className="card bg-amber-50 border-amber-200">
-        <p className="text-xs text-amber-800">
-          This comparison is for informational and educational purposes only. Score improvements do not guarantee future trading results.
+      <div className="text-center py-4">
+        <p className="text-xs text-slate-400">
+          This tracking is for informational purposes only. Past performance does not indicate future results.
           Always do your own research and consult a qualified financial professional.
         </p>
       </div>

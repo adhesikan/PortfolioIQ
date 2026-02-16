@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { getSampleTrades, getSampleDataset, SampleType, type SampleDataset } from "@/lib/sampleTrades";
 import { canGenerateReport } from "@/lib/usage";
 import { logAbuse } from "@/lib/abuse";
+import { calculateLeakScore } from "@/lib/leakScoring";
 import OpenAI from "openai";
 
 const openai = new OpenAI();
@@ -146,11 +147,22 @@ export async function POST(req: NextRequest) {
     if (cachedReport) {
       const trades = getSampleTrades(sampleType as SampleType);
       const dataset = getSampleDataset(sampleType as SampleType);
+      const scoring = calculateLeakScore(trades);
       const now = new Date();
       const tz = timezone || "UTC";
       const dateStr = now.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: tz });
       const timeStr = now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: tz });
       const sampleTitle = `${dataset.label} Sample — ${dateStr}, ${timeStr}`;
+
+      const cachedFull = (cachedReport.fullReport as Record<string, any>) || {};
+      cachedFull.leakScore = scoring.leakScore;
+      cachedFull.scoreBreakdown = scoring.breakdown;
+      if (cachedFull.keyStats) {
+        cachedFull.keyStats.totalTrades = scoring.metrics.totalTrades;
+        cachedFull.keyStats.winRate = scoring.metrics.winRate;
+        cachedFull.keyStats.avgRR = scoring.metrics.avgRR;
+        cachedFull.keyStats.profitFactor = scoring.metrics.profitFactor;
+      }
 
       const upload = await prisma.upload.create({
         data: {
@@ -189,13 +201,13 @@ export async function POST(req: NextRequest) {
           userId: user.id,
           uploadId: upload.id,
           title: sampleTitle,
-          leakScore: cachedReport.leakScore,
+          leakScore: scoring.leakScore,
           topLeaks: cachedReport.topLeaks as any,
-          keyStats: cachedReport.keyStats as any ?? undefined,
+          keyStats: (cachedFull.keyStats || (cachedReport.keyStats as any)) ?? undefined,
           behaviorPatterns: cachedReport.behaviorPatterns as any ?? undefined,
           fixPlan: cachedReport.fixPlan as any ?? undefined,
           riskChecklist: cachedReport.riskChecklist as any ?? undefined,
-          fullReport: cachedReport.fullReport as any,
+          fullReport: cachedFull,
         },
       });
 
@@ -267,6 +279,22 @@ export async function POST(req: NextRequest) {
     if (!jsonMatch) throw new Error("Could not parse AI response");
     const reportData = JSON.parse(jsonMatch[0]);
 
+    const scoring = calculateLeakScore(trades);
+    reportData.leakScore = scoring.leakScore;
+    reportData.scoreBreakdown = scoring.breakdown;
+    if (reportData.keyStats) {
+      reportData.keyStats.totalTrades = scoring.metrics.totalTrades;
+      reportData.keyStats.winRate = scoring.metrics.winRate;
+      reportData.keyStats.avgRR = scoring.metrics.avgRR;
+      reportData.keyStats.avgWin = scoring.metrics.avgWin;
+      reportData.keyStats.avgLoss = scoring.metrics.avgLoss;
+      reportData.keyStats.biggestWin = scoring.metrics.biggestWin;
+      reportData.keyStats.biggestLoss = scoring.metrics.biggestLoss;
+      reportData.keyStats.avgHoldWinDays = scoring.metrics.avgHoldWinDays;
+      reportData.keyStats.avgHoldLossDays = scoring.metrics.avgHoldLossDays;
+      reportData.keyStats.profitFactor = scoring.metrics.profitFactor;
+    }
+
     const dataset = getSampleDataset(sampleType as SampleType);
     const nowGen = new Date();
     const tzGen = timezone || "UTC";
@@ -279,7 +307,7 @@ export async function POST(req: NextRequest) {
         userId: user.id,
         uploadId: upload.id,
         title: genTitle,
-        leakScore: reportData.leakScore || 50,
+        leakScore: reportData.leakScore,
         topLeaks: reportData.topLeaks || [],
         keyStats: reportData.keyStats || {},
         behaviorPatterns: reportData.behaviorPatterns || [],
