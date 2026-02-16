@@ -144,6 +144,8 @@ export default function UploadPage() {
 
   const handleScreenshot = async (file: File) => {
     setError("");
+    setIsSample(false);
+    setSampleType(null);
     setLoading(true);
     try {
       const compressed = await compressImage(file);
@@ -166,6 +168,8 @@ export default function UploadPage() {
 
   const handleCSV = async (file: File) => {
     setError("");
+    setIsSample(false);
+    setSampleType(null);
     setLoading(true);
     try {
       const formData = new FormData();
