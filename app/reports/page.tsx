@@ -43,7 +43,7 @@ type SortOrder = "asc" | "desc";
 type FilterType = "all" | "uploaded" | "sample";
 
 export default function ReportsPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
 
   const [reports, setReports] = useState<ReportSummary[]>([]);
@@ -109,9 +109,10 @@ export default function ReportsPage() {
   }, [user, page, perPage, sortBy, sortOrder, filterType, debouncedSearch]);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     fetchReports();
-  }, [user, router, fetchReports]);
+  }, [user, authLoading, router, fetchReports]);
 
   useEffect(() => {
     if (editingId && inputRef.current) {

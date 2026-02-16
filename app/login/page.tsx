@@ -6,13 +6,14 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 
 export default function LoginPage() {
-  const { login, user } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  if (authLoading) return null;
   if (user) {
     router.push("/dashboard");
     return null;

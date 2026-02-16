@@ -45,7 +45,7 @@ const METRIC_CONFIG: Record<ChartMetric, { label: string; color: string; format:
 };
 
 export default function ProgressPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [history, setHistory] = useState<HistoryReport[]>([]);
   const [recurringLeaks, setRecurringLeaks] = useState<RecurringLeak[]>([]);
@@ -58,6 +58,7 @@ export default function ProgressPage() {
   const isPro = user?.subscription?.status === "active" || user?.subscription?.status === "trialing";
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     if (!isPro) { setLoading(false); return; }
 
@@ -81,9 +82,9 @@ export default function ProgressPage() {
       })
       .catch(() => setError("Failed to load data"))
       .finally(() => setLoading(false));
-  }, [user, router, isPro]);
+  }, [user, authLoading, router, isPro]);
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
   if (!isPro) {
     return (

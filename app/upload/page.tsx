@@ -32,7 +32,7 @@ const SAMPLE_TYPES = [
 ];
 
 export default function UploadPage() {
-  const { user, refresh } = useAuth();
+  const { user, loading: authLoading, refresh } = useAuth();
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const csvInputRef = useRef<HTMLInputElement>(null);
@@ -57,6 +57,7 @@ export default function UploadPage() {
   const [pendingUploadAction, setPendingUploadAction] = useState<(() => void) | null>(null);
   const [selectionMode, setSelectionMode] = useState<"all" | "select">("all");
 
+  if (authLoading) return null;
   if (!user) {
     router.push("/login");
     return null;

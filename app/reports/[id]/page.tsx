@@ -77,6 +77,7 @@ export default function ReportDetailPage() {
   const [savingTitle, setSavingTitle] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     if (!reportId) return;
     fetch(`/api/reports/${reportId}`)
@@ -84,9 +85,9 @@ export default function ReportDetailPage() {
       .then((data) => setReport(data.report))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [user, router, reportId]);
+  }, [user, authLoading, router, reportId]);
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
   if (loading) {
     return (

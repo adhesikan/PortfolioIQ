@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 
 export default function SettingsPage() {
-  const { user, refresh, logout } = useAuth();
+  const { user, loading: authLoading, refresh, logout } = useAuth();
   const router = useRouter();
 
   const [name, setName] = useState("");
@@ -25,11 +25,12 @@ export default function SettingsPage() {
   const [portalLoading, setPortalLoading] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     setName(user.name || "");
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
   const isPro = user.subscription?.status === "active" || user.subscription?.status === "trialing";
   const periodEnd = user.subscription?.currentPeriodEnd

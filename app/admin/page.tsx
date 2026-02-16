@@ -30,7 +30,7 @@ interface AbuseLogEntry {
 type Tab = "users" | "payments" | "email" | "abuse";
 
 export default function AdminPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("users");
   const [users, setUsers] = useState<AdminUser[]>([]);
@@ -46,9 +46,10 @@ export default function AdminPage() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user || user.role !== "ADMIN") { router.push("/dashboard"); return; }
     fetchData();
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const fetchData = async () => {
     setLoading(true);

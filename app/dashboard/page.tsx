@@ -18,25 +18,26 @@ interface ReportSummary {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [reports, setReports] = useState<ReportSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push("/login"); return; }
     fetch("/api/reports")
       .then((r) => r.json())
       .then((data) => setReports(data.reports || []))
       .finally(() => setLoading(false));
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState("");
   const [saving, setSaving] = useState(false);
   const editInputRef = useRef<HTMLInputElement>(null);
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
   const freeUsed = user.usage?.freeReportsUsed ?? 0;
   const isPro = user.subscription?.status === "active";
