@@ -18,6 +18,7 @@ export async function GET() {
       name: user.name,
       role: user.role,
       sampleDisclaimerAcceptedAt: user.sampleDisclaimerAcceptedAt?.toISOString() || null,
+      piiDisclaimerDismissedAt: user.piiDisclaimerDismissedAt?.toISOString() || null,
       usage: usage ? { freeReportsUsed: usage.freeReportsUsed, totalReports: usage.totalReports } : null,
       subscription: subscription ? { status: subscription.status, currentPeriodEnd: subscription.currentPeriodEnd } : null,
     },

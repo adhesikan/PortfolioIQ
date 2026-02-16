@@ -8,6 +8,7 @@ interface UserData {
   name: string | null;
   role: string;
   sampleDisclaimerAcceptedAt: string | null;
+  piiDisclaimerDismissedAt: string | null;
   usage: { freeReportsUsed: number; totalReports: number } | null;
   subscription: { status: string; currentPeriodEnd: string | null } | null;
 }

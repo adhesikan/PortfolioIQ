@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useRef, useCallback } from "react";
-import { Upload, FileText, Image, AlertCircle, Loader2, Check, Edit3, Trash2, ArrowRight, Beaker, TrendingUp, TrendingDown, BarChart3, Zap, LineChart } from "lucide-react";
+import { Upload, FileText, Image, AlertCircle, Loader2, Check, Edit3, Trash2, ArrowRight, Beaker, TrendingUp, TrendingDown, BarChart3, Zap, LineChart, ShieldAlert, List } from "lucide-react";
 import Tooltip from "@/components/Tooltip";
 import SampleDisclaimer from "@/components/SampleDisclaimer";
 
@@ -52,6 +52,10 @@ export default function UploadPage() {
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [needsSelection, setNeedsSelection] = useState(false);
   const [uploadConsent, setUploadConsent] = useState(false);
+  const [showPiiDialog, setShowPiiDialog] = useState(false);
+  const [piiDontShowAgain, setPiiDontShowAgain] = useState(false);
+  const [pendingUploadAction, setPendingUploadAction] = useState<(() => void) | null>(null);
+  const [selectionMode, setSelectionMode] = useState<"all" | "select">("all");
 
   if (!user) {
     router.push("/login");
@@ -63,14 +67,18 @@ export default function UploadPage() {
   const atLimit = !isPro && freeUsed >= 3;
   const hasAcceptedDisclaimer = !!user.sampleDisclaimerAcceptedAt;
   const FREE_MAX_TRADES = 10;
-  const requiresTradeSelection = !isPro && !isSample && trades.length > FREE_MAX_TRADES;
+  const freeTradeLimit = !isPro && !isSample && trades.length > FREE_MAX_TRADES;
+  const userWantsSelection = selectionMode === "select";
+  const requiresTradeSelection = freeTradeLimit || (userWantsSelection && trades.length > 0);
+  const maxSelectable = freeTradeLimit ? FREE_MAX_TRADES : trades.length;
+  const hasDismissedPii = !!user.piiDisclaimerDismissedAt;
 
   const toggleTradeSelection = (index: number) => {
     setSelectedIndices((prev) => {
       const next = new Set(prev);
       if (next.has(index)) {
         next.delete(index);
-      } else if (next.size < FREE_MAX_TRADES) {
+      } else if (!freeTradeLimit || next.size < FREE_MAX_TRADES) {
         next.add(index);
       }
       return next;
@@ -86,6 +94,30 @@ export default function UploadPage() {
   };
 
   const clearSelection = () => setSelectedIndices(new Set());
+
+  const triggerUpload = (action: () => void) => {
+    if (hasDismissedPii) {
+      action();
+    } else {
+      setPendingUploadAction(() => action);
+      setPiiDontShowAgain(false);
+      setShowPiiDialog(true);
+    }
+  };
+
+  const handlePiiConfirm = async () => {
+    setShowPiiDialog(false);
+    if (piiDontShowAgain) {
+      try {
+        await fetch("/api/consent/pii-dismiss", { method: "POST" });
+        await refresh();
+      } catch {}
+    }
+    if (pendingUploadAction) {
+      pendingUploadAction();
+      setPendingUploadAction(null);
+    }
+  };
 
   const compressImage = (file: File, maxWidth = 1200): Promise<File> => {
     return new Promise((resolve) => {
@@ -202,12 +234,11 @@ export default function UploadPage() {
   const handleGenerateReport = async () => {
     if (!uploadId) return;
     if (requiresTradeSelection && selectedIndices.size === 0) {
-      setNeedsSelection(true);
-      selectMostRecent();
+      setError("Please select at least one trade to analyze.");
       return;
     }
-    if (requiresTradeSelection && selectedIndices.size !== FREE_MAX_TRADES) {
-      setError(`Please select exactly ${FREE_MAX_TRADES} trades to analyze.`);
+    if (freeTradeLimit && selectedIndices.size > FREE_MAX_TRADES) {
+      setError(`Free reports can analyze up to ${FREE_MAX_TRADES} trades. Please deselect some.`);
       return;
     }
     setStep("generating");
@@ -363,7 +394,7 @@ export default function UploadPage() {
           <div className={`grid gap-6 md:grid-cols-2 ${atLimit ? "opacity-50 pointer-events-none" : ""}`}>
             <div
               className="card-hover cursor-pointer text-center py-12"
-              onClick={() => !atLimit && fileInputRef.current?.click()}
+              onClick={() => !atLimit && triggerUpload(() => fileInputRef.current?.click())}
             >
               <Image className="h-12 w-12 text-brand-accent mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Screenshot</h3>
@@ -381,7 +412,7 @@ export default function UploadPage() {
             </div>
             <div
               className="card-hover cursor-pointer text-center py-12"
-              onClick={() => csvInputRef.current?.click()}
+              onClick={() => !atLimit && triggerUpload(() => csvInputRef.current?.click())}
             >
               <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload CSV</h3>
@@ -415,30 +446,74 @@ export default function UploadPage() {
 
       {step === "confirm" && !loading && (
         <div>
+          <div className="mb-4 flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+            <List className="h-4 w-4 text-slate-500 shrink-0" />
+            <span className="text-sm text-slate-700">Trades to analyze:</span>
+            <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+              <button
+                onClick={() => { setSelectionMode("all"); setSelectedIndices(new Set()); }}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${selectionMode === "all" ? "bg-brand-accent text-white" : "bg-white text-slate-600 hover:bg-slate-100"}`}
+              >
+                All Trades ({trades.length})
+              </button>
+              <button
+                onClick={() => { setSelectionMode("select"); setSelectedIndices(new Set()); }}
+                className={`px-3 py-1.5 text-xs font-medium border-l border-slate-200 transition-colors ${selectionMode === "select" ? "bg-brand-accent text-white" : "bg-white text-slate-600 hover:bg-slate-100"}`}
+              >
+                Select Specific
+              </button>
+            </div>
+            {freeTradeLimit && selectionMode === "all" && (
+              <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                Free plan: max {FREE_MAX_TRADES} trades.
+                <a href="/pricing?reason=trade-limit" className="underline ml-1">Upgrade</a>
+              </span>
+            )}
+          </div>
+
           {requiresTradeSelection && (
-            <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+            <div className="mb-4 p-4 rounded-lg bg-blue-50 border border-blue-200">
               <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 shrink-0" />
+                <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5 shrink-0" />
                 <div className="flex-1">
-                  <p className="text-sm font-semibold text-amber-900">Free reports analyze up to {FREE_MAX_TRADES} trades</p>
-                  <p className="text-xs text-amber-800 mt-1">
-                    You have {trades.length} trades. Select {FREE_MAX_TRADES} to include in your report, or upgrade for unlimited analysis.
+                  <p className="text-sm font-semibold text-blue-900">
+                    {freeTradeLimit
+                      ? `Free reports analyze up to ${FREE_MAX_TRADES} trades`
+                      : "Select the trades you want to include"}
+                  </p>
+                  <p className="text-xs text-blue-800 mt-1">
+                    {freeTradeLimit
+                      ? `You have ${trades.length} trades. Select ${FREE_MAX_TRADES} to include, or upgrade for unlimited analysis.`
+                      : `Check the trades you want analyzed. ${selectedIndices.size} selected so far.`}
                   </p>
                   <div className="flex items-center gap-3 mt-3">
-                    <span className={`text-sm font-bold ${selectedIndices.size === FREE_MAX_TRADES ? "text-green-700" : "text-amber-700"}`}>
-                      {selectedIndices.size} / {FREE_MAX_TRADES} selected
+                    <span className={`text-sm font-bold ${
+                      freeTradeLimit
+                        ? selectedIndices.size === FREE_MAX_TRADES ? "text-green-700" : "text-amber-700"
+                        : selectedIndices.size > 0 ? "text-green-700" : "text-blue-700"
+                    }`}>
+                      {selectedIndices.size}{freeTradeLimit ? ` / ${FREE_MAX_TRADES}` : ""} selected
                     </span>
-                    <button onClick={selectMostRecent} className="text-xs text-brand-accent hover:underline">
-                      Select most recent {FREE_MAX_TRADES}
-                    </button>
+                    {freeTradeLimit && (
+                      <button onClick={selectMostRecent} className="text-xs text-brand-accent hover:underline">
+                        Select most recent {FREE_MAX_TRADES}
+                      </button>
+                    )}
+                    {!freeTradeLimit && (
+                      <button onClick={() => setSelectedIndices(new Set(trades.map((_, i) => i)))} className="text-xs text-brand-accent hover:underline">
+                        Select all
+                      </button>
+                    )}
                     {selectedIndices.size > 0 && (
                       <button onClick={clearSelection} className="text-xs text-slate-500 hover:underline">
                         Clear all
                       </button>
                     )}
-                    <a href="/pricing?reason=trade-limit" className="ml-auto btn-primary text-xs px-4 py-1.5">
-                      Upgrade for All Trades
-                    </a>
+                    {freeTradeLimit && (
+                      <a href="/pricing?reason=trade-limit" className="ml-auto btn-primary text-xs px-4 py-1.5">
+                        Upgrade for All Trades
+                      </a>
+                    )}
                   </div>
                 </div>
               </div>
@@ -454,11 +529,11 @@ export default function UploadPage() {
             <button
               onClick={handleGenerateReport}
               className="btn-primary"
-              disabled={trades.length === 0 || !uploadConsent || (requiresTradeSelection && selectedIndices.size !== FREE_MAX_TRADES)}
+              disabled={trades.length === 0 || !uploadConsent || (requiresTradeSelection && selectedIndices.size === 0) || (freeTradeLimit && selectionMode === "all")}
             >
               {requiresTradeSelection
-                ? `Analyze ${selectedIndices.size === FREE_MAX_TRADES ? FREE_MAX_TRADES : "Selected"} Trades`
-                : "Generate Leak Report"}
+                ? `Analyze ${selectedIndices.size} Selected Trade${selectedIndices.size !== 1 ? "s" : ""}`
+                : `Analyze All ${trades.length} Trades`}
               <ArrowRight className="h-4 w-4" />
             </button>
           </div>
@@ -622,6 +697,50 @@ export default function UploadPage() {
               <a href="/pricing" className="btn-secondary w-full py-3">View Plans</a>
               <button onClick={() => setShowPaywall(false)} className="text-sm text-slate-500 hover:text-slate-700 mt-1">
                 Maybe later
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPiiDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <ShieldAlert className="h-6 w-6 text-amber-500" />
+              <h3 className="text-lg font-bold text-slate-900">Privacy Reminder</h3>
+            </div>
+            <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-900 font-medium mb-2">Do not upload any personally identifiable information (PII)</p>
+              <ul className="text-xs text-amber-800 space-y-1.5 list-disc pl-4">
+                <li>Account numbers or login credentials</li>
+                <li>Social security or government ID numbers</li>
+                <li>Home addresses or phone numbers</li>
+                <li>Full names tied to financial accounts</li>
+              </ul>
+              <p className="text-xs text-amber-800 mt-3">Crop or blur any sensitive details before uploading. We process your data to generate reports only.</p>
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer mb-5">
+              <input
+                type="checkbox"
+                checked={piiDontShowAgain}
+                onChange={(e) => setPiiDontShowAgain(e.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
+              />
+              <span className="text-xs text-slate-600">Don&apos;t show this again</span>
+            </label>
+            <div className="flex gap-3">
+              <button
+                onClick={() => { setShowPiiDialog(false); setPendingUploadAction(null); }}
+                className="btn-secondary flex-1"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handlePiiConfirm}
+                className="btn-primary flex-1"
+              >
+                I Understand, Continue
               </button>
             </div>
           </div>

@@ -21,6 +21,7 @@ model User {
   role          Role         @default(USER)
   isDisabled    Boolean      @default(false)
   sampleDisclaimerAcceptedAt DateTime?
+  piiDisclaimerDismissedAt   DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
   sessions      Session[]
