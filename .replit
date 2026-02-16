@@ -58,5 +58,5 @@ externalPort = 8080
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["bash", "-c", "PORT=5000 HOSTNAME=0.0.0.0 node .next/standalone/server.js"]
-build = ["bash", "-c", "npm run build && cp -r .next/static .next/standalone/.next/static && cp -r public .next/standalone/public 2>/dev/null || true"]
+run = ["npm", "run", "start"]
+build = ["npm", "run", "build"]
