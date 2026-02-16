@@ -24,23 +24,31 @@ export async function canGenerateReport(userId: string, isSample: boolean = fals
   const freeUsed = usage?.freeReportsUsed ?? 0;
 
   if (isSample) {
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const sampleCount = await prisma.leakReport.count({
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const todaySamples = await prisma.leakReport.findMany({
       where: {
         userId,
-        createdAt: { gte: oneDayAgo },
+        createdAt: { gte: todayStart },
         upload: { isSample: true },
       },
+      orderBy: { createdAt: "desc" },
+      select: { createdAt: true },
+      take: SAMPLE_REPORTS_PER_DAY_LIMIT,
     });
 
-    if (sampleCount >= SAMPLE_REPORTS_PER_DAY_LIMIT) {
+    if (todaySamples.length >= SAMPLE_REPORTS_PER_DAY_LIMIT) {
+      const lastUsed = todaySamples[0].createdAt;
+      const formattedDate = lastUsed.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+      const formattedTime = lastUsed.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
       return {
         allowed: false,
         reason: "SAMPLE_RATE_LIMIT",
         freeUsed,
         freeLimit: FREE_REPORTS_LIFETIME_LIMIT,
         isSubscriber,
-        message: "You've reached today's sample report limit. Please upload your own trade history or try again tomorrow.",
+        message: `You reached your daily sample report limit (${SAMPLE_REPORTS_PER_DAY_LIMIT}) on ${formattedDate} at ${formattedTime}. Please upload your own trade history or try again tomorrow.`,
       };
     }
 
