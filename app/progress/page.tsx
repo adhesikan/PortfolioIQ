@@ -91,10 +91,19 @@ export default function ProgressPage() {
       <div className="mx-auto w-full max-w-3xl px-4 sm:px-6 py-16 text-center">
         <div className="card py-12">
           <Lock className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Historical Report Comparison</h1>
-          <p className="text-sm text-slate-600 mb-6 max-w-md mx-auto">
-            Track your progress over time by comparing Leak Scores, recurring patterns, and key metrics across all your reports.
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Progress Tracker</h1>
+          <p className="text-sm text-slate-600 mb-4 max-w-md mx-auto">
+            Track your trading improvement over time with interactive charts and detailed comparisons.
           </p>
+          <div className="bg-slate-50 rounded-lg p-4 mb-6 max-w-md mx-auto text-left">
+            <p className="text-xs font-semibold text-slate-700 mb-2">What you get with Pro:</p>
+            <ul className="text-xs text-slate-600 space-y-1.5">
+              <li className="flex items-start gap-2"><TrendingUp className="h-3.5 w-3.5 text-brand-accent mt-0.5 shrink-0" /> Interactive charts for Leak Score, Win Rate, Profit Factor, and Avg R:R over time</li>
+              <li className="flex items-start gap-2"><BarChart3 className="h-3.5 w-3.5 text-brand-accent mt-0.5 shrink-0" /> Side-by-side report comparison with highlighted changes</li>
+              <li className="flex items-start gap-2"><AlertCircle className="h-3.5 w-3.5 text-brand-accent mt-0.5 shrink-0" /> Recurring leak detection across multiple reports</li>
+            </ul>
+            <p className="text-xs text-slate-500 mt-3">Charts appear after generating at least 2 Leak Reports.</p>
+          </div>
           <Link href="/pricing" className="btn-primary">
             Upgrade to Pro <ArrowRight className="h-4 w-4" />
           </Link>
@@ -142,9 +151,17 @@ export default function ProgressPage() {
         <div className="card py-12">
           <BarChart3 className="h-12 w-12 text-slate-300 mx-auto mb-4" />
           <h1 className="text-2xl font-bold text-slate-900 mb-2">Not Enough Data Yet</h1>
-          <p className="text-sm text-slate-600 mb-6 max-w-md mx-auto">
-            Generate at least 2 Leak Reports to start tracking your progress and comparing results over time.
+          <p className="text-sm text-slate-600 mb-4 max-w-md mx-auto">
+            You need at least <strong>2 Leak Reports</strong> to start tracking your progress. You currently have {history.length === 0 ? "none" : "1 report"}.
           </p>
+          <div className="bg-slate-50 rounded-lg p-4 mb-6 max-w-md mx-auto text-left">
+            <p className="text-xs font-semibold text-slate-700 mb-2">Once you have 2+ reports, you'll see:</p>
+            <ul className="text-xs text-slate-600 space-y-1.5">
+              <li className="flex items-start gap-2"><TrendingUp className="h-3.5 w-3.5 text-brand-accent mt-0.5 shrink-0" /> Interactive charts tracking Leak Score, Win Rate, Profit Factor, and Avg R:R over time</li>
+              <li className="flex items-start gap-2"><BarChart3 className="h-3.5 w-3.5 text-brand-accent mt-0.5 shrink-0" /> Side-by-side report comparison with highlighted improvements</li>
+              <li className="flex items-start gap-2"><AlertCircle className="h-3.5 w-3.5 text-brand-accent mt-0.5 shrink-0" /> Recurring leak detection to spot persistent patterns</li>
+            </ul>
+          </div>
           <Link href="/upload" className="btn-primary">
             Create a Report <ArrowRight className="h-4 w-4" />
           </Link>

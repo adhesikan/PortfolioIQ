@@ -33,7 +33,7 @@ export default function Navigation() {
     { href: "/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/upload", label: "Upload", icon: Upload },
     { href: "/reports", label: "Reports", icon: FileText },
-    ...(isPro ? [{ href: "/progress", label: "Progress", icon: TrendingUp }] : []),
+    { href: "/progress", label: "Progress", icon: TrendingUp },
     { href: "/pricing", label: "Pricing", icon: CreditCard },
     { href: "/settings", label: "Settings", icon: Settings },
   ];
