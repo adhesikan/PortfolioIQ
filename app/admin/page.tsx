@@ -43,6 +43,7 @@ export default function AdminPage() {
   const [emailSending, setEmailSending] = useState(false);
   const [emailResult, setEmailResult] = useState("");
   const [abuseFilter, setAbuseFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     if (!user || user.role !== "ADMIN") { router.push("/dashboard"); return; }
@@ -89,8 +90,6 @@ export default function AdminPage() {
   };
 
   if (!user || user.role !== "ADMIN") return null;
-
-  const [statusFilter, setStatusFilter] = useState("all");
 
   const filteredUsers = users.filter((u) => {
     const matchesSearch = u.email.toLowerCase().includes(search.toLowerCase()) ||
