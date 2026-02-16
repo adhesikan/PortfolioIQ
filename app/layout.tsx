@@ -18,31 +18,36 @@ export const metadata: Metadata = {
   }
 };
 
+const themeScript = `(function(){try{var t=localStorage.getItem('piq_theme');if(t==='dark'||(t!=='light'&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`;
+
 export default function RootLayout({
   children
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body>
         <Providers>
-          <div className="min-h-screen bg-slate-50 flex flex-col">
-            <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur">
+          <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col transition-colors">
+            <header className="sticky top-0 z-50 border-b border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-slate-900/95 backdrop-blur">
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 flex items-center justify-between py-3">
                 <Link href="/" className="flex items-center">
-                  <img src="/logo-clean.png" alt="PortfolioIQ — Trading Performance Intelligence" className="h-28 w-auto" />
+                  <img src="/logo-clean.png" alt="PortfolioIQ — Trading Performance Intelligence" className="h-28 w-auto dark:brightness-200 dark:contrast-75" />
                 </Link>
                 <Navigation />
               </div>
             </header>
             <main className="flex-1">{children}</main>
-            <footer className="border-t border-slate-200 bg-slate-900 text-slate-400">
+            <footer className="border-t border-slate-200 dark:border-slate-800 bg-slate-900 dark:bg-slate-950 text-slate-400">
               <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                   <div>
                     <div className="mb-2">
-                      <img src="/logo-clean.png" alt="PortfolioIQ" className="h-8 w-auto" />
+                      <img src="/logo-clean.png" alt="PortfolioIQ" className="h-8 w-auto brightness-200 contrast-75" />
                     </div>
                     <p className="text-xs">Trading Performance Intelligence. Review and refine your trading process.</p>
                   </div>

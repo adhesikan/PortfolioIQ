@@ -36,8 +36,8 @@ export default function LoginPage() {
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome back</h1>
-          <p className="text-slate-600">Log in to your PortfolioIQ account</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">Welcome back</h1>
+          <p className="text-slate-600 dark:text-slate-400">Log in to your PortfolioIQ account</p>
         </div>
         <div className="card">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -58,7 +58,7 @@ export default function LoginPage() {
               {loading ? "Logging in..." : "Log In"}
             </button>
           </form>
-          <p className="text-center text-sm text-slate-600 mt-4">
+          <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-4">
             Don&apos;t have an account? <Link href="/signup" className="text-brand-accent font-medium hover:underline">Sign up</Link>
           </p>
         </div>

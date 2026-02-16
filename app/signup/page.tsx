@@ -43,8 +43,8 @@ export default function SignupPage() {
     <div className="min-h-[70vh] flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Create your account</h1>
-          <p className="text-slate-600">Get 3 free Leak Reports to start</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">Create your account</h1>
+          <p className="text-slate-600 dark:text-slate-400">Get 3 free Leak Reports to start</p>
         </div>
         <div className="card">
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -84,7 +84,7 @@ export default function SignupPage() {
               {loading ? "Creating account..." : "Create Account"}
             </button>
           </form>
-          <p className="text-center text-sm text-slate-600 mt-4">
+          <p className="text-center text-sm text-slate-600 dark:text-slate-400 mt-4">
             Already have an account? <Link href="/login" className="text-brand-accent font-medium hover:underline">Log in</Link>
           </p>
         </div>

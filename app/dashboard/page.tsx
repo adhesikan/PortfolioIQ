@@ -312,14 +312,14 @@ export default function DashboardPage() {
 
       {/* PLAN STATUS */}
       {!isPro ? (
-        <div className="rounded-xl border border-slate-200 bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
               <Zap className="h-4 w-4 text-brand-accent" />
             </div>
             <div>
-              <p className="text-sm font-medium text-slate-900">Free Plan: {freeUsed} of 3 reports used ({Math.max(3 - freeUsed, 0)} remaining)</p>
-              <p className="text-xs text-slate-500">Sample reports don't count toward your limit</p>
+              <p className="text-sm font-medium text-slate-900 dark:text-slate-100">Free Plan: {freeUsed} of 3 reports used ({Math.max(3 - freeUsed, 0)} remaining)</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Sample reports don't count toward your limit</p>
             </div>
           </div>
           <Link href="/pricing" className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand-accent hover:text-brand-accent/80 transition-colors shrink-0">
@@ -328,13 +328,13 @@ export default function DashboardPage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/50 p-4 flex items-center justify-between gap-3">
+        <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 p-4 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100">
-              <Shield className="h-4 w-4 text-emerald-600" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900">
+              <Shield className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-sm font-medium text-emerald-900">Pro Active</p>
+              <p className="text-sm font-medium text-emerald-900 dark:text-emerald-300">Pro Active</p>
               {user.subscription?.currentPeriodEnd && (
                 <p className="text-xs text-emerald-700">
                   Renews {new Date(user.subscription.currentPeriodEnd).toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" })}
@@ -350,16 +350,16 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* AI INSIGHT CARD */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50">
-              <Lightbulb className="h-4 w-4 text-violet-600" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-50 dark:bg-violet-950">
+              <Lightbulb className="h-4 w-4 text-violet-600 dark:text-violet-400" />
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">AI Insight (Latest Report)</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">AI Insight (Latest Report)</h2>
           </div>
           {insight ? (
             <>
-              <p className="text-sm text-slate-700 leading-relaxed mb-4">{insight}</p>
+              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed mb-4">{insight}</p>
               <Link href={`/reports/${latest!.id}`} className="inline-flex items-center gap-1.5 text-xs font-semibold text-brand-accent hover:text-brand-accent/80 transition-colors">
                 See Trades Driving This
                 <ChevronRight className="h-3.5 w-3.5" />
@@ -377,13 +377,13 @@ export default function DashboardPage() {
         </div>
 
         {/* PROGRESS TRACKING CARD */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-950">
                 <BarChart3 className="h-4 w-4 text-brand-accent" />
               </div>
-              <h2 className="text-sm font-semibold text-slate-900">Progress Tracking</h2>
+              <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Progress Tracking</h2>
             </div>
             {data && data.trend && (
               <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
@@ -421,13 +421,13 @@ export default function DashboardPage() {
                   <div key={i} className="w-6 rounded-t bg-slate-100" style={{ height: `${h}px` }}></div>
                 ))}
               </div>
-              <p className="text-sm font-medium text-slate-700 mb-1">
+              <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {data && data.totalReports === 1
                   ? "Generate one more report to unlock trend analysis."
                   : "Generate your first report to set a baseline."
                 }
               </p>
-              <p className="text-xs text-slate-500 mb-4">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
                 {data && data.totalReports === 1
                   ? "Your first report sets a baseline. Run another after your next trades to see progress."
                   : "Upload your trade history and our AI will analyze your patterns."
@@ -442,24 +442,24 @@ export default function DashboardPage() {
         </div>
 
         {/* TOP 3 LEAKS CARD */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50">
-              <AlertCircle className="h-4 w-4 text-red-500" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-red-50 dark:bg-red-950">
+              <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400" />
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">Top Leaks (Latest Report)</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Top Leaks (Latest Report)</h2>
           </div>
           {leaks.length > 0 ? (
             <div className="space-y-3">
               {leaks.slice(0, 3).map((leak, i) => (
                 <Link key={i} href={`/reports/${latest!.id}`} className="block group">
-                  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors -mx-1">
+                  <div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors -mx-1">
                     <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold uppercase border shrink-0 mt-0.5 ${getSeverityColor(leak.severity)}`}>
                       {typeof leak.severity === "string" ? leak.severity : "Info"}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 group-hover:text-brand-accent transition-colors">{leak.name || leak.title || `Leak ${i + 1}`}</p>
-                      <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{leak.meaning || leak.explanation || leak.evidence || ""}</p>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 group-hover:text-brand-accent transition-colors">{leak.name || leak.title || `Leak ${i + 1}`}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">{leak.meaning || leak.explanation || leak.evidence || ""}</p>
                     </div>
                     <ChevronRight className="h-4 w-4 text-slate-300 group-hover:text-brand-accent transition-colors shrink-0 mt-0.5" />
                   </div>
@@ -474,12 +474,12 @@ export default function DashboardPage() {
         </div>
 
         {/* NEXT ACTIONS CARD */}
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
           <div className="flex items-center gap-2 mb-4">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
-              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-950">
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h2 className="text-sm font-semibold text-slate-900">Next Actions</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Next Actions</h2>
           </div>
           {latest ? (
             <div className="space-y-3">
@@ -488,7 +488,7 @@ export default function DashboardPage() {
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-brand-accent/10 text-brand-accent shrink-0 mt-0.5">
                     <span className="text-xs font-bold">{i + 1}</span>
                   </div>
-                  <p className="text-sm text-slate-700">{action}</p>
+                  <p className="text-sm text-slate-700 dark:text-slate-300">{action}</p>
                 </div>
               ))}
             </div>
@@ -514,9 +514,9 @@ export default function DashboardPage() {
 
       {/* RECENT REPORTS */}
       {reports.length > 0 && (
-        <div className="rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 sm:p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-slate-900">Recent Reports</h2>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Recent Reports</h2>
             {reports.length > 5 && (
               <Link href="/reports" className="text-xs font-medium text-brand-accent hover:text-brand-accent/80 transition-colors">
                 View all
@@ -525,7 +525,7 @@ export default function DashboardPage() {
           </div>
           <div className="space-y-2">
             {reports.slice(0, 5).map((report) => (
-              <div key={report.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 transition-colors group -mx-1">
+              <div key={report.id} className="flex items-center justify-between p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors group -mx-1">
                 <div className="flex items-center gap-3 flex-1 min-w-0">
                   <div className={`flex h-9 w-9 items-center justify-center rounded-lg text-xs font-bold text-white shrink-0 ${
                     report.leakScore >= 65 ? "bg-emerald-500" : report.leakScore >= 35 ? "bg-amber-500" : "bg-red-500"
@@ -554,16 +554,16 @@ export default function DashboardPage() {
                     ) : (
                       <div className="flex items-center gap-2">
                         <Link href={`/reports/${report.id}`} className="block min-w-0">
-                          <p className="text-sm font-medium text-slate-900 truncate hover:text-brand-accent transition-colors">{report.title || "Leak Report"}</p>
+                          <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate hover:text-brand-accent transition-colors">{report.title || "Leak Report"}</p>
                         </Link>
                         <button onClick={(e) => startEditing(report, e)} className="p-1 rounded opacity-0 group-hover:opacity-100 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all shrink-0" title="Rename">
                           <Pencil className="h-3 w-3" />
                         </button>
                       </div>
                     )}
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
                       {new Date(report.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })} · {report.tradesCount} trades
-                      {report.isSample && <span className="ml-1.5 text-violet-500 font-medium">Sample</span>}
+                      {report.isSample && <span className="ml-1.5 text-violet-500 dark:text-violet-400 font-medium">Sample</span>}
                     </p>
                   </div>
                 </div>
