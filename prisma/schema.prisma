@@ -24,16 +24,18 @@ model User {
   piiDisclaimerDismissedAt   DateTime?
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
-  sessions      Session[]
-  uploads       Upload[]
-  reports       LeakReport[]
-  subscription  Subscription?
-  usageCounter  UsageCounter?
-  abuseLogs     AbuseLog[]
-  consentLogs   ConsentLog[]
-  portfolios    Portfolio[]
-  importJobs    ImportJob[]
-  oldReports    Report[]
+  sessions        Session[]
+  uploads         Upload[]
+  reports         LeakReport[]
+  subscription    Subscription?
+  usageCounter    UsageCounter?
+  abuseLogs       AbuseLog[]
+  consentLogs     ConsentLog[]
+  portfolios      Portfolio[]
+  importJobs      ImportJob[]
+  oldReports      Report[]
+  supportTickets  SupportTicket[]
+  adminResponses  SupportTicket[] @relation("AdminResponder")
 }
 
 model Session {
@@ -262,4 +264,28 @@ model ConsentLog {
   @@index([userId])
   @@index([hashedIp])
   @@index([consentType])
+}
+
+model SupportTicket {
+  id                 String    @id @default(cuid())
+  userId             String
+  userEmail          String
+  userName           String?
+  category           String
+  subject            String
+  message            String
+  status             String    @default("open")
+  adminResponse      String?
+  respondedByAdminId String?
+  respondedAt        DateTime?
+  meta               Json?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  respondedByAdmin   User?     @relation("AdminResponder", fields: [respondedByAdminId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([category])
+  @@index([createdAt])
 }
