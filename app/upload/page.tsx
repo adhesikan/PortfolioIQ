@@ -304,29 +304,29 @@ export default function UploadPage() {
                 ? "bg-brand-accent text-white"
                 : i < (step === "upload" ? 0 : step === "confirm" ? 1 : 2)
                 ? "bg-green-500 text-white"
-                : "bg-slate-200 text-slate-500"
+                : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
             }`}>
               {i < (step === "upload" ? 0 : step === "confirm" ? 1 : 2) ? <Check className="h-4 w-4" /> : i + 1}
             </div>
-            <span className="text-sm font-medium text-slate-700 hidden sm:block">{label}</span>
-            {i < 2 && <div className="w-8 md:w-16 h-px bg-slate-300"></div>}
+            <span className="text-sm font-medium text-slate-700 dark:text-slate-300 hidden sm:block">{label}</span>
+            {i < 2 && <div className="w-8 md:w-16 h-px bg-slate-300 dark:bg-slate-600"></div>}
           </div>
         ))}
       </div>
 
       {!isPro && (
-        <div className="mb-6 p-3 rounded-lg bg-blue-50 border border-blue-100 flex items-center justify-between">
+        <div className="mb-6 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-800 flex items-center justify-between">
           <Tooltip content="Each successful report generation counts as one use. Sample reports do not count. You get 3 free reports for life.">
-            <span className="text-sm text-blue-800">Free reports used: {freeUsed} / 3</span>
+            <span className="text-sm text-blue-800 dark:text-blue-300">Free reports used: {freeUsed} / 3</span>
           </Tooltip>
-          <div className="w-32 h-2 rounded-full bg-blue-200 overflow-hidden">
+          <div className="w-32 h-2 rounded-full bg-blue-200 dark:bg-blue-800 overflow-hidden">
             <div className="h-full bg-brand-accent rounded-full" style={{ width: `${Math.min((freeUsed / 3) * 100, 100)}%` }}></div>
           </div>
         </div>
       )}
 
       {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center gap-2">
+        <div className="mb-6 p-4 rounded-lg bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800 text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
           <AlertCircle className="h-4 w-4 shrink-0" />
           {error}
         </div>
@@ -336,12 +336,12 @@ export default function UploadPage() {
         <>
           <div className="mb-8">
             <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700 mb-3">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-purple-100 dark:bg-purple-900/40 px-3 py-1 text-xs font-semibold text-purple-700 dark:text-purple-300 mb-3">
                 <Beaker className="h-3.5 w-3.5" />
                 Try Sample Data
               </div>
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Try a Sample Leak Report</h2>
-              <p className="text-sm text-slate-600">See how the Leak Report works using example trade history. Example only — not real trades.</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1">Try a Sample Leak Report</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400">See how the Leak Report works using example trade history. Example only — not real trades.</p>
             </div>
 
             <div className="grid gap-3 grid-cols-2 lg:grid-cols-5 mb-4">
@@ -352,9 +352,9 @@ export default function UploadPage() {
                   disabled={loading}
                   className="card-hover text-center p-4 group transition-all hover:ring-2 hover:ring-brand-accent/30"
                 >
-                  <sample.icon className="h-7 w-7 text-slate-600 group-hover:text-brand-accent mx-auto mb-2 transition-colors" />
-                  <p className="text-sm font-semibold text-slate-900 mb-1">{sample.label}</p>
-                  <p className="text-xs text-slate-500 mb-2">{sample.desc}</p>
+                  <sample.icon className="h-7 w-7 text-slate-600 dark:text-slate-400 group-hover:text-brand-accent mx-auto mb-2 transition-colors" />
+                  <p className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-1">{sample.label}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">{sample.desc}</p>
                   <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium ${sample.badgeColor}`}>
                     {sample.badge}
                   </span>
@@ -363,23 +363,23 @@ export default function UploadPage() {
             </div>
 
             <SampleDisclaimer compact />
-            <p className="text-xs text-center text-green-700 mt-2">Sample reports are for demonstration only and do not count toward your 3 free reports.</p>
+            <p className="text-xs text-center text-green-700 dark:text-green-400 mt-2">Sample reports are for demonstration only and do not count toward your 3 free reports.</p>
           </div>
 
           <div className="relative mb-8">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200"></div>
+              <div className="w-full border-t border-slate-200 dark:border-slate-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-white px-4 text-slate-500">or upload your own trades</span>
+              <span className="bg-white dark:bg-slate-900 px-4 text-slate-500 dark:text-slate-400">or upload your own trades</span>
             </div>
           </div>
 
           {atLimit && (
-            <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200 text-center">
+            <div className="mb-6 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-center">
               <AlertCircle className="h-8 w-8 text-amber-500 mx-auto mb-2" />
-              <h3 className="font-semibold text-slate-900 mb-1">You&apos;ve used your 3 free reports</h3>
-              <p className="text-sm text-slate-600 mb-3">Upgrade for unlimited reports, or try a sample report above.</p>
+              <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">You&apos;ve used your 3 free reports</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-3">Upgrade for unlimited reports, or try a sample report above.</p>
               <div className="flex flex-col sm:flex-row gap-2 justify-center">
                 <a href="/pricing?reason=limit" className="btn-primary px-6 py-2 text-sm">Upgrade Now</a>
                 <a href="/pricing" className="btn-secondary px-6 py-2 text-sm">View Plans</a>
@@ -387,10 +387,10 @@ export default function UploadPage() {
             </div>
           )}
 
-          <div className="mb-6 p-4 rounded-lg bg-amber-50 border border-amber-200">
+          <div className="mb-6 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
             <div className="flex items-start gap-2">
-              <AlertCircle className="h-4 w-4 text-amber-600 mt-0.5 shrink-0" />
-              <p className="text-xs text-amber-800">
+              <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+              <p className="text-xs text-amber-800 dark:text-amber-300">
                 <span className="font-semibold">Privacy Notice:</span> Please do not upload account numbers, addresses, or other personal identifiers. Crop or blur sensitive details before uploading.
               </p>
             </div>
@@ -402,10 +402,10 @@ export default function UploadPage() {
               onClick={() => !atLimit && triggerUpload(() => fileInputRef.current?.click())}
             >
               <Image className="h-12 w-12 text-brand-accent mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload Screenshot</h3>
-              <p className="text-sm text-slate-600 mb-4">Take a screenshot of your brokerage trade history</p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Upload Screenshot</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Take a screenshot of your brokerage trade history</p>
               <Tooltip content="Our AI reads your screenshot and automatically extracts trade data. Works with most brokerages. For best results, make sure the text is clearly visible.">
-                <span className="text-xs text-slate-500">PNG, JPG up to 10MB</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">PNG, JPG up to 10MB</span>
               </Tooltip>
               <input
                 ref={fileInputRef}
@@ -420,10 +420,10 @@ export default function UploadPage() {
               onClick={() => !atLimit && triggerUpload(() => csvInputRef.current?.click())}
             >
               <FileText className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">Upload CSV</h3>
-              <p className="text-sm text-slate-600 mb-4">Export your trade history as CSV for more accuracy</p>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">Upload CSV</h3>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">Export your trade history as CSV for more accuracy</p>
               <Tooltip content="CSV files give more accurate results than screenshots. Most brokerages let you export trade history as a CSV file from your account settings.">
-                <span className="text-xs text-slate-500">CSV files up to 5MB</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">CSV files up to 5MB</span>
               </Tooltip>
               <input
                 ref={csvInputRef}
@@ -440,10 +440,10 @@ export default function UploadPage() {
       {loading && (
         <div className="card text-center py-16">
           <Loader2 className="h-10 w-10 text-brand-accent mx-auto mb-4 animate-spin" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
             {isSample ? "Loading sample trades..." : "Extracting trades..."}
           </h3>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {isSample ? "Preparing example trade data for review." : "Our AI is reading your trade data. This may take a moment."}
           </p>
         </div>
@@ -451,19 +451,19 @@ export default function UploadPage() {
 
       {step === "confirm" && !loading && (
         <div>
-          <div className="mb-4 flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
-            <List className="h-4 w-4 text-slate-500 shrink-0" />
-            <span className="text-sm text-slate-700">Trades to analyze:</span>
-            <div className="flex rounded-lg border border-slate-200 overflow-hidden">
+          <div className="mb-4 flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+            <List className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
+            <span className="text-sm text-slate-700 dark:text-slate-300">Trades to analyze:</span>
+            <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
               <button
                 onClick={() => { setSelectionMode("all"); setSelectedIndices(new Set()); }}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${selectionMode === "all" ? "bg-brand-accent text-white" : "bg-white text-slate-600 hover:bg-slate-100"}`}
+                className={`px-3 py-1.5 text-xs font-medium transition-colors ${selectionMode === "all" ? "bg-brand-accent text-white" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"}`}
               >
                 All Trades ({trades.length})
               </button>
               <button
                 onClick={() => { setSelectionMode("select"); setSelectedIndices(new Set()); }}
-                className={`px-3 py-1.5 text-xs font-medium border-l border-slate-200 transition-colors ${selectionMode === "select" ? "bg-brand-accent text-white" : "bg-white text-slate-600 hover:bg-slate-100"}`}
+                className={`px-3 py-1.5 text-xs font-medium border-l border-slate-200 dark:border-slate-600 transition-colors ${selectionMode === "select" ? "bg-brand-accent text-white" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"}`}
               >
                 Select Specific
               </button>
@@ -527,7 +527,7 @@ export default function UploadPage() {
 
           <div className="flex items-center justify-between mb-4">
             <Tooltip content="Review the trades our AI extracted. You can edit any values or remove incorrect rows before generating your report.">
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 Confirm Extracted Trades ({trades.length})
               </h2>
             </Tooltip>
@@ -543,7 +543,7 @@ export default function UploadPage() {
             </button>
           </div>
 
-          <div className="mb-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+          <div className="mb-4 p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -551,7 +551,7 @@ export default function UploadPage() {
                 onChange={(e) => setUploadConsent(e.target.checked)}
                 className="mt-0.5 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
               />
-              <span className="text-xs text-slate-700 leading-relaxed">
+              <span className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
                 I confirm I have permission to upload this data and it does not include sensitive personal identifiers. 
                 See our <a href="/disclaimer" className="underline text-brand-accent hover:text-blue-800">Disclaimer</a>.
               </span>
@@ -560,33 +560,33 @@ export default function UploadPage() {
           <div className="card overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-200">
+                <tr className="border-b border-slate-200 dark:border-slate-700">
                   {requiresTradeSelection && (
-                    <th className="pb-3 w-8 text-center font-medium text-slate-500">
+                    <th className="pb-3 w-8 text-center font-medium text-slate-500 dark:text-slate-400">
                       <Tooltip content="Select trades to include in your free report">
                         <span className="text-xs">Pick</span>
                       </Tooltip>
                     </th>
                   )}
-                  <th className="pb-3 text-left font-medium text-slate-500">Ticker</th>
-                  <th className="pb-3 text-left font-medium text-slate-500">Action</th>
-                  <th className="pb-3 text-right font-medium text-slate-500">Qty</th>
-                  <th className="pb-3 text-right font-medium text-slate-500">
+                  <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">Ticker</th>
+                  <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">Action</th>
+                  <th className="pb-3 text-right font-medium text-slate-500 dark:text-slate-400">Qty</th>
+                  <th className="pb-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <Tooltip content="The price at which you entered (opened) the trade.">
                       <span>Entry</span>
                     </Tooltip>
                   </th>
-                  <th className="pb-3 text-right font-medium text-slate-500">
+                  <th className="pb-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <Tooltip content="The price at which you exited (closed) the trade.">
                       <span>Exit</span>
                     </Tooltip>
                   </th>
-                  <th className="pb-3 text-right font-medium text-slate-500">
+                  <th className="pb-3 text-right font-medium text-slate-500 dark:text-slate-400">
                     <Tooltip content="Profit or loss for this trade. Green means profit, red means loss.">
                       <span>P&L</span>
                     </Tooltip>
                   </th>
-                  <th className="pb-3 text-center font-medium text-slate-500">
+                  <th className="pb-3 text-center font-medium text-slate-500 dark:text-slate-400">
                     <Tooltip content="How confident our AI is about the extracted data for this trade. Below 50% means you should double-check the values.">
                       <span>Confidence</span>
                     </Tooltip>
@@ -596,7 +596,7 @@ export default function UploadPage() {
               </thead>
               <tbody>
                 {trades.map((trade, i) => (
-                  <tr key={i} className={`border-b border-slate-100 last:border-0 ${requiresTradeSelection && selectedIndices.has(i) ? "bg-blue-50/50" : ""}`}>
+                  <tr key={i} className={`border-b border-slate-100 dark:border-slate-700 last:border-0 ${requiresTradeSelection && selectedIndices.has(i) ? "bg-blue-50/50 dark:bg-blue-950/30" : ""}`}>
                     {requiresTradeSelection && (
                       <td className="py-3 text-center">
                         <input
@@ -659,10 +659,10 @@ export default function UploadPage() {
       {step === "generating" && (
         <div className="card text-center py-16">
           <Loader2 className="h-10 w-10 text-brand-accent mx-auto mb-4 animate-spin" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+          <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
             {isSample ? "Loading Sample Report..." : "Generating your Leak Report..."}
           </h3>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {isSample
               ? "Preparing your sample leak report. This should only take a moment."
               : "Analyzing patterns, identifying leaks, building your review plan. This takes about 15-30 seconds."}
@@ -672,13 +672,13 @@ export default function UploadPage() {
 
       {step === "done" && reportId && (
         <div className="card text-center py-16">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <Check className="h-8 w-8 text-green-600" />
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/40">
+            <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
           </div>
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">
+          <h3 className="text-xl font-semibold text-slate-900 dark:text-slate-100 mb-2">
             {isSample ? "Your Sample Leak Report is Ready!" : "Your Leak Report is Ready!"}
           </h3>
-          <p className="text-sm text-slate-600 mb-6">We analyzed {trades.length} trades and found actionable insights.</p>
+          <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">We analyzed {trades.length} trades and found actionable insights.</p>
           {isSample && (
             <div className="mb-4 max-w-md mx-auto">
               <SampleDisclaimer compact />
@@ -693,14 +693,14 @@ export default function UploadPage() {
 
       {showPaywall && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-8 text-center">
             <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-slate-900 mb-2">You&apos;ve used your 3 free reports</h2>
-            <p className="text-slate-600 mb-6">Upgrade for unlimited reports, saved history, and weekly insights.</p>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-2">You&apos;ve used your 3 free reports</h2>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">Upgrade for unlimited reports, saved history, and weekly insights.</p>
             <div className="flex flex-col gap-3">
               <a href="/pricing?reason=limit" className="btn-primary w-full py-3">Upgrade Now</a>
               <a href="/pricing" className="btn-secondary w-full py-3">View Plans</a>
-              <button onClick={() => setShowPaywall(false)} className="text-sm text-slate-500 hover:text-slate-700 mt-1">
+              <button onClick={() => setShowPaywall(false)} className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 mt-1">
                 Maybe later
               </button>
             </div>
@@ -710,20 +710,20 @@ export default function UploadPage() {
 
       {showPiiDialog && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-md w-full p-6">
             <div className="flex items-center gap-3 mb-4">
               <ShieldAlert className="h-6 w-6 text-amber-500" />
-              <h3 className="text-lg font-bold text-slate-900">Privacy Reminder</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">Privacy Reminder</h3>
             </div>
-            <div className="mb-4 p-4 rounded-lg bg-amber-50 border border-amber-200">
-              <p className="text-sm text-amber-900 font-medium mb-2">Do not upload any personally identifiable information (PII)</p>
-              <ul className="text-xs text-amber-800 space-y-1.5 list-disc pl-4">
+            <div className="mb-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+              <p className="text-sm text-amber-900 dark:text-amber-300 font-medium mb-2">Do not upload any personally identifiable information (PII)</p>
+              <ul className="text-xs text-amber-800 dark:text-amber-400 space-y-1.5 list-disc pl-4">
                 <li>Account numbers or login credentials</li>
                 <li>Social security or government ID numbers</li>
                 <li>Home addresses or phone numbers</li>
                 <li>Full names tied to financial accounts</li>
               </ul>
-              <p className="text-xs text-amber-800 mt-3">Crop or blur any sensitive details before uploading. We process your data to generate reports only.</p>
+              <p className="text-xs text-amber-800 dark:text-amber-400 mt-3">Crop or blur any sensitive details before uploading. We process your data to generate reports only.</p>
             </div>
             <label className="flex items-center gap-2 cursor-pointer mb-5">
               <input
@@ -732,7 +732,7 @@ export default function UploadPage() {
                 onChange={(e) => setPiiDontShowAgain(e.target.checked)}
                 className="h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
               />
-              <span className="text-xs text-slate-600">Don&apos;t show this again</span>
+              <span className="text-xs text-slate-600 dark:text-slate-400">Don&apos;t show this again</span>
             </label>
             <div className="flex gap-3">
               <button
@@ -754,8 +754,8 @@ export default function UploadPage() {
 
       {showDisclaimerModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">Before using sample data</h3>
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl max-w-lg w-full p-6">
+            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-4">Before using sample data</h3>
             <SampleDisclaimer />
             <label className="flex items-start gap-3 mt-5 cursor-pointer">
               <input
@@ -764,7 +764,7 @@ export default function UploadPage() {
                 onChange={(e) => setDisclaimerAccepted(e.target.checked)}
                 className="mt-1 h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
               />
-              <span className="text-sm text-slate-700">
+              <span className="text-sm text-slate-700 dark:text-slate-300">
                 I understand this is example data for demonstration purposes only, not financial advice.
               </span>
             </label>
