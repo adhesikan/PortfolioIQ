@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, FormEvent } from "react";
-import { MessageSquare, Send, CheckCircle, AlertCircle, Shield } from "lucide-react";
+import { MessageSquare, Send, CheckCircle, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 const CATEGORIES = [
@@ -13,6 +13,26 @@ const CATEGORIES = [
   { value: "report_question", label: "Report Clarification" },
   { value: "other", label: "Other" },
 ];
+
+const CATEGORY_LABELS: Record<string, string> = {
+  technical: "Technical",
+  billing: "Billing",
+  feature: "Feature Request",
+  report_question: "Report",
+  other: "Other",
+};
+
+interface Ticket {
+  id: string;
+  category: string;
+  subject: string;
+  message: string;
+  status: string;
+  adminResponse: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function SupportPage() {
   const { user, loading: authLoading } = useAuth();
@@ -26,9 +46,29 @@ export default function SupportPage() {
   const [error, setError] = useState("");
   const [successTicketId, setSuccessTicketId] = useState<string | null>(null);
 
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(true);
+  const [expandedTicket, setExpandedTicket] = useState<string | null>(null);
+
   useEffect(() => {
     if (!authLoading && !user) router.push("/login");
   }, [authLoading, user, router]);
+
+  const fetchTickets = async () => {
+    setTicketsLoading(true);
+    try {
+      const res = await fetch("/api/support/tickets");
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data.tickets);
+      }
+    } catch {}
+    setTicketsLoading(false);
+  };
+
+  useEffect(() => {
+    if (user) fetchTickets();
+  }, [user]);
 
   if (authLoading || !user) return null;
 
@@ -59,6 +99,7 @@ export default function SupportPage() {
         return;
       }
       setSuccessTicketId(data.ticketId);
+      fetchTickets();
     } catch {
       setError("Something went wrong. Please try again.");
     } finally {
@@ -74,6 +115,20 @@ export default function SupportPage() {
     setSubject("");
     setMessage("");
     setDisclaimerAck(false);
+  };
+
+  const statusBadge = (status: string) => {
+    const cls =
+      status === "open" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" :
+      status === "pending" ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" :
+      "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300";
+    return (
+      <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${cls}`}>
+        {status === "open" && <Clock className="h-3 w-3" />}
+        {status === "closed" && <CheckCircle className="h-3 w-3" />}
+        {status}
+      </span>
+    );
   };
 
   return (
@@ -104,7 +159,7 @@ export default function SupportPage() {
         </div>
       )}
 
-      <div className="card">
+      <div className="card mb-8">
         <form onSubmit={handleSubmit} className="space-y-5">
           <div>
             <label className="label mb-1.5">Category <span className="text-red-500">*</span></label>
@@ -180,6 +235,91 @@ export default function SupportPage() {
             )}
           </button>
         </form>
+      </div>
+
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">My Tickets</h2>
+
+        {ticketsLoading ? (
+          <div className="card text-center py-8">
+            <Loader2 className="h-6 w-6 text-brand-accent mx-auto animate-spin" />
+          </div>
+        ) : tickets.length === 0 ? (
+          <div className="card text-center py-8">
+            <p className="text-sm text-slate-500 dark:text-slate-400">No tickets yet. Submit a message above and it will appear here.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {tickets.map((t) => {
+              const isExpanded = expandedTicket === t.id;
+              const hasResponse = !!t.adminResponse;
+              return (
+                <div key={t.id} className="card !p-0 overflow-hidden">
+                  <button
+                    onClick={() => setExpandedTicket(isExpanded ? null : t.id)}
+                    className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {statusBadge(t.status)}
+                        <span className="text-xs text-slate-500 dark:text-slate-400 capitalize">{CATEGORY_LABELS[t.category] || t.category}</span>
+                        {hasResponse && (
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-300">
+                            Replied
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{t.subject}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                        {new Date(t.createdAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+                      </p>
+                    </div>
+                    {isExpanded ? <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" /> : <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="border-t border-slate-200 dark:border-slate-700 px-5 py-4 space-y-4">
+                      <div>
+                        <p className="text-xs font-medium text-slate-500 dark:text-slate-400 mb-1">Your message</p>
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                          <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{t.message}</p>
+                        </div>
+                      </div>
+
+                      {hasResponse ? (
+                        <div>
+                          <p className="text-xs font-medium text-green-600 dark:text-green-400 mb-1 flex items-center gap-1">
+                            <CheckCircle className="h-3 w-3" />
+                            Support Response
+                            {t.respondedAt && (
+                              <span className="text-slate-400 dark:text-slate-500 font-normal ml-1">
+                                — {new Date(t.respondedAt).toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
+                              </span>
+                            )}
+                          </p>
+                          <div className="p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                            <p className="text-sm text-green-900 dark:text-green-200 whitespace-pre-wrap">{t.adminResponse}</p>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 text-center">
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            <Clock className="h-3 w-3 inline mr-1" />
+                            Awaiting response from our team
+                          </p>
+                        </div>
+                      )}
+
+                      <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                        Ref: TCK-{t.id.slice(0, 8).toUpperCase()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       <p className="text-xs text-center text-slate-500 dark:text-slate-400 mt-6">

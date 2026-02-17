@@ -4,6 +4,29 @@ import { prisma } from "@/lib/db";
 
 const VALID_CATEGORIES = ["technical", "billing", "feature", "report_question", "other"];
 
+export async function GET() {
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const tickets = await prisma.supportTicket.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    select: {
+      id: true,
+      category: true,
+      subject: true,
+      message: true,
+      status: true,
+      adminResponse: true,
+      respondedAt: true,
+      createdAt: true,
+      updatedAt: true,
+    },
+  });
+
+  return NextResponse.json({ tickets });
+}
+
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
   if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
