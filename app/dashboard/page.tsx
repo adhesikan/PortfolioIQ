@@ -61,15 +61,15 @@ interface DashboardData {
 }
 
 function getScoreStatus(score: number) {
-  if (score >= 65) return { label: "Strong Structure", color: "text-emerald-700", bg: "bg-emerald-50 border-emerald-200", dot: "bg-emerald-500" };
-  if (score >= 35) return { label: "Needs Attention", color: "text-amber-700", bg: "bg-amber-50 border-amber-200", dot: "bg-amber-500" };
-  return { label: "High Leakage", color: "text-red-700", bg: "bg-red-50 border-red-200", dot: "bg-red-500" };
+  if (score >= 65) return { label: "Strong Structure", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-50 border-emerald-200 dark:bg-emerald-900/30 dark:border-emerald-700", dot: "bg-emerald-500" };
+  if (score >= 35) return { label: "Needs Attention", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-50 border-amber-200 dark:bg-amber-900/30 dark:border-amber-700", dot: "bg-amber-500" };
+  return { label: "High Leakage", color: "text-red-700 dark:text-red-400", bg: "bg-red-50 border-red-200 dark:bg-red-900/30 dark:border-red-700", dot: "bg-red-500" };
 }
 
 function getScoreColor(score: number) {
-  if (score >= 65) return "text-emerald-600";
-  if (score >= 35) return "text-amber-600";
-  return "text-red-600";
+  if (score >= 65) return "text-emerald-600 dark:text-emerald-400";
+  if (score >= 35) return "text-amber-600 dark:text-amber-400";
+  return "text-red-600 dark:text-red-400";
 }
 
 function getScoreRingColor(score: number) {
