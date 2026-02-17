@@ -235,7 +235,7 @@ export default function DashboardPage() {
             <div className="flex flex-wrap items-center gap-2 mt-3 mb-4">
               {latest ? (
                 <>
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getScoreStatus(latest.leakScore).bg}`}>
+                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border ${getScoreStatus(latest.leakScore).bg} ${getScoreStatus(latest.leakScore).color}`}>
                     <span className={`h-1.5 w-1.5 rounded-full ${getScoreStatus(latest.leakScore).dot}`}></span>
                     {getScoreStatus(latest.leakScore).label}
                   </span>
