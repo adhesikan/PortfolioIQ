@@ -196,7 +196,7 @@ export default function AdminPage() {
     { id: "users" as Tab, label: "Users", icon: Users },
     { id: "payments" as Tab, label: "Payments", icon: CreditCard },
     { id: "email" as Tab, label: "Email", icon: Mail },
-    { id: "abuse" as Tab, label: "Abuse Logs", icon: Shield },
+    { id: "abuse" as Tab, label: "User Sessions", icon: Shield },
     { id: "support" as Tab, label: "Support", icon: MessageSquare },
   ];
 
@@ -622,7 +622,7 @@ export default function AdminPage() {
             return (
             <div className="card">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-slate-900">Abuse Logs</h2>
+                <h2 className="text-lg font-semibold text-slate-900">User Sessions</h2>
                 <div className="flex items-center gap-2">
                   <label className="text-xs text-slate-500">Filter:</label>
                   <select
@@ -639,7 +639,7 @@ export default function AdminPage() {
                 </div>
               </div>
               {filteredLogs.length === 0 ? (
-                <p className="text-sm text-slate-500 py-8 text-center">No abuse logs recorded</p>
+                <p className="text-sm text-slate-500 py-8 text-center">No session logs recorded</p>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
