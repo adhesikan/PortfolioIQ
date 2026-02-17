@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Users, CreditCard, Mail, Shield, Loader2, Search, AlertTriangle, MessageSquare, ArrowLeft, Clock, CheckCircle, XCircle } from "lucide-react";
+import { Users, CreditCard, Mail, Shield, Loader2, Search, AlertTriangle, MessageSquare, ArrowLeft, Clock, CheckCircle, XCircle, BarChart3, Globe, Eye, TrendingUp } from "lucide-react";
 
 interface AdminUser {
   id: string;
@@ -49,7 +49,25 @@ interface AbuseLogEntry {
   userEmail: string | null;
 }
 
-type Tab = "users" | "payments" | "email" | "abuse" | "support";
+interface AnalyticsData {
+  totalViews: number;
+  uniqueVisitors: number;
+  topPages: Array<{ path: string; views: number; unique_visitors: number }>;
+  recentViews: Array<{
+    id: string;
+    path: string;
+    hashedIp: string;
+    userAgent: string | null;
+    referrer: string | null;
+    userId: string | null;
+    userEmail: string | null;
+    deviceId: string | null;
+    createdAt: string;
+  }>;
+  dailyViews: Array<{ date: string; views: number }>;
+}
+
+type Tab = "users" | "payments" | "email" | "abuse" | "support" | "analytics";
 
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
@@ -78,6 +96,9 @@ export default function AdminPage() {
   const [ticketStatus, setTicketStatus] = useState("");
   const [savingTicket, setSavingTicket] = useState(false);
   const [ticketSaveMsg, setTicketSaveMsg] = useState("");
+  const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
+  const [analyticsRange, setAnalyticsRange] = useState("7d");
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   useEffect(() => {
     if (authLoading) return;
@@ -153,9 +174,22 @@ export default function AdminPage() {
     setSavingTicket(false);
   };
 
+  const fetchAnalytics = async (range: string) => {
+    setAnalyticsLoading(true);
+    try {
+      const res = await fetch(`/api/admin/analytics?range=${range}`);
+      if (res.ok) setAnalytics(await res.json());
+    } catch {}
+    setAnalyticsLoading(false);
+  };
+
   useEffect(() => {
     if (tab === "support" && user?.role === "ADMIN") fetchTickets(1);
   }, [tab, ticketStatusFilter, ticketCategoryFilter]);
+
+  useEffect(() => {
+    if (tab === "analytics" && user?.role === "ADMIN") fetchAnalytics(analyticsRange);
+  }, [tab, analyticsRange]);
 
   const toggleUser = async (userId: string, action: string) => {
     await fetch("/api/admin/users", {
@@ -198,6 +232,7 @@ export default function AdminPage() {
     { id: "email" as Tab, label: "Email", icon: Mail },
     { id: "abuse" as Tab, label: "User Sessions", icon: Shield },
     { id: "support" as Tab, label: "Support", icon: MessageSquare },
+    { id: "analytics" as Tab, label: "Site Analytics", icon: BarChart3 },
   ];
 
   return (
@@ -612,6 +647,172 @@ export default function AdminPage() {
                     </button>
                   </div>
                 )}
+              </div>
+            )
+          )}
+
+          {tab === "analytics" && (
+            analyticsLoading ? (
+              <div className="card text-center py-12">
+                <Loader2 className="h-8 w-8 text-brand-accent mx-auto animate-spin" />
+              </div>
+            ) : analytics ? (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Site Analytics</h2>
+                  <div className="flex gap-1 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
+                    {[
+                      { value: "24h", label: "24h" },
+                      { value: "7d", label: "7 days" },
+                      { value: "30d", label: "30 days" },
+                    ].map((r) => (
+                      <button
+                        key={r.value}
+                        onClick={() => setAnalyticsRange(r.value)}
+                        className={`px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          analyticsRange === r.value
+                            ? "bg-brand-accent text-white"
+                            : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="card flex items-center gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <Eye className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{analytics.totalViews.toLocaleString()}</p>
+                      <p className="text-xs text-slate-500">Total Page Views</p>
+                    </div>
+                  </div>
+                  <div className="card flex items-center gap-3">
+                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                      <Users className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{analytics.uniqueVisitors.toLocaleString()}</p>
+                      <p className="text-xs text-slate-500">Unique Visitors</p>
+                    </div>
+                  </div>
+                  <div className="card flex items-center gap-3">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                      <TrendingUp className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        {analytics.uniqueVisitors > 0 ? (analytics.totalViews / analytics.uniqueVisitors).toFixed(1) : "0"}
+                      </p>
+                      <p className="text-xs text-slate-500">Pages / Visitor</p>
+                    </div>
+                  </div>
+                </div>
+
+                {analytics.dailyViews.length > 0 && (
+                  <div className="card">
+                    <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Daily Views</h3>
+                    <div className="flex items-end gap-1 h-32">
+                      {(() => {
+                        const maxViews = Math.max(...analytics.dailyViews.map((d) => d.views), 1);
+                        return analytics.dailyViews.map((d, i) => (
+                          <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                            <div className="absolute -top-8 bg-slate-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
+                              {new Date(d.date).toLocaleDateString()} — {d.views} views
+                            </div>
+                            <div
+                              className="w-full bg-brand-accent/80 rounded-t hover:bg-brand-accent transition-colors min-h-[2px]"
+                              style={{ height: `${(d.views / maxViews) * 100}%` }}
+                            />
+                          </div>
+                        ));
+                      })()}
+                    </div>
+                    <div className="flex justify-between mt-1 text-[10px] text-slate-400">
+                      {analytics.dailyViews.length > 0 && (
+                        <>
+                          <span>{new Date(analytics.dailyViews[0].date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                          <span>{new Date(analytics.dailyViews[analytics.dailyViews.length - 1].date).toLocaleDateString(undefined, { month: "short", day: "numeric" })}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <div className="card">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Top Pages</h3>
+                  {analytics.topPages.length === 0 ? (
+                    <p className="text-sm text-slate-500 py-4 text-center">No page views yet</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {analytics.topPages.map((p, i) => {
+                        const maxV = analytics.topPages[0]?.views || 1;
+                        return (
+                          <div key={i} className="relative">
+                            <div
+                              className="absolute inset-y-0 left-0 bg-brand-accent/10 dark:bg-brand-accent/20 rounded"
+                              style={{ width: `${(p.views / maxV) * 100}%` }}
+                            />
+                            <div className="relative flex items-center justify-between px-3 py-2">
+                              <div className="flex items-center gap-2">
+                                <Globe className="h-3.5 w-3.5 text-slate-400" />
+                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{p.path}</span>
+                              </div>
+                              <div className="flex items-center gap-4 text-xs text-slate-500">
+                                <span>{p.views} views</span>
+                                <span>{p.unique_visitors} unique</span>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                <div className="card">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Recent Visits</h3>
+                  {analytics.recentViews.length === 0 ? (
+                    <p className="text-sm text-slate-500 py-4 text-center">No visits recorded yet</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-slate-200 dark:border-slate-700">
+                            <th className="pb-3 text-left font-medium text-slate-500">Time</th>
+                            <th className="pb-3 text-left font-medium text-slate-500">Page</th>
+                            <th className="pb-3 text-left font-medium text-slate-500">Visitor</th>
+                            <th className="pb-3 text-left font-medium text-slate-500">Referrer</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {analytics.recentViews.map((v) => (
+                            <tr key={v.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
+                              <td className="py-2.5 text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">{new Date(v.createdAt).toLocaleString()}</td>
+                              <td className="py-2.5 text-slate-900 dark:text-slate-100 font-medium">{v.path}</td>
+                              <td className="py-2.5">
+                                {v.userEmail ? (
+                                  <span className="text-xs text-brand-accent">{v.userEmail}</span>
+                                ) : (
+                                  <span className="text-xs text-slate-400 font-mono">{v.hashedIp.substring(0, 10)}...</span>
+                                )}
+                              </td>
+                              <td className="py-2.5 text-xs text-slate-500 max-w-[200px] truncate">{v.referrer || "—"}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="card text-center py-12">
+                <p className="text-sm text-slate-500">No analytics data available</p>
               </div>
             )
           )}

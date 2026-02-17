@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import Providers from "@/components/Providers";
 import Navigation from "@/components/Navigation";
 import CookieConsent from "@/components/CookieConsent";
+import PageViewTracker from "@/components/PageViewTracker";
 import Link from "next/link";
 
 export const metadata: Metadata = {
@@ -82,6 +83,7 @@ export default function RootLayout({
             </footer>
           </div>
           <CookieConsent />
+          <PageViewTracker />
         </Providers>
       </body>
     </html>

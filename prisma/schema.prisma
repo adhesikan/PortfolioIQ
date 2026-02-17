@@ -267,6 +267,21 @@ model ConsentLog {
   @@index([consentType])
 }
 
+model PageView {
+  id          String   @id @default(cuid())
+  path        String
+  hashedIp    String
+  userAgent   String?
+  referrer    String?
+  userId      String?
+  deviceId    String?
+  createdAt   DateTime @default(now())
+
+  @@index([path])
+  @@index([createdAt])
+  @@index([hashedIp])
+}
+
 model SupportTicket {
   id                 String    @id @default(cuid())
   userId             String

@@ -6,7 +6,7 @@ PortfolioIQ is a full-stack SaaS application positioned as "Trading Performance 
 
 **Domain:** portfolioiq.pro  
 **Status:** Active development  
-**Last Updated:** 2026-02-16
+**Last Updated:** 2026-02-17
 
 ## Tech Stack
 
@@ -130,7 +130,8 @@ prisma/
 - User management (view, disable, reset reports, change role)
 - Payment/subscription status
 - Email broadcast (all, free tier, paid tier)
-- Abuse logs with risk scoring
+- User Sessions (renamed from Abuse Logs) with risk scoring
+- Site Analytics tab: total views, unique visitors, pages/visitor, daily views chart, top pages, recent visits
 
 ### Support Ticket System
 - Contact form at /support with category, subject, message, disclaimer acknowledgment
@@ -149,7 +150,7 @@ prisma/
 
 ## Database Models
 
-User, Session, Subscription, Upload, Trade, LeakReport, UsageCounter, AbuseLog, AdminAuditLog, MarketingContent, ConsentLog, Portfolio, Holding, ImportJob, PortfolioLot, Snapshot, RuleSet, Recommendation, StressTestResult, Report, SupportTicket
+User, Session, Subscription, Upload, Trade, LeakReport, UsageCounter, AbuseLog, AdminAuditLog, MarketingContent, ConsentLog, Portfolio, Holding, ImportJob, PortfolioLot, Snapshot, RuleSet, Recommendation, StressTestResult, Report, SupportTicket, PageView
 
 ## Environment Variables Required
 
