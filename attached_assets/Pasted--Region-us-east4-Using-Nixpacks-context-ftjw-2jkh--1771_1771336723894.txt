@@ -1,0 +1,122 @@
+ 
+[Region: us-east4]
+==============
+Using Nixpacks
+==============
+
+context: ftjw-2jkh
+╔══════════════════════════════ Nixpacks v1.38.0 ══════════════════════════════╗
+║ setup      │ nodejs_18, npm-9_x, openssl                                     ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ install    │ npm ci                                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ build      │ npm install && npx prisma generate && npm run build && cp -r    ║
+║            │ public .next/standalone/ 2>/dev/null || true && cp -r           ║
+║            │ .next/static .next/standalone/.next/                            ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ start      │ npx prisma migrate deploy && HOSTNAME=0.0.0.0 node              ║
+║            │ .next/standalone/server.js                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+74ms
+
+internal
+load .dockerignore
+0ms
+
+stage-0
+FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+11ms
+
+internal
+load build context
+1ms
+
+stage-0
+RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d cached
+0ms
+
+stage-0
+COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix cached
+0ms
+
+stage-0
+WORKDIR /app/ cached
+0ms
+
+stage-0
+COPY . /app/.
+36ms
+
+stage-0
+RUN npm ci
+13s
+Run `npm audit` for details.
+
+stage-0
+COPY . /app/.
+379ms
+
+stage-0
+RUN npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/
+16s
+npm warn config production Use `--omit=dev` instead.
+> portfolioiq@0.1.0 postinstall
+> prisma generate
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 192ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Curious about the SQL queries Prisma ORM generates? Optimize helps you enhance your visibility: https://pris.ly/tip-2-optimize
+┌─────────────────────────────────────────────────────────┐
+│  Update available 5.22.0 -> 7.4.0                       │
+│                                                         │
+│  This is a major update - please follow the guide at    │
+│  https://pris.ly/d/major-version-upgrade                │
+│                                                         │
+│  Run the following to update                            │
+│    npm i --save-dev prisma@latest                       │
+│    npm i @prisma/client@latest                          │
+└─────────────────────────────────────────────────────────┘
+up to date, audited 612 packages in 12s
+194 packages are looking for funding
+  run `npm fund` for details
+9 vulnerabilities (1 low, 4 moderate, 4 high)
+To address issues that do not require attention, run:
+  npm audit fix
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+Run `npm audit` for details.
+npm warn config production Use `--omit=dev` instead.
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 192ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Help us improve the Prisma ORM for everyone. Share your feedback in a short 2-min survey: https://pris.ly/orm/survey/release-5-22
+npm warn config production Use `--omit=dev` instead.
+> portfolioiq@0.1.0 build
+> prisma generate && prisma db push && next build
+Prisma schema loaded from prisma/schema.prisma
+✔ Generated Prisma Client (v5.22.0) to ./node_modules/@prisma/client in 192ms
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+Tip: Need your database queries to be 1000x faster? Accelerate offers you that and more: https://pris.ly/tip-2-accelerate
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "railway", schema "public" at "postgres.railway.internal:5432"
+Error: P1001: Can't reach database server at `postgres.railway.internal:5432`
+
+Please make sure your database server is running at `postgres.railway.internal:5432`.
+cp: cannot stat '.next/static': No such file or directory
+Dockerfile:24
+-------------------
+22 |     # build phase
+23 |     COPY . /app/.
+24 | >>> RUN --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-next/cache,target=/app/.next/cache --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-node_modules/cache,target=/app/node_modules/.cache npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/
+25 |
+26 |
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/bash -ol pipefail -c npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/" did not complete successfully: exit code: 1
+Error: Docker build failed
