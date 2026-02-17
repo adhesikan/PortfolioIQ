@@ -1,0 +1,141 @@
+You are working inside an existing full-stack SaaS app called “PortfolioIQ” (Next.js/React + Tailwind UI + Node/Express or Next API routes + Postgres). There is already:
+- User auth (sessions/JWT) and a Users table
+- An Admin Panel area restricted to admin users (or an admin role flag)
+- A public marketing site + an authenticated app
+
+GOAL
+Implement a compliance-safe “Contact Support” feature:
+1) A Contact button + form for logged-in users (and optionally public users, but default to logged-in).
+2) Backend storage in Postgres for messages (“Support Tickets”).
+3) Admin panel pages to view, filter, and respond to tickets.
+4) A professional, compliant “Thank you” success popup after submission:
+   “Thanks — we received your message. Our support team will respond as soon as possible.”
+   Also include a short boundary disclaimer: “PortfolioIQ does not provide investment advice.”
+
+NON-GOALS
+- Do not add email sending yet (store-only). If email exists already, you may optionally add “notify admin” later, but not required.
+- Do not request or store brokerage credentials or sensitive PII beyond what is necessary.
+- Do not change billing/Stripe.
+
+COMPLIANCE REQUIREMENTS
+- The contact form must be explicitly for product/billing/technical issues and feature requests.
+- Add a visible note above the message box:
+  “Support is for product, billing, and technical questions only. PortfolioIQ does not provide investment advice or trade recommendations.”
+- Require a category dropdown to reduce “advice” optics. Do NOT include “Trading Advice” as a category.
+- Add a required checkbox:
+  “I understand PortfolioIQ does not provide investment advice. I will not submit brokerage credentials or sensitive personal identifiers.”
+- In Admin UI, display a reminder banner: “Do not provide investment advice. Provide product/billing/technical help only.”
+
+DATA MODEL (Postgres)
+Create a new table: support_tickets
+
+Fields (suggested):
+- id (uuid, primary key)
+- user_id (uuid, nullable if you allow non-logged users; default required for now)
+- user_email (text)  // copy at time of submission
+- user_name (text, nullable)
+- category (text) // enum-like: 'technical', 'billing', 'feature', 'report_question', 'other'
+- subject (text)
+- message (text)
+- status (text) default 'open'  // 'open' | 'pending' | 'closed'
+- admin_response (text, nullable)
+- responded_by_admin_id (uuid, nullable)
+- created_at (timestamp)
+- updated_at (timestamp)
+- responded_at (timestamp, nullable)
+- meta (jsonb, nullable) // store app_version, page_url, user_agent if available (NO PII)
+
+If you use Prisma/Drizzle/Knex, implement via the ORM’s migration system. If migrations are not set up, implement a SQL migration and run it safely.
+
+BACKEND API
+Implement routes:
+1) POST /api/support/tickets
+   - Auth required (default). If no auth, return 401.
+   - Validate with Zod (or existing validator):
+     category: one of allowed values
+     subject: 3–120 chars
+     message: 10–3000 chars
+     disclaimer_ack: must be true
+   - Sanitize / trim strings.
+   - Create ticket row with user_id + user_email + name.
+   - Return { ok: true, ticketId }
+
+2) GET /api/admin/support/tickets
+   - Admin-only
+   - Support query params: status, category, q (search by email/subject), page, limit
+   - Return paginated list with key fields
+
+3) GET /api/admin/support/tickets/:id
+   - Admin-only
+   - Return full ticket + user summary (plan, created_at, reports_used) IF those exist in DB; otherwise return basic user info only.
+
+4) PATCH /api/admin/support/tickets/:id
+   - Admin-only
+   - Allow updating: status, admin_response
+   - When admin_response provided, set responded_at and responded_by_admin_id.
+   - Return updated ticket.
+
+SECURITY / RBAC
+- Reuse existing auth middleware.
+- Ensure admin routes check role/flag (e.g., user.role === 'admin').
+- Rate limit POST /api/support/tickets (e.g., 5 per hour per user) to prevent abuse (use existing rate limiter or a simple in-memory limiter if no infra; if serverless, store minimal throttle info in DB).
+
+FRONTEND — USER CONTACT FORM
+Add a “Contact Support” button in:
+- App header user menu OR sidebar (prefer: Settings page section “Support”).
+Create page: /app/support (or /support inside authenticated app)
+
+Form fields:
+- Category (dropdown required):
+  Technical Support
+  Billing Question
+  Feature Request
+  Report Clarification
+  Other
+- Subject (input)
+- Message (textarea)
+- Required checkbox: disclaimer_ack
+- Optional: attach screenshot (NOT in this iteration; omit)
+
+Add helper text above message:
+“Please do not include account numbers, passwords, or brokerage credentials. For security, remove personal identifiers.”
+
+On Submit:
+- Call POST /api/support/tickets
+- On success show a modal/popup (shadcn Dialog or your existing Modal) with:
+  Title: “Message received”
+  Body: “Thanks — we received your message. Our support team will respond as soon as possible.”
+  Small note: “PortfolioIQ does not provide investment advice or trade recommendations.”
+  Button: “Close”
+- After closing modal, either clear form or redirect to a simple “Ticket submitted” state.
+- Show ticket reference ID like: “Reference: TCK-<first8 of uuid>” (do not expose sequential ids).
+
+FRONTEND — ADMIN PANEL
+Add new admin nav item: “Support Tickets”
+
+Admin list page: /admin/support
+- Table columns: Created, Status, Category, User (email), Subject, Last Updated
+- Filters: status, category
+- Search input: email/subject
+- Badge colors by status (use neutral, not sensational)
+- Row click opens detail
+
+Admin detail page: /admin/support/:id
+- Show ticket fields and timestamps
+- Show user summary panel:
+  email, name, plan, created_at, reports_used (if available)
+- Admin response textarea + status dropdown
+- Save button calls PATCH
+- Display compliance reminder banner at top:
+  “Reminder: Provide product/billing/technical assistance only. Do not provide investment advice.”
+
+UX / COPY REQUIREMENTS
+- Keep tone professional, calm, and non-promissory.
+- No language like “we’ll help you become profitable” or “we’ll fix your trading”.
+
+OUTPUT
+- Implement DB migration and code changes.
+- Provide a list of files changed and brief notes.
+- Ensure lint/build passes.
+
+START NOW. Do not ask me questions—make reasonable assumptions based on the existing codebase patterns and implement accordingly.
