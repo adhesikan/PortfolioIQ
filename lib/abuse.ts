@@ -3,6 +3,7 @@ import { hashIp } from "./auth";
 
 export async function logAbuse(params: {
   userId?: string;
+  userEmail?: string;
   ip: string;
   deviceId?: string;
   userAgent?: string;
@@ -22,6 +23,7 @@ export async function logAbuse(params: {
   await prisma.abuseLog.create({
     data: {
       userId: params.userId,
+      userEmail: params.userEmail,
       hashedIp,
       deviceId: params.deviceId,
       userAgent: params.userAgent,

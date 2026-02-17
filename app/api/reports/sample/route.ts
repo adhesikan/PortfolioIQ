@@ -219,7 +219,7 @@ export async function POST(req: NextRequest) {
 
       const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
       const userAgent = req.headers.get("user-agent") || undefined;
-      await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_REPORT_CACHED" });
+      await logAbuse({ userId: user.id, userEmail: user.email, ip, userAgent, action: "SAMPLE_REPORT_CACHED" });
 
       return NextResponse.json({
         reportId: report.id,
@@ -327,7 +327,7 @@ export async function POST(req: NextRequest) {
 
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
     const userAgent = req.headers.get("user-agent") || undefined;
-    await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_REPORT_GENERATED" });
+    await logAbuse({ userId: user.id, userEmail: user.email, ip, userAgent, action: "SAMPLE_REPORT_GENERATED" });
 
     return NextResponse.json({
       reportId: report.id,

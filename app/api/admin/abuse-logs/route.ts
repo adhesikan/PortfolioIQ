@@ -19,7 +19,7 @@ export async function GET() {
       action: l.action,
       riskScore: l.riskScore,
       createdAt: l.createdAt.toISOString(),
-      userEmail: l.user?.email ?? null,
+      userEmail: l.userEmail || l.user?.email || null,
     })),
   });
 }

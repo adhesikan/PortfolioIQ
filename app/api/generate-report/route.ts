@@ -42,14 +42,14 @@ export async function POST(req: NextRequest) {
       const userAgent = req.headers.get("user-agent") || undefined;
 
       if (check.reason === "SAMPLE_RATE_LIMIT") {
-        await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_RATE_LIMIT_HIT" });
+        await logAbuse({ userId: user.id, userEmail: user.email, ip, userAgent, action: "SAMPLE_RATE_LIMIT_HIT" });
         return NextResponse.json({
           error: "SAMPLE_RATE_LIMIT",
           message: check.message,
         }, { status: 429 });
       }
 
-      await logAbuse({ userId: user.id, ip, userAgent, action: "FREE_LIMIT_REACHED" });
+      await logAbuse({ userId: user.id, userEmail: user.email, ip, userAgent, action: "FREE_LIMIT_REACHED" });
       return NextResponse.json({
         error: "FREE_LIMIT_REACHED",
         freeUsed: check.freeUsed,
@@ -282,7 +282,7 @@ Rules:
     if (isSampleReport) {
       const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
       const userAgent = req.headers.get("user-agent") || undefined;
-      await logAbuse({ userId: user.id, ip, userAgent, action: "SAMPLE_REPORT_GENERATED" });
+      await logAbuse({ userId: user.id, userEmail: user.email, ip, userAgent, action: "SAMPLE_REPORT_GENERATED" });
     }
 
     return NextResponse.json({

@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || "unknown";
-    await logAbuse({ userId: user.id, ip, userAgent: req.headers.get("user-agent") || undefined, action: "extract_trades" });
+    await logAbuse({ userId: user.id, userEmail: user.email, ip, userAgent: req.headers.get("user-agent") || undefined, action: "extract_trades" });
 
     const formData = await req.formData();
     const file = formData.get("file") as File;

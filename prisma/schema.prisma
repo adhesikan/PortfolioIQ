@@ -126,6 +126,7 @@ model UsageCounter {
 model AbuseLog {
   id          String   @id @default(cuid())
   userId      String?
+  userEmail   String?
   hashedIp    String
   deviceId    String?
   userAgent   String?

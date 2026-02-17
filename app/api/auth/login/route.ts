@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { email, password } = loginSchema.parse(body);
 
-    const abuseResult = await logAbuse({ ip, userAgent, action: "login" });
+    const abuseResult = await logAbuse({ ip, userAgent, userEmail: email, action: "login" });
     if (abuseResult.blocked) {
       return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
     }
@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
 
     const valid = await verifyPassword(password, user.passwordHash);
     if (!valid) {
-      await logAbuse({ userId: user.id, ip, userAgent, action: "failed_login" });
+      await logAbuse({ userId: user.id, userEmail: user.email, ip, userAgent, action: "failed_login" });
       return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
     }
 

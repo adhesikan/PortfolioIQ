@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "You must agree to the Terms of Service and Privacy Policy." }, { status: 400 });
     }
 
-    const abuseResult = await logAbuse({ ip, userAgent, action: "signup" });
+    const abuseResult = await logAbuse({ ip, userAgent, userEmail: email, action: "signup" });
     if (abuseResult.blocked) {
       return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
     }
