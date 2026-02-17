@@ -101,7 +101,6 @@ export default function PricingPage() {
               { text: "Priority AI analysis", tip: "Your reports are processed with priority, giving you faster results." },
               { text: "Advanced behavior insights", tip: "Deeper analysis of your trading psychology including emotional patterns, time-of-day trends, and more." },
               { text: "Historical report comparison", tip: "Track your progress over time by comparing Leak Scores and patterns across multiple reports." },
-              { text: "Email report delivery", tip: "Get your Leak Reports delivered straight to your inbox for easy reference." },
             ].map((f) => (
               <li key={f.text} className="flex items-center gap-2 text-sm text-slate-700">
                 <Check className="h-4 w-4 text-green-500 shrink-0" />
