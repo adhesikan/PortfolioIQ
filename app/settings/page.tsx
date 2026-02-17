@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import {
   Loader2, User, Lock, CreditCard, Shield, Calendar,
-  CheckCircle, AlertCircle, ExternalLink, Crown
+  CheckCircle, AlertCircle, ExternalLink, Crown, MessageSquare
 } from "lucide-react";
 import Link from "next/link";
 
@@ -296,8 +296,22 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <div className="card border-red-200 bg-red-50/50">
-        <h2 className="text-lg font-semibold text-red-900 mb-2">Sign Out</h2>
+      <div className="card mb-6">
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4 flex items-center gap-2">
+          <MessageSquare className="h-5 w-5 text-brand-accent" />
+          Support
+        </h2>
+        <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+          Have a question, issue, or feature request? Our team is here to help with product and technical questions.
+        </p>
+        <Link href="/support" className="btn-secondary text-sm inline-flex items-center gap-2">
+          Contact Support
+          <MessageSquare className="h-3.5 w-3.5" />
+        </Link>
+      </div>
+
+      <div className="card border-red-200 bg-red-50/50 dark:bg-red-950/20 dark:border-red-800">
+        <h2 className="text-lg font-semibold text-red-900 dark:text-red-300 mb-2">Sign Out</h2>
         <p className="text-sm text-red-700 mb-4">Sign out of your account on this device.</p>
         <button
           onClick={async () => { await logout(); router.push("/"); }}

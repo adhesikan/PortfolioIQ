@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useState, useRef, useEffect } from "react";
 import {
   Menu, X, BarChart3, Upload, FileText, Settings, Shield, LogOut,
-  CreditCard, TrendingUp, ChevronDown, User, Sun, Moon
+  CreditCard, TrendingUp, ChevronDown, User, Sun, Moon, MessageSquare
 } from "lucide-react";
 import { useTheme } from "@/contexts/ThemeContext";
 
@@ -66,6 +66,7 @@ export default function Navigation() {
   const allMobileNav = [
     ...primaryNav,
     { href: "/settings", label: "Settings", icon: Settings },
+    { href: "/support", label: "Support", icon: MessageSquare },
     ...(user.role === "ADMIN" ? [{ href: "/admin", label: "Admin", icon: Shield }] : []),
   ];
 
@@ -130,6 +131,14 @@ export default function Navigation() {
               >
                 <Settings className="h-4 w-4 text-slate-400" />
                 Settings
+              </Link>
+              <Link
+                href="/support"
+                onClick={() => setProfileOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                <MessageSquare className="h-4 w-4 text-slate-400" />
+                Contact Support
               </Link>
               {user.role === "ADMIN" && (
                 <Link

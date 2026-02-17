@@ -3,7 +3,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Users, CreditCard, Mail, Shield, Loader2, Search, AlertTriangle } from "lucide-react";
+import { Users, CreditCard, Mail, Shield, Loader2, Search, AlertTriangle, MessageSquare, ArrowLeft, Clock, CheckCircle, XCircle } from "lucide-react";
 
 interface AdminUser {
   id: string;
@@ -18,6 +18,28 @@ interface AdminUser {
   accountStatus: string;
 }
 
+interface SupportTicket {
+  id: string;
+  userEmail: string;
+  userName: string | null;
+  category: string;
+  subject: string;
+  message: string;
+  status: string;
+  adminResponse: string | null;
+  respondedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  user?: {
+    email: string;
+    name: string | null;
+    role: string;
+    createdAt: string;
+    subscription: { status: string } | null;
+    _count?: { reports: number };
+  };
+}
+
 interface AbuseLogEntry {
   id: string;
   hashedIp: string;
@@ -27,7 +49,7 @@ interface AbuseLogEntry {
   userEmail: string | null;
 }
 
-type Tab = "users" | "payments" | "email" | "abuse";
+type Tab = "users" | "payments" | "email" | "abuse" | "support";
 
 export default function AdminPage() {
   const { user, loading: authLoading } = useAuth();
@@ -44,6 +66,18 @@ export default function AdminPage() {
   const [emailResult, setEmailResult] = useState("");
   const [abuseFilter, setAbuseFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [tickets, setTickets] = useState<SupportTicket[]>([]);
+  const [ticketsTotal, setTicketsTotal] = useState(0);
+  const [ticketsPage, setTicketsPage] = useState(1);
+  const [ticketStatusFilter, setTicketStatusFilter] = useState("all");
+  const [ticketCategoryFilter, setTicketCategoryFilter] = useState("all");
+  const [ticketSearch, setTicketSearch] = useState("");
+  const [selectedTicket, setSelectedTicket] = useState<SupportTicket | null>(null);
+  const [ticketLoading, setTicketLoading] = useState(false);
+  const [adminResponse, setAdminResponse] = useState("");
+  const [ticketStatus, setTicketStatus] = useState("");
+  const [savingTicket, setSavingTicket] = useState(false);
+  const [ticketSaveMsg, setTicketSaveMsg] = useState("");
 
   useEffect(() => {
     if (authLoading) return;
@@ -63,6 +97,65 @@ export default function AdminPage() {
     } catch {}
     setLoading(false);
   };
+
+  const fetchTickets = async (page = 1) => {
+    setTicketLoading(true);
+    try {
+      const params = new URLSearchParams({ page: String(page), limit: "20" });
+      if (ticketStatusFilter !== "all") params.set("status", ticketStatusFilter);
+      if (ticketCategoryFilter !== "all") params.set("category", ticketCategoryFilter);
+      if (ticketSearch.trim()) params.set("q", ticketSearch.trim());
+      const res = await fetch(`/api/admin/support/tickets?${params}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTickets(data.tickets);
+        setTicketsTotal(data.total);
+        setTicketsPage(data.page);
+      }
+    } catch {}
+    setTicketLoading(false);
+  };
+
+  const openTicketDetail = async (id: string) => {
+    try {
+      const res = await fetch(`/api/admin/support/tickets/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedTicket(data.ticket);
+        setAdminResponse(data.ticket.adminResponse || "");
+        setTicketStatus(data.ticket.status);
+        setTicketSaveMsg("");
+      }
+    } catch {}
+  };
+
+  const saveTicketResponse = async () => {
+    if (!selectedTicket) return;
+    setSavingTicket(true);
+    setTicketSaveMsg("");
+    try {
+      const res = await fetch(`/api/admin/support/tickets/${selectedTicket.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: ticketStatus, adminResponse: adminResponse.trim() || undefined }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSelectedTicket(data.ticket);
+        setTicketSaveMsg("Saved successfully");
+        fetchTickets(ticketsPage);
+      } else {
+        setTicketSaveMsg("Failed to save");
+      }
+    } catch {
+      setTicketSaveMsg("Failed to save");
+    }
+    setSavingTicket(false);
+  };
+
+  useEffect(() => {
+    if (tab === "support" && user?.role === "ADMIN") fetchTickets(1);
+  }, [tab, ticketStatusFilter, ticketCategoryFilter]);
 
   const toggleUser = async (userId: string, action: string) => {
     await fetch("/api/admin/users", {
@@ -104,11 +197,12 @@ export default function AdminPage() {
     { id: "payments" as Tab, label: "Payments", icon: CreditCard },
     { id: "email" as Tab, label: "Email", icon: Mail },
     { id: "abuse" as Tab, label: "Abuse Logs", icon: Shield },
+    { id: "support" as Tab, label: "Support", icon: MessageSquare },
   ];
 
   return (
     <div className="mx-auto w-full max-w-7xl px-4 sm:px-6 py-8">
-      <h1 className="text-2xl font-bold text-slate-900 mb-6">Admin Panel</h1>
+      <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-6">Admin Panel</h1>
 
       <div className="flex gap-2 mb-6 overflow-x-auto">
         {tabs.map((t) => (
@@ -273,6 +367,253 @@ export default function AdminPage() {
                 </button>
               </div>
             </div>
+          )}
+
+          {tab === "support" && (
+            selectedTicket ? (
+              <div className="card">
+                <button
+                  onClick={() => { setSelectedTicket(null); setTicketSaveMsg(""); }}
+                  className="flex items-center gap-1 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 mb-4"
+                >
+                  <ArrowLeft className="h-4 w-4" /> Back to list
+                </button>
+
+                <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                      Reminder: Provide product/billing/technical assistance only. Do not provide investment advice.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2 space-y-4">
+                    <div>
+                      <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-1">{selectedTicket.subject}</h2>
+                      <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
+                        <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                          selectedTicket.status === "open" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" :
+                          selectedTicket.status === "pending" ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" :
+                          "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                        }`}>
+                          {selectedTicket.status === "open" && <Clock className="h-3 w-3" />}
+                          {selectedTicket.status === "pending" && <Clock className="h-3 w-3" />}
+                          {selectedTicket.status === "closed" && <CheckCircle className="h-3 w-3" />}
+                          {selectedTicket.status}
+                        </span>
+                        <span>{selectedTicket.category}</span>
+                        <span>{new Date(selectedTicket.createdAt).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                      <p className="text-sm text-slate-800 dark:text-slate-200 whitespace-pre-wrap">{selectedTicket.message}</p>
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3">
+                        <label className="label whitespace-nowrap">Status</label>
+                        <select
+                          className="input w-40"
+                          value={ticketStatus}
+                          onChange={(e) => setTicketStatus(e.target.value)}
+                        >
+                          <option value="open">Open</option>
+                          <option value="pending">Pending</option>
+                          <option value="closed">Closed</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="label mb-1.5">Admin Response</label>
+                        <textarea
+                          className="input min-h-[120px] resize-y"
+                          value={adminResponse}
+                          onChange={(e) => setAdminResponse(e.target.value)}
+                          placeholder="Type your response to the user..."
+                        />
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <button onClick={saveTicketResponse} disabled={savingTicket} className="btn-primary">
+                          {savingTicket ? "Saving..." : "Save Response"}
+                        </button>
+                        {ticketSaveMsg && (
+                          <span className={`text-sm ${ticketSaveMsg.includes("success") ? "text-green-600" : "text-red-600"}`}>
+                            {ticketSaveMsg}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {selectedTicket.respondedAt && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
+                        Last responded: {new Date(selectedTicket.respondedAt).toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">User Info</h3>
+                      <div className="space-y-2 text-xs">
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 dark:text-slate-400">Email</span>
+                          <span className="text-slate-800 dark:text-slate-200 font-medium">{selectedTicket.userEmail}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 dark:text-slate-400">Name</span>
+                          <span className="text-slate-800 dark:text-slate-200">{selectedTicket.userName || "—"}</span>
+                        </div>
+                        {selectedTicket.user && (
+                          <>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400">Role</span>
+                              <span className="text-slate-800 dark:text-slate-200">{selectedTicket.user.role}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400">Plan</span>
+                              <span className="text-slate-800 dark:text-slate-200">{selectedTicket.user.subscription?.status === "active" ? "Pro" : "Free"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400">Reports</span>
+                              <span className="text-slate-800 dark:text-slate-200">{selectedTicket.user._count?.reports ?? "—"}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-slate-500 dark:text-slate-400">Joined</span>
+                              <span className="text-slate-800 dark:text-slate-200">{new Date(selectedTicket.user.createdAt).toLocaleDateString()}</span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <div className="p-4 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-2">Reference</h3>
+                      <p className="text-xs font-mono text-slate-600 dark:text-slate-400">TCK-{selectedTicket.id.slice(0, 8).toUpperCase()}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="card">
+                <div className="mb-4 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-800 dark:text-amber-300 font-medium">
+                      Reminder: Provide product/billing/technical assistance only. Do not provide investment advice.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3 mb-4">
+                  <div className="relative flex-1 min-w-[200px]">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <input
+                      className="input pl-9"
+                      placeholder="Search by email or subject..."
+                      value={ticketSearch}
+                      onChange={(e) => setTicketSearch(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && fetchTickets(1)}
+                    />
+                  </div>
+                  <select
+                    className="input w-auto"
+                    value={ticketStatusFilter}
+                    onChange={(e) => setTicketStatusFilter(e.target.value)}
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="open">Open</option>
+                    <option value="pending">Pending</option>
+                    <option value="closed">Closed</option>
+                  </select>
+                  <select
+                    className="input w-auto"
+                    value={ticketCategoryFilter}
+                    onChange={(e) => setTicketCategoryFilter(e.target.value)}
+                  >
+                    <option value="all">All Categories</option>
+                    <option value="technical">Technical</option>
+                    <option value="billing">Billing</option>
+                    <option value="feature">Feature</option>
+                    <option value="report_question">Report</option>
+                    <option value="other">Other</option>
+                  </select>
+                  <button onClick={() => fetchTickets(1)} className="btn-secondary text-sm">Search</button>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">{ticketsTotal} tickets</span>
+                </div>
+
+                {ticketLoading ? (
+                  <div className="text-center py-8"><Loader2 className="h-6 w-6 text-brand-accent mx-auto animate-spin" /></div>
+                ) : tickets.length === 0 ? (
+                  <p className="text-sm text-slate-500 dark:text-slate-400 py-8 text-center">No support tickets found</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-slate-200 dark:border-slate-700">
+                          <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">Created</th>
+                          <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">Status</th>
+                          <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">Category</th>
+                          <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">User</th>
+                          <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">Subject</th>
+                          <th className="pb-3 text-left font-medium text-slate-500 dark:text-slate-400">Updated</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {tickets.map((t) => (
+                          <tr
+                            key={t.id}
+                            onClick={() => openTicketDetail(t.id)}
+                            className="border-b border-slate-100 dark:border-slate-700 last:border-0 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50"
+                          >
+                            <td className="py-3 text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                              {new Date(t.createdAt).toLocaleDateString()}
+                            </td>
+                            <td className="py-3">
+                              <span className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ${
+                                t.status === "open" ? "bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300" :
+                                t.status === "pending" ? "bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-300" :
+                                "bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                              }`}>
+                                {t.status}
+                              </span>
+                            </td>
+                            <td className="py-3 text-xs text-slate-700 dark:text-slate-300 capitalize">{t.category.replace("_", " ")}</td>
+                            <td className="py-3 text-xs text-slate-800 dark:text-slate-200">{t.userEmail}</td>
+                            <td className="py-3 text-sm text-slate-900 dark:text-slate-100 max-w-[300px] truncate">{t.subject}</td>
+                            <td className="py-3 text-xs text-slate-500 dark:text-slate-400 whitespace-nowrap">
+                              {new Date(t.updatedAt).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+
+                {ticketsTotal > 20 && (
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <button
+                      onClick={() => fetchTickets(ticketsPage - 1)}
+                      disabled={ticketsPage <= 1}
+                      className="btn-secondary text-xs px-3 py-1 disabled:opacity-50"
+                    >
+                      Previous
+                    </button>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      Page {ticketsPage} of {Math.ceil(ticketsTotal / 20)}
+                    </span>
+                    <button
+                      onClick={() => fetchTickets(ticketsPage + 1)}
+                      disabled={ticketsPage >= Math.ceil(ticketsTotal / 20)}
+                      className="btn-secondary text-xs px-3 py-1 disabled:opacity-50"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )
           )}
 
           {tab === "abuse" && (() => {

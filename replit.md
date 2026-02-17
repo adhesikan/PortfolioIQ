@@ -38,9 +38,11 @@ app/
     generate-report/# Leak Report generation
     reports/        # Report CRUD
     stripe/         # Checkout, webhook, portal
-    admin/          # Users, abuse-logs, email broadcast
+    admin/          # Users, abuse-logs, email broadcast, support tickets
+    support/        # Support ticket submission (POST)
     portfolios/     # Legacy portfolio API
-  admin/            # Admin panel (RBAC)
+  admin/            # Admin panel (RBAC, support tickets tab)
+  support/          # Contact support form page
   dashboard/        # User dashboard with usage tracking
   login/            # Login page
   signup/           # Signup page
@@ -130,6 +132,15 @@ prisma/
 - Email broadcast (all, free tier, paid tier)
 - Abuse logs with risk scoring
 
+### Support Ticket System
+- Contact form at /support with category, subject, message, disclaimer acknowledgment
+- Categories: Technical, Billing, Feature Request, Report Clarification, Other
+- Rate limited: 5 tickets/hour per user
+- Admin Support tab in /admin with list view, filters (status/category/search), pagination
+- Admin ticket detail view with user info sidebar, status management, response textarea
+- Compliance reminders throughout (no investment advice)
+- Support link in Navigation dropdown and Settings page
+
 ### Abuse Prevention
 - Hashed IP logging (SHA-256 + salt)
 - Device ID tracking via cookies
@@ -138,7 +149,7 @@ prisma/
 
 ## Database Models
 
-User, Session, Subscription, Upload, Trade, LeakReport, UsageCounter, AbuseLog, AdminAuditLog, MarketingContent, ConsentLog, Portfolio, Holding, ImportJob, PortfolioLot, Snapshot, RuleSet, Recommendation, StressTestResult, Report
+User, Session, Subscription, Upload, Trade, LeakReport, UsageCounter, AbuseLog, AdminAuditLog, MarketingContent, ConsentLog, Portfolio, Holding, ImportJob, PortfolioLot, Snapshot, RuleSet, Recommendation, StressTestResult, Report, SupportTicket
 
 ## Environment Variables Required
 
