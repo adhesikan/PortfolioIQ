@@ -99,6 +99,13 @@ export default function AdminPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null);
   const [analyticsRange, setAnalyticsRange] = useState("7d");
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsSearch, setAnalyticsSearch] = useState("");
+  const [analyticsPageFilter, setAnalyticsPageFilter] = useState("all");
+  const [analyticsVisitorFilter, setAnalyticsVisitorFilter] = useState<"all" | "logged_in" | "anonymous">("all");
+  const [analyticsSortBy, setAnalyticsSortBy] = useState<"time" | "page" | "visitor">("time");
+  const [analyticsSortDir, setAnalyticsSortDir] = useState<"asc" | "desc">("desc");
+  const [topPagesSortBy, setTopPagesSortBy] = useState<"views" | "unique" | "path">("views");
+  const [topPagesSortDir, setTopPagesSortDir] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
     if (authLoading) return;
@@ -743,72 +750,187 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                <div className="card">
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Top Pages</h3>
-                  {analytics.topPages.length === 0 ? (
-                    <p className="text-sm text-slate-500 py-4 text-center">No page views yet</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {analytics.topPages.map((p, i) => {
-                        const maxV = analytics.topPages[0]?.views || 1;
-                        return (
-                          <div key={i} className="relative">
-                            <div
-                              className="absolute inset-y-0 left-0 bg-brand-accent/10 dark:bg-brand-accent/20 rounded"
-                              style={{ width: `${(p.views / maxV) * 100}%` }}
-                            />
-                            <div className="relative flex items-center justify-between px-3 py-2">
-                              <div className="flex items-center gap-2">
-                                <Globe className="h-3.5 w-3.5 text-slate-400" />
-                                <span className="text-sm font-medium text-slate-900 dark:text-slate-100">{p.path}</span>
-                              </div>
-                              <div className="flex items-center gap-4 text-xs text-slate-500">
-                                <span>{p.views} views</span>
-                                <span>{p.unique_visitors} unique</span>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
+                {(() => {
+                  const sortedTopPages = [...analytics.topPages].sort((a, b) => {
+                    const dir = topPagesSortDir === "asc" ? 1 : -1;
+                    if (topPagesSortBy === "views") return (a.views - b.views) * dir;
+                    if (topPagesSortBy === "unique") return (a.unique_visitors - b.unique_visitors) * dir;
+                    return a.path.localeCompare(b.path) * dir;
+                  });
+                  const toggleTopSort = (col: "views" | "unique" | "path") => {
+                    if (topPagesSortBy === col) setTopPagesSortDir(topPagesSortDir === "asc" ? "desc" : "asc");
+                    else { setTopPagesSortBy(col); setTopPagesSortDir(col === "path" ? "asc" : "desc"); }
+                  };
+                  const sortIcon = (col: string, active: string, dir: string) =>
+                    active === col ? (dir === "asc" ? " ↑" : " ↓") : "";
 
-                <div className="card">
-                  <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Recent Visits</h3>
-                  {analytics.recentViews.length === 0 ? (
-                    <p className="text-sm text-slate-500 py-4 text-center">No visits recorded yet</p>
-                  ) : (
-                    <div className="overflow-x-auto">
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-slate-200 dark:border-slate-700">
-                            <th className="pb-3 text-left font-medium text-slate-500">Time</th>
-                            <th className="pb-3 text-left font-medium text-slate-500">Page</th>
-                            <th className="pb-3 text-left font-medium text-slate-500">Visitor</th>
-                            <th className="pb-3 text-left font-medium text-slate-500">Referrer</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {analytics.recentViews.map((v) => (
-                            <tr key={v.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
-                              <td className="py-2.5 text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">{new Date(v.createdAt).toLocaleString()}</td>
-                              <td className="py-2.5 text-slate-900 dark:text-slate-100 font-medium">{v.path}</td>
-                              <td className="py-2.5">
-                                {v.userEmail ? (
-                                  <span className="text-xs text-brand-accent">{v.userEmail}</span>
-                                ) : (
-                                  <span className="text-xs text-slate-400 font-mono">{v.hashedIp.substring(0, 10)}...</span>
-                                )}
-                              </td>
-                              <td className="py-2.5 text-xs text-slate-500 max-w-[200px] truncate">{v.referrer || "—"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                  return (
+                    <div className="card">
+                      <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-3">Top Pages</h3>
+                      {sortedTopPages.length === 0 ? (
+                        <p className="text-sm text-slate-500 py-4 text-center">No page views yet</p>
+                      ) : (
+                        <>
+                          <div className="grid grid-cols-[1fr_auto_auto] gap-2 px-3 pb-2 border-b border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-500">
+                            <button onClick={() => toggleTopSort("path")} className="text-left hover:text-slate-900 dark:hover:text-slate-200 transition-colors">
+                              Page{sortIcon("path", topPagesSortBy, topPagesSortDir)}
+                            </button>
+                            <button onClick={() => toggleTopSort("views")} className="text-right hover:text-slate-900 dark:hover:text-slate-200 transition-colors w-20">
+                              Views{sortIcon("views", topPagesSortBy, topPagesSortDir)}
+                            </button>
+                            <button onClick={() => toggleTopSort("unique")} className="text-right hover:text-slate-900 dark:hover:text-slate-200 transition-colors w-20">
+                              Unique{sortIcon("unique", topPagesSortBy, topPagesSortDir)}
+                            </button>
+                          </div>
+                          <div className="space-y-1 mt-2">
+                            {sortedTopPages.map((p, i) => {
+                              const maxV = Math.max(...analytics.topPages.map((pg) => pg.views), 1);
+                              return (
+                                <div key={i} className="relative">
+                                  <div
+                                    className="absolute inset-y-0 left-0 bg-brand-accent/10 dark:bg-brand-accent/20 rounded"
+                                    style={{ width: `${(p.views / maxV) * 100}%` }}
+                                  />
+                                  <div className="relative grid grid-cols-[1fr_auto_auto] gap-2 px-3 py-2">
+                                    <div className="flex items-center gap-2">
+                                      <Globe className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                      <span className="text-sm font-medium text-slate-900 dark:text-slate-100 truncate">{p.path}</span>
+                                    </div>
+                                    <span className="text-xs text-slate-500 w-20 text-right">{p.views}</span>
+                                    <span className="text-xs text-slate-500 w-20 text-right">{p.unique_visitors}</span>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })()}
+
+                {(() => {
+                  const allPages = analytics.recentViews.length > 0
+                    ? [...new Set(analytics.recentViews.map((v) => v.path))].sort()
+                    : [];
+
+                  let filteredViews = analytics.recentViews;
+
+                  if (analyticsSearch.trim()) {
+                    const q = analyticsSearch.toLowerCase();
+                    filteredViews = filteredViews.filter((v) =>
+                      v.path.toLowerCase().includes(q) ||
+                      (v.userEmail && v.userEmail.toLowerCase().includes(q)) ||
+                      (v.referrer && v.referrer.toLowerCase().includes(q)) ||
+                      v.hashedIp.toLowerCase().includes(q)
+                    );
+                  }
+
+                  if (analyticsPageFilter !== "all") {
+                    filteredViews = filteredViews.filter((v) => v.path === analyticsPageFilter);
+                  }
+
+                  if (analyticsVisitorFilter === "logged_in") {
+                    filteredViews = filteredViews.filter((v) => v.userEmail);
+                  } else if (analyticsVisitorFilter === "anonymous") {
+                    filteredViews = filteredViews.filter((v) => !v.userEmail);
+                  }
+
+                  const sorted = [...filteredViews].sort((a, b) => {
+                    const dir = analyticsSortDir === "asc" ? 1 : -1;
+                    if (analyticsSortBy === "time") return (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()) * dir;
+                    if (analyticsSortBy === "page") return a.path.localeCompare(b.path) * dir;
+                    return ((a.userEmail || a.hashedIp).localeCompare(b.userEmail || b.hashedIp)) * dir;
+                  });
+
+                  const toggleSort = (col: "time" | "page" | "visitor") => {
+                    if (analyticsSortBy === col) setAnalyticsSortDir(analyticsSortDir === "asc" ? "desc" : "asc");
+                    else { setAnalyticsSortBy(col); setAnalyticsSortDir(col === "time" ? "desc" : "asc"); }
+                  };
+                  const sortArrow = (col: string) =>
+                    analyticsSortBy === col ? (analyticsSortDir === "asc" ? " ↑" : " ↓") : "";
+
+                  return (
+                    <div className="card">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">Recent Visits</h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <div className="relative">
+                            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                            <input
+                              type="text"
+                              placeholder="Search visits..."
+                              value={analyticsSearch}
+                              onChange={(e) => setAnalyticsSearch(e.target.value)}
+                              className="pl-8 pr-3 py-1.5 text-xs border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 w-44"
+                            />
+                          </div>
+                          <select
+                            value={analyticsPageFilter}
+                            onChange={(e) => setAnalyticsPageFilter(e.target.value)}
+                            className="text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          >
+                            <option value="all">All Pages</option>
+                            {allPages.map((p) => (
+                              <option key={p} value={p}>{p}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={analyticsVisitorFilter}
+                            onChange={(e) => setAnalyticsVisitorFilter(e.target.value as "all" | "logged_in" | "anonymous")}
+                            className="text-xs border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                          >
+                            <option value="all">All Visitors</option>
+                            <option value="logged_in">Logged In</option>
+                            <option value="anonymous">Anonymous</option>
+                          </select>
+                          <span className="text-[10px] text-slate-400">{sorted.length} of {analytics.recentViews.length}</span>
+                        </div>
+                      </div>
+
+                      {sorted.length === 0 ? (
+                        <p className="text-sm text-slate-500 py-4 text-center">
+                          {analytics.recentViews.length === 0 ? "No visits recorded yet" : "No visits match your filters"}
+                        </p>
+                      ) : (
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-slate-200 dark:border-slate-700">
+                                <th className="pb-3 text-left font-medium text-slate-500 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 select-none" onClick={() => toggleSort("time")}>
+                                  Time{sortArrow("time")}
+                                </th>
+                                <th className="pb-3 text-left font-medium text-slate-500 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 select-none" onClick={() => toggleSort("page")}>
+                                  Page{sortArrow("page")}
+                                </th>
+                                <th className="pb-3 text-left font-medium text-slate-500 cursor-pointer hover:text-slate-900 dark:hover:text-slate-200 select-none" onClick={() => toggleSort("visitor")}>
+                                  Visitor{sortArrow("visitor")}
+                                </th>
+                                <th className="pb-3 text-left font-medium text-slate-500">Referrer</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {sorted.map((v) => (
+                                <tr key={v.id} className="border-b border-slate-100 dark:border-slate-800 last:border-0">
+                                  <td className="py-2.5 text-xs text-slate-600 dark:text-slate-400 whitespace-nowrap">{new Date(v.createdAt).toLocaleString()}</td>
+                                  <td className="py-2.5 text-slate-900 dark:text-slate-100 font-medium">{v.path}</td>
+                                  <td className="py-2.5">
+                                    {v.userEmail ? (
+                                      <span className="text-xs text-brand-accent">{v.userEmail}</span>
+                                    ) : (
+                                      <span className="text-xs text-slate-400 font-mono">{v.hashedIp.substring(0, 10)}...</span>
+                                    )}
+                                  </td>
+                                  <td className="py-2.5 text-xs text-slate-500 max-w-[200px] truncate">{v.referrer || "—"}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             ) : (
               <div className="card text-center py-12">
