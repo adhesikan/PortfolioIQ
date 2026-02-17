@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
+interface TopPage {
+  path: string;
+  views: number;
+  unique_visitors: number;
+}
+
+interface DailyView {
+  date: string;
+  views: number;
+}
+
 export async function GET(req: NextRequest) {
   const session = await getSession();
-  if (!session || session.role !== "ADMIN") {
+  if (!session || session.user.role !== "ADMIN") {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -33,16 +44,16 @@ export async function GET(req: NextRequest) {
     prisma.pageView.groupBy({
       by: ["hashedIp"],
       where: { createdAt: { gte: since } },
-    }).then((r) => r.length),
+    }).then((r: { hashedIp: string }[]) => r.length),
 
-    prisma.$queryRaw`
+    prisma.$queryRaw<TopPage[]>`
       SELECT path, COUNT(*)::int as views, COUNT(DISTINCT "hashedIp")::int as unique_visitors
       FROM "PageView"
       WHERE "createdAt" >= ${since}
       GROUP BY path
       ORDER BY views DESC
       LIMIT 20
-    ` as Promise<Array<{ path: string; views: number; unique_visitors: number }>>,
+    `,
 
     prisma.pageView.findMany({
       where: { createdAt: { gte: since } },
@@ -60,29 +71,30 @@ export async function GET(req: NextRequest) {
       },
     }),
 
-    prisma.$queryRaw`
+    prisma.$queryRaw<DailyView[]>`
       SELECT DATE("createdAt") as date, COUNT(*)::int as views
       FROM "PageView"
       WHERE "createdAt" >= ${since}
       GROUP BY DATE("createdAt")
       ORDER BY date ASC
-    ` as Promise<Array<{ date: string; views: number }>>,
+    `,
   ]);
 
   const userIds = recentViews
-    .map((v) => v.userId)
-    .filter((id): id is string => !!id);
+    .map((v: { userId: string | null }) => v.userId)
+    .filter((id: string | null): id is string => !!id);
   
   let userMap: Record<string, string> = {};
   if (userIds.length > 0) {
+    const uniqueIds: string[] = [...new Set(userIds)];
     const users = await prisma.user.findMany({
-      where: { id: { in: [...new Set(userIds)] } },
+      where: { id: { in: uniqueIds } },
       select: { id: true, email: true },
     });
-    userMap = Object.fromEntries(users.map((u) => [u.id, u.email]));
+    userMap = Object.fromEntries(users.map((u: { id: string; email: string }) => [u.id, u.email]));
   }
 
-  const recentViewsWithEmail = recentViews.map((v) => ({
+  const recentViewsWithEmail = recentViews.map((v: { userId: string | null; [key: string]: unknown }) => ({
     ...v,
     userEmail: v.userId ? userMap[v.userId] || null : null,
   }));

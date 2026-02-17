@@ -1,0 +1,77 @@
+==============
+Using Nixpacks
+==============
+
+context: 37zg-3Qzm
+╔══════════════════════════════ Nixpacks v1.38.0 ══════════════════════════════╗
+║ setup      │ nodejs_18, npm-9_x, openssl                                     ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ install    │ npm ci                                                          ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ build      │ npm install && npx prisma generate && npm run build && cp -r    ║
+║            │ public .next/standalone/ 2>/dev/null || true && cp -r           ║
+║            │ .next/static .next/standalone/.next/                            ║
+║──────────────────────────────────────────────────────────────────────────────║
+║ start      │ npx prisma migrate deploy && HOSTNAME=0.0.0.0 node              ║
+║            │ .next/standalone/server.js                                      ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+internal
+load build definition from Dockerfile
+0ms
+
+internal
+load metadata for ghcr.io/railwayapp/nixpacks:ubuntu-1745885067
+92ms
+
+internal
+load .dockerignore
+0ms
+
+internal
+load build context
+0ms
+
+stage-0
+FROM ghcr.io/railwayapp/nixpacks:ubuntu-1745885067@sha256:d45c89d80e13d7ad0fd555b5130f22a866d9dd10e861f589932303ef2314c7de
+10ms
+
+stage-0
+RUN nix-env -if .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix && nix-collect-garbage -d cached
+0ms
+
+stage-0
+COPY .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix .nixpacks/nixpkgs-ffeebf0acf3ae8b29f8c7049cd911b9636efd7e7.nix cached
+0ms
+
+stage-0
+WORKDIR /app/ cached
+0ms
+
+stage-0
+COPY . /app/.
+39ms
+
+stage-0
+RUN npm ci
+29s
+Run `npm audit` for details.
+
+stage-0
+COPY . /app/.
+291ms
+
+stage-0
+RUN npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/
+32s
+cp: cannot create directory '.next/standalone/.next/': No such file or directory
+Dockerfile:24
+-------------------
+22 |     # build phase
+23 |     COPY . /app/.
+24 | >>> RUN --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-next/cache,target=/app/.next/cache --mount=type=cache,id=s/4a75d1f1-9a80-4679-85cd-9cdc316f3d95-node_modules/cache,target=/app/node_modules/.cache npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/
+25 |
+26 |
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/bash -ol pipefail -c npm install && npx prisma generate && npm run build && cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/" did not complete successfully: exit code: 1
+Error: Docker build failed

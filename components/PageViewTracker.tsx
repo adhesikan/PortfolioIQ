@@ -21,7 +21,7 @@ export default function PageViewTracker() {
   const lastTracked = useRef("");
 
   useEffect(() => {
-    if (pathname === lastTracked.current) return;
+    if (!pathname || pathname === lastTracked.current) return;
     lastTracked.current = pathname;
 
     const deviceId = getDeviceId();
