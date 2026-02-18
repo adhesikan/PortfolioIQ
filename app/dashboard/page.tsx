@@ -9,6 +9,7 @@ import {
   BarChart3, CheckCircle2, Circle, Lightbulb, Activity, Shield
 } from "lucide-react";
 import Link from "next/link";
+import OnboardingModal from "@/components/OnboardingModal";
 
 interface ReportSummary {
   id: string;
@@ -219,8 +220,11 @@ export default function DashboardPage() {
   const fixActions = latest ? getFixActions(latest) : [];
   const leaks = (latest?.topLeaks as LeakItem[]) || [];
 
+  const isNewUser = (data?.totalReports ?? 0) === 0 && freeUsed === 0;
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 sm:px-6 py-6 space-y-6 animate-fade-in">
+      <OnboardingModal isNewUser={isNewUser} />
 
       {/* HERO CARD */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white p-6 sm:p-8">
