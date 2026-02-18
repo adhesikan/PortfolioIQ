@@ -68,7 +68,8 @@ export default function UploadPage() {
   const atLimit = !isPro && freeUsed >= 3;
   const hasAcceptedDisclaimer = !!user.sampleDisclaimerAcceptedAt;
   const FREE_MAX_TRADES = 10;
-  const freeTradeLimit = !isPro && !isSample && trades.length > FREE_MAX_TRADES;
+  const isFirstFreeReport = !isPro && freeUsed === 0;
+  const freeTradeLimit = !isPro && !isSample && !isFirstFreeReport && trades.length > FREE_MAX_TRADES;
   const userWantsSelection = selectionMode === "select";
   const requiresTradeSelection = freeTradeLimit || (userWantsSelection && trades.length > 0);
   const maxSelectable = freeTradeLimit ? FREE_MAX_TRADES : trades.length;
@@ -79,7 +80,7 @@ export default function UploadPage() {
       const next = new Set(prev);
       if (next.has(index)) {
         next.delete(index);
-      } else if (!freeTradeLimit || next.size < FREE_MAX_TRADES) {
+      } else if (!freeTradeLimit || next.size < maxSelectable) {
         next.add(index);
       }
       return next;
@@ -454,25 +455,33 @@ export default function UploadPage() {
           <div className="mb-4 flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
             <List className="h-4 w-4 text-slate-500 dark:text-slate-400 shrink-0" />
             <span className="text-sm text-slate-700 dark:text-slate-300">Trades to analyze:</span>
-            <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
-              <button
-                onClick={() => { setSelectionMode("all"); setSelectedIndices(new Set()); }}
-                className={`px-3 py-1.5 text-xs font-medium transition-colors ${selectionMode === "all" ? "bg-brand-accent text-white" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"}`}
-              >
-                All Trades ({trades.length})
-              </button>
-              <button
-                onClick={() => { setSelectionMode("select"); setSelectedIndices(new Set()); }}
-                className={`px-3 py-1.5 text-xs font-medium border-l border-slate-200 dark:border-slate-600 transition-colors ${selectionMode === "select" ? "bg-brand-accent text-white" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"}`}
-              >
-                Select Specific
-              </button>
-            </div>
-            {freeTradeLimit && selectionMode === "all" && (
-              <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
-                Free plan: max {FREE_MAX_TRADES} trades.
-                <a href="/pricing?reason=trade-limit" className="underline ml-1">Upgrade</a>
+            {isFirstFreeReport && !isSample ? (
+              <span className="text-xs text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-950/40 px-2 py-1 rounded font-medium">
+                First report — all {trades.length} trades included
               </span>
+            ) : (
+              <>
+                <div className="flex rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
+                  <button
+                    onClick={() => { setSelectionMode("all"); setSelectedIndices(new Set()); }}
+                    className={`px-3 py-1.5 text-xs font-medium transition-colors ${selectionMode === "all" ? "bg-brand-accent text-white" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"}`}
+                  >
+                    All Trades ({trades.length})
+                  </button>
+                  <button
+                    onClick={() => { setSelectionMode("select"); setSelectedIndices(new Set()); }}
+                    className={`px-3 py-1.5 text-xs font-medium border-l border-slate-200 dark:border-slate-600 transition-colors ${selectionMode === "select" ? "bg-brand-accent text-white" : "bg-white dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600"}`}
+                  >
+                    Select Specific
+                  </button>
+                </div>
+                {freeTradeLimit && selectionMode === "all" && (
+                  <span className="text-xs text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                    Free plan: max {FREE_MAX_TRADES} trades.
+                    <a href="/pricing?reason=trade-limit" className="underline ml-1">Upgrade</a>
+                  </span>
+                )}
+              </>
             )}
           </div>
 
@@ -603,7 +612,7 @@ export default function UploadPage() {
                           type="checkbox"
                           checked={selectedIndices.has(i)}
                           onChange={() => toggleTradeSelection(i)}
-                          disabled={!selectedIndices.has(i) && selectedIndices.size >= FREE_MAX_TRADES}
+                          disabled={!selectedIndices.has(i) && freeTradeLimit && selectedIndices.size >= FREE_MAX_TRADES}
                           className="h-4 w-4 rounded border-slate-300 text-brand-accent focus:ring-brand-accent"
                         />
                       </td>

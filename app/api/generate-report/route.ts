@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { canGenerateReport, FREE_REPORTS_LIFETIME_LIMIT, FREE_MAX_TRADES_PER_REPORT, PRO_MAX_TRADES_PER_REPORT } from "@/lib/usage";
+import { canGenerateReport, FREE_REPORTS_LIFETIME_LIMIT, FREE_MAX_TRADES_PER_REPORT, FREE_FIRST_REPORT_MAX_TRADES, PRO_MAX_TRADES_PER_REPORT } from "@/lib/usage";
 import { logAbuse } from "@/lib/abuse";
 import { calculateLeakScore } from "@/lib/leakScoring";
 import OpenAI from "openai";
@@ -59,11 +59,15 @@ export async function POST(req: NextRequest) {
     }
 
     const isFreeUser = !check.isSubscriber && !isSampleReport;
-    const maxTrades = isFreeUser ? FREE_MAX_TRADES_PER_REPORT : PRO_MAX_TRADES_PER_REPORT;
+    const isFirstFreeReport = isFreeUser && check.freeUsed === 0;
+    const freeTradeLimit = isFirstFreeReport ? FREE_FIRST_REPORT_MAX_TRADES : FREE_MAX_TRADES_PER_REPORT;
+    const maxTrades = isFreeUser ? freeTradeLimit : PRO_MAX_TRADES_PER_REPORT;
 
     let tradesToAnalyze = trades;
 
-    if (isFreeUser && trades.length > FREE_MAX_TRADES_PER_REPORT) {
+    if (isFirstFreeReport) {
+      tradesToAnalyze = trades.slice(0, FREE_FIRST_REPORT_MAX_TRADES);
+    } else if (isFreeUser && trades.length > FREE_MAX_TRADES_PER_REPORT) {
       if (!selectedTradeIndices || !Array.isArray(selectedTradeIndices) || selectedTradeIndices.length !== FREE_MAX_TRADES_PER_REPORT) {
         return NextResponse.json({
           error: "FREE_TRADE_LIMIT_EXCEEDED",
@@ -84,7 +88,7 @@ export async function POST(req: NextRequest) {
       tradesToAnalyze = selectedTradeIndices.map((idx: number) => trades[idx]);
     }
 
-    if (!isFreeUser && tradesToAnalyze.length > maxTrades) {
+    if (tradesToAnalyze.length > maxTrades) {
       tradesToAnalyze = tradesToAnalyze.slice(0, maxTrades);
     }
 

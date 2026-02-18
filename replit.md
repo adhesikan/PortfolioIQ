@@ -107,16 +107,18 @@ prisma/
    - Risk Control Checklist
 
 ### Free Tier + Paywall
-- 3 free Leak Reports per user (lifetime), max 10 trades per report
+- 3 free Leak Reports per user (lifetime)
+- **First free report**: analyzes ALL uploaded trades (up to 500), no 10-trade limit
+- **Reports 2 & 3**: limited to max 10 trades per report (trade selector UI shown if >10 trades)
 - Pro users: unlimited reports, up to 500 trades per report
 - Usage tracked in UsageCounter table with transactional enforcement
 - Usage only increments on successful report generation (not extraction)
-- Free users with >10 trades see trade selector UI (checkboxes, default: most recent 10)
+- Free users (after first report) with >10 trades see trade selector UI (checkboxes, default: most recent 10)
 - After 3 reports → HTTP 402 paywall with modal + redirect to pricing page
-- >10 trades on free plan → HTTP 409 with trade selection prompt
+- >10 trades on free plan (reports 2-3) → HTTP 409 with trade selection prompt
 - Sample reports do NOT count toward free limit (separate 5/day rate limit)
 - Stripe subscription for unlimited (Pro plan)
-- Constants in `lib/usage.ts`: `FREE_REPORTS_LIFETIME_LIMIT = 3`, `FREE_MAX_TRADES_PER_REPORT = 10`, `PRO_MAX_TRADES_PER_REPORT = 500`
+- Constants in `lib/usage.ts`: `FREE_REPORTS_LIFETIME_LIMIT = 3`, `FREE_MAX_TRADES_PER_REPORT = 10`, `FREE_FIRST_REPORT_MAX_TRADES = 500`, `PRO_MAX_TRADES_PER_REPORT = 500`
 
 ### Progress Tracker (/progress) — Pro Only
 - Recharts-powered interactive area chart showing metrics over time
